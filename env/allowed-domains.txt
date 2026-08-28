@@ -1,0 +1,30 @@
+# MakeHardware — cloud environment "Allowed domains"
+#
+# Set Network access to **Custom** and TICK
+# "Also include default list of common package managers".
+# Then paste the lines below (comments are fine to omit).
+#
+# Why each entry is needed:
+
+# KiCad 10 packages. The Trusted preset allows launchpad.net and the RETIRED
+# ppa.launchpad.net, but Launchpad serves PPA content from launchpadcontent.net,
+# which is not on that list. Without this line apt-get update only *warns* and
+# `apt-get install kicad` silently installs KiCad 7.0.11 from Ubuntu universe —
+# which has no IPC API, so Konnect cannot drive it.
+ppa.launchpadcontent.net
+
+# Lets Claude read back the vision boards and reports it publishes as Artifacts.
+*.frame.claudeusercontent.com
+
+# ---------------------------------------------------------------------------
+# Only needed if you set MH_ENABLE_LTSPICE=1. ngspice covers the default
+# simulation loop with no Wine and no download, so leave these out unless you
+# specifically need vendor-encrypted ADI models or .asc schematic editing.
+# ---------------------------------------------------------------------------
+# ltspice.analog.com
+# *.analog.com
+
+# Already covered by the Trusted preset, listed here only so you can see that
+# the build depends on them: pypi.org, files.pythonhosted.org, index.crates.io,
+# static.crates.io, static.rust-lang.org, github.com, codeload.github.com,
+# archive.ubuntu.com, security.ubuntu.com, *.ubuntu.com (keyserver.ubuntu.com).

@@ -1,0 +1,15 @@
+build/
+__pycache__/
+*.pyc
+.venv/
+
+# Simulation and CAD outputs — regenerate them, don't commit them.
+*.raw
+*.op.raw
+sim/**/out/
+cad/**/out/
+
+# KiCad working files
+*-backups/
+*.kicad_prl
+fp-info-cache

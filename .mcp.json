@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "konnect": {
+      "command": "konnect",
+      "args": [],
+      "env": {}
+    },
+    "build123d": {
+      "command": "/opt/hw-py/bin/build123d-mcp",
+      "args": ["--library", "cad", "--exec-timeout", "120"],
+      "env": {}
+    },
+    "spice": {
+      "command": "/opt/hw-py/bin/ltspice-mcp",
+      "args": ["--config", "/etc/ltspice-mcp.toml"],
+      "env": {}
+    }
+  }
+}

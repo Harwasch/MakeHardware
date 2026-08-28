@@ -1,0 +1,31 @@
+[DOCUMENT]
+TITLE: System Requirements
+UID: DOC-SYSTEM
+
+[GRAMMAR]
+IMPORT_FROM_FILE: hardware.sgra
+
+[TEXT]
+STATEMENT: >>>
+Testable system-level requirements. Each one Refines a ``VIS-`` entry and is
+itself refined by the discipline requirements in the ``20-`` documents.
+<<<
+
+[REQUIREMENT]
+UID: SYS-001
+TITLE: Example — battery life
+STATEMENT: >>>
+The device shall operate for >= 12 h of continuous use at 25 degC on a
+single charge.
+<<<
+RATIONALE: >>>
+A full working day plus margin; below this the product needs a midday
+charge, which the vision explicitly rejects.
+<<<
+VERIFICATION: Simulation
+BUDGET: 12 h
+STATUS: Draft
+RELATIONS:
+- TYPE: Parent
+  VALUE: VIS-001
+  ROLE: Refines

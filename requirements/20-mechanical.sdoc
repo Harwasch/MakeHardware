@@ -1,0 +1,22 @@
+[DOCUMENT]
+TITLE: Mechanical Requirements
+UID: DOC-MECHANICAL
+
+[GRAMMAR]
+IMPORT_FROM_FILE: hardware.sgra
+
+[REQUIREMENT]
+UID: MEC-001
+TITLE: Example — enclosure envelope
+STATEMENT: The enclosure shall fit within 75 x 125 x 16 mm.
+RATIONALE: >>>
+One-hand reach for the 5th-percentile female hand; sets the PCB outline
+and the cell footprint.
+<<<
+VERIFICATION: Analysis
+BUDGET: 75 x 125 x 16 mm
+STATUS: Draft
+RELATIONS:
+- TYPE: Parent
+  VALUE: VIS-001
+  ROLE: Refines

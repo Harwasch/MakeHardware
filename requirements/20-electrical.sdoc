@@ -1,0 +1,22 @@
+[DOCUMENT]
+TITLE: Electrical Requirements
+UID: DOC-ELECTRICAL
+
+[GRAMMAR]
+IMPORT_FROM_FILE: hardware.sgra
+
+[REQUIREMENT]
+UID: ELE-001
+TITLE: Example — standby quiescent current
+STATEMENT: The power path shall draw <= 40 uA from the cell in standby.
+RATIONALE: >>>
+Derived from SYS-001: a 900 mAh cell, 12 h active at 65 mA, and a 7-day
+standby tail leaves 40 uA for the always-on rail.
+<<<
+VERIFICATION: Simulation
+BUDGET: 40 uA
+STATUS: Draft
+RELATIONS:
+- TYPE: Parent
+  VALUE: SYS-001
+  ROLE: Refines
