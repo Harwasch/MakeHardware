@@ -17,6 +17,9 @@ It is not the same as a fork, and it is not `.github/` repository templates
 
 ## Making one
 
+It already exists: [`Harwasch/makehardware-template`](https://github.com/Harwasch/makehardware-template).
+The rest of this section is how it was made, and how to make another.
+
 The contents are in [`templates/github-repo/`](../templates/github-repo). They
 are deliberately minimal — see below for why.
 
@@ -28,7 +31,7 @@ git clone https://github.com/Harwasch/MakeHardware
 ./MakeHardware/templates/github-repo/create-template-repo.sh
 ```
 
-It defaults to a private repo named `hardware-project-template`; pass a name
+It defaults to a private repo named `makehardware-template`; pass a name
 and/or `--public` to change that. It refuses to touch a repo that already
 exists, because it pushes an initial commit.
 
@@ -47,7 +50,7 @@ From then on, a new project is: *Use this template* → new repo → point a clo
 session at it → `/hw-new-project`.
 
 If you prefer the command line, `gh repo create my-widget --template
-Harwasch/hardware-project-template --private` does the same thing.
+Harwasch/makehardware-template --private` does the same thing.
 
 ## What the template does not solve
 
