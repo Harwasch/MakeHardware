@@ -33,6 +33,12 @@ The short version — in the project repo's `.claude/settings.json`:
 }
 ```
 
+That is enough on a local machine you have trusted for plugins. **In a cloud
+session it is not sufficient on its own** — a repo-declared marketplace is
+ignored for an untrusted folder, and `enabledPlugins` never installs anything.
+The environment's setup script therefore installs the plugin at user scope; see
+[docs/01-environment.md](docs/01-environment.md#why-the-setup-script-installs-the-plugin).
+
 Then point the project at a cloud environment built from [`env/`](env/) and run
 `/hw-new-project` to scaffold it.
 
@@ -87,7 +93,9 @@ Three fields in the cloud environment dialog at
    Custom fallback if you'd rather not run open — note that on **Trusted** you
    silently get KiCad 7 instead of 10.
 2. **Environment variables** ← [`env/environment-variables.env`](env/environment-variables.env)
-3. **Setup script** ← [`env/setup.sh`](env/setup.sh)
+3. **Setup script** ← [`env/setup.sh`](env/setup.sh) — this also installs the
+   plugin itself, which is why a cloud session gets the skills and MCP servers
+   without a trust dialog.
 
 Then run `hw-doctor` in a session. Details and the five failure modes the
 script works around: [docs/01-environment.md](docs/01-environment.md).

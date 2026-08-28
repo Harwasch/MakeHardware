@@ -37,6 +37,14 @@ mkdir -p "${PREFIX}" "${LOGDIR}"
 : "${MH_ENABLE_KONNECT:=1}"   # KiCad 10 + Konnect MCP  (needs ppa.launchpadcontent.net)
 : "${MH_ENABLE_LTSPICE:=0}"   # LTspice under Wine      (needs *.analog.com)
 
+# The MakeHardware plugin itself — skills, commands, bin/ and the MCP servers.
+# Installed at user scope at build time; see phase_plugin for why the project
+# repo's own settings.json cannot do this on its own in a cloud session.
+: "${MH_ENABLE_PLUGIN:=1}"
+: "${MH_PLUGIN_SOURCE:=Harwasch/MakeHardware}"   # anything `claude plugin marketplace add` takes
+: "${MH_PLUGIN_NAME:=makehardware}"
+: "${MH_PLUGIN_ID:=makehardware@makehardware}"
+
 # Escape hatch: build Konnect from source instead of installing the upstream
 # release binary. Costs ~4 minutes and the protobuf/cmake toolchain, so it is
 # off — see phase 4.
@@ -438,7 +446,58 @@ EOF
 }
 
 # ==========================================================================
-# Phase 7 — finalize. Runs from a trap, so a kill at the time budget still
+# Phase 7 — the MakeHardware plugin itself
+#
+# WHY THIS IS HERE AND NOT LEFT TO THE PROJECT REPO:
+#
+#   A project repo's .claude/settings.json declares the marketplace in
+#   extraKnownMarketplaces and enables the plugin in enabledPlugins. That is
+#   necessary but NOT sufficient, and it fails silently in a cloud session:
+#
+#     1. A marketplace declared by a repo's own files is only registered for a
+#        folder you have TRUSTED for plugins. A cloud session has no trust
+#        dialog to accept, so the declaration is ignored and the session logs
+#        "Skipping orphaned enabledPlugins entry ...: marketplace not
+#        registered" — at debug level, where nobody sees it.
+#     2. enabledPlugins only ENABLES an already-installed plugin. It never
+#        installs one. Registering the marketplace alone still leaves the
+#        skills, the commands, the MCP servers and bin/ absent.
+#
+#   Installing here sidesteps both. This runs as root at build time and writes
+#   to /root/.claude, which is part of the snapshot, so the plugin is present
+#   and enabled at USER scope in every session regardless of folder trust —
+#   the same trick phase_konnect uses for the KiCad skills.
+#
+#   The GitHub *API* 403s for repos not attached to the session, but `claude
+#   plugin marketplace add` clones over HTTPS, and a public repo clone is
+#   served at every network level. Verified with a scrubbed environment: no
+#   session credentials are needed. Both steps are idempotent and exit 0 when
+#   the marketplace or plugin is already there, so a rebuild is a no-op.
+# ==========================================================================
+phase_plugin() {
+    local log="${LOGDIR}/plugin.log" claude_bin
+    claude_bin=$(command -v claude 2>/dev/null || true)
+    [ -n "${claude_bin}" ] || claude_bin="${CLAUDE_CODE_EXECPATH:-/opt/claude-code/bin/claude}"
+    if [ ! -x "${claude_bin}" ]; then
+        echo "no claude executable found" >>"${log}" 2>&1
+        return 1
+    fi
+
+    # `add` on an already-registered marketplace succeeds; `update` is the
+    # refresh path for a rebuild whose snapshot already carries the clone.
+    "${claude_bin}" plugin marketplace add "${MH_PLUGIN_SOURCE}" >>"${log}" 2>&1 \
+        || "${claude_bin}" plugin marketplace update "${MH_PLUGIN_NAME}" >>"${log}" 2>&1 \
+        || return 1
+
+    "${claude_bin}" plugin install "${MH_PLUGIN_ID}" >>"${log}" 2>&1 || return 1
+
+    # An install that loads with a bad manifest still reports success, so
+    # confirm the plugin actually reached "enabled" rather than trusting rc.
+    "${claude_bin}" plugin list 2>>"${log}" | grep -q "enabled" || return 2
+}
+
+# ==========================================================================
+# Phase 8 — finalize. Runs from a trap, so a kill at the time budget still
 # writes the status file and the LTspice wiring instead of leaving neither.
 # ==========================================================================
 finalize() {   # finalize <complete|interrupted>
@@ -506,6 +565,13 @@ if [ "${MH_ENABLE_KONNECT}" = "1" ]; then
 else
     _st kicad SKIP "MH_ENABLE_KONNECT=0"
     _st konnect SKIP "MH_ENABLE_KONNECT=0"
+fi
+
+if [ "${MH_ENABLE_PLUGIN}" = "1" ]; then
+    run plugin phase_plugin &
+    PID_PLUGIN=$!
+else
+    _st plugin SKIP "MH_ENABLE_PLUGIN=0 — install it from the project repo instead"
 fi
 
 if [ "${MH_ENABLE_LTSPICE}" = "1" ]; then
