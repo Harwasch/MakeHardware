@@ -8,10 +8,10 @@
 #
 #   ./create-template-repo.sh [name] [--public]
 #
-# Default name: hardware-project-template. Private unless --public is given.
+# Default name: makehardware-template. Private unless --public is given.
 set -euo pipefail
 
-NAME="hardware-project-template"
+NAME="makehardware-template"
 VISIBILITY="--private"
 for arg in "$@"; do
     case "${arg}" in

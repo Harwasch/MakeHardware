@@ -15,9 +15,10 @@ This repo was created from the MakeHardware project template, so
 /hw-new-project
 ```
 
-That scaffolds `plan.yaml`, `requirements/`, `hw/`, `cad/`, `sim/` and `docs/`
-from the plugin's current templates, then runs `hw-doctor` so you know what the
-toolchain can actually do before you plan around it.
+That scaffolds `plan.yaml`, `requirements/`, `hw/`, `cad/`, `concepts/`,
+`sim/`, `docs/`, `strictdoc.toml` and a project `CLAUDE.md` from the plugin's
+current templates, then runs `hw-doctor` and `imagegen --list` so you know what
+the toolchain can actually do before you plan around it.
 
 Then start the vision interview:
 
@@ -40,7 +41,7 @@ req-trace --gate          # traceability gate; exit 1 while gaps remain
 
 The plugin's skills are useless without the toolchain behind them. This repo
 needs a Claude Code cloud environment built from
-[MakeHardware's `env/`](https://github.com/Harwasch/MakeHardware/tree/main/env) —
+[MakeHardware's `env/`](https://github.com/Harwasch/MakeHardware/tree/HEAD/env) —
 network access **Full**, the environment variables file, and the setup script.
 
 The setup script is not optional. `.claude/settings.json` declares the plugin
@@ -48,4 +49,4 @@ but does not install it: in a cloud session a repo-declared marketplace is
 ignored for an untrusted folder, so the setup script installs the plugin at
 user scope. Without it you get a repo with no skills in it.
 
-See [docs/01-environment.md](https://github.com/Harwasch/MakeHardware/blob/main/docs/01-environment.md).
+See [docs/01-environment.md](https://github.com/Harwasch/MakeHardware/blob/HEAD/docs/01-environment.md).
