@@ -169,6 +169,12 @@ Paste from `env/environment-variables.env`. The two that change behaviour:
   installing the upstream release binary. Adds ~4 minutes and the
   protobuf/cmake toolchain; the fallback if upstream ever stops publishing a
   Linux asset.
+* `MH_ENABLE_PLUGIN=1` — install the MakeHardware plugin itself at user scope.
+  Set to `0` only if the project repo installs it some other way.
+* `MH_PLUGIN_SOURCE=Harwasch/MakeHardware` — anything `claude plugin
+  marketplace add` accepts. Point it at a fork, or at a local checkout path
+  when you are developing the plugin and want the working tree instead of the
+  published default branch.
 
 ## 3. Setup script
 
@@ -195,6 +201,47 @@ status file saying `"complete": false` next to whichever phases did land.
 (`FDA854F61C4D0D9572BB95E5245D5502FAD7A805`) into `/etc/apt/keyrings/`. No
 Python involved. An apt preference pins the PPA at priority 1001 so universe
 cannot win, and the script then asserts `kicad-cli version` starts with `10.`.
+
+### Why the setup script installs the plugin
+
+A project repo declares the marketplace in `extraKnownMarketplaces` and turns
+the plugin on in `enabledPlugins`. That is necessary but **not sufficient**,
+and in a cloud session it fails silently in two independent ways:
+
+1. **A marketplace declared by a repo's own files is only registered for a
+   folder you have trusted for plugins.** A cloud session has no trust dialog
+   to accept, so `hasTrustDialogAccepted` stays `false`, the declaration is
+   ignored, and the only trace is a debug-level line:
+
+   ```
+   Skipping orphaned enabledPlugins entry makehardware@makehardware:
+     marketplace not registered
+   Found 0 plugins (0 enabled, 0 disabled)
+   ```
+
+2. **`enabledPlugins` enables, it never installs.** Even with the marketplace
+   registered, the plugin must be installed on the machine. Without that step
+   the skills, the commands, the MCP servers and `bin/` are all absent.
+
+`phase_plugin` sidesteps both by installing at **user scope** into
+`/root/.claude`, which is part of the snapshot — the same trick `phase_konnect`
+uses for the KiCad skills. Folder trust never enters into it.
+
+The GitHub *API* 403s for repos not attached to the session, but `claude plugin
+marketplace add` clones over HTTPS, and a public-repo clone is served at every
+network level. No session credentials are involved, so it works at build time.
+
+Note that the trust flag independently causes the `permissions.allow` entries
+in `.claude/settings.json` to be ignored, which shows up as permission prompts
+for `ngspice`, `kicad-cli` and friends despite them being allowlisted. The
+session prints the remedy when it happens:
+
+```
+Ignoring N permissions.allow entries from .claude/settings.json: this
+workspace has not been trusted. Run Claude Code interactively here once and
+accept the trust dialog, or set
+projects["/path/to/repo"].hasTrustDialogAccepted: true in /root/.claude.json.
+```
 
 ## 4. What is cached, and what is not
 
