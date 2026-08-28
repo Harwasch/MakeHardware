@@ -20,20 +20,28 @@ It is not the same as a fork, and it is not `.github/` repository templates
 The contents are in [`templates/github-repo/`](../templates/github-repo). They
 are deliberately minimal — see below for why.
 
-```bash
-# 1. Create an empty repo on GitHub, e.g. Harwasch/hardware-project-template
+There is a script that does all of it — create the repo, push the contents,
+flip the switch:
 
-# 2. Push the template contents into it
+```bash
 git clone https://github.com/Harwasch/MakeHardware
-cp -r MakeHardware/templates/github-repo/. /tmp/hpt/
-cd /tmp/hpt
-git init && git add -A
-git commit -m "MakeHardware project template"
-git remote add origin https://github.com/Harwasch/hardware-project-template
-git push -u origin main
+./MakeHardware/templates/github-repo/create-template-repo.sh
 ```
 
-Then turn the switch on: **Settings → General → Template repository**.
+It defaults to a private repo named `hardware-project-template`; pass a name
+and/or `--public` to change that. It refuses to touch a repo that already
+exists, because it pushes an initial commit.
+
+**Run it locally, not from a Claude Code cloud session.** A cloud session's
+GitHub token is scoped to the single repository the session was started on and
+cannot create new ones — the API returns `403 Resource not accessible by
+integration`. The same applies to the template switch: nothing in a cloud
+session can set `is_template`.
+
+By hand, if you would rather not run a script: create an empty repo, push the
+contents of `templates/github-repo/` into it (leaving out the script and
+`README-TEMPLATE-NOTES.md`, which belong to MakeHardware), then turn on
+**Settings → General → Template repository**.
 
 From then on, a new project is: *Use this template* → new repo → point a cloud
 session at it → `/hw-new-project`.
