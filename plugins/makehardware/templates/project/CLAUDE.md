@@ -9,9 +9,12 @@ environment build actually managed to install.
 
 ## Stages
 
-`hw-vision` → `hw-planning` → `hw-requirements` → design → `hw-simulation`
-→ `hw-verification`, with `hw-sourcing`, `hw-documentation`, `hw-imagegen` and
-`hw-retro` throughout.
+`hw-vision` → `hw-planning` → `hw-requirements` → `hw-block-diagram` → design
+→ `hw-simulation` → `hw-verification`, with `hw-sourcing`, `hw-documentation`,
+`hw-imagegen` and `hw-retro` throughout.
+
+The block diagram sits between requirements and schematic capture on purpose:
+the architecture and the power budget are agreed before anything is wired.
 
 ## Three skill sets, one rule each
 
@@ -38,6 +41,8 @@ imagegen --list           # which image providers have keys
 plan-render               # refresh docs/plan.svg and the README block
 plan-render --summary     # status and what is ready to start
 req-trace --gate          # traceability gate; exit 1 while gaps remain
+block-diagram             # refresh hw/block-diagram.drawio and the review image
+block-diagram --check     # architecture gate; exit 1 on an over-budget rail
 vision-board concepts/*.py --out build/vision
 ```
 
@@ -49,6 +54,11 @@ into the system Python.
 **Keep the plan current.** Update `status` in `plan.yaml` as work completes and
 re-render in the same session. A stale plan is worse than no plan, because
 people trust it.
+
+**Do not start schematic capture without an agreed block diagram.** The major
+ICs, the power tree and the buses are settled in `hw/block-diagram.yaml` first,
+and `block-diagram --check` has to pass. A rail found short at layout time is a
+respin; found here it is an edit.
 
 **Never mark a requirement `Verified` without evidence.** All four of:
 verification method, an `EVIDENCE` pointer someone can look at, a `File`
@@ -92,6 +102,8 @@ the number has to move.
 * MLCC capacitance derates hard with DC bias — a 10 uF 0603 at 5 V can be a
   third of its marked value.
 * The environment snapshot preserves files, not processes.
+* `hw/block-diagram.drawio` and the SVG are generated. Edit
+  `block-diagram.yaml`; rearranging blocks in draw.io is fine and is kept.
 
 ## Publishing
 

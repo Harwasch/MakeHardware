@@ -15,6 +15,7 @@ plan.yaml                 project plan (renders into the README)
 requirements/             StrictDoc tree + hardware grammar
 concepts/                 build123d concept modules for the vision stage
 cad/                      design models
+hw/                       block-diagram spec + the KiCad project
 sim/                      SPICE decks and results
 docs/reference/           external datasheets and app notes + manifest.yaml
 docs/design/              ADRs, architecture, verification report
@@ -60,7 +61,9 @@ Then:
    the example chunks — they are illustrative, not a starting plan.
 
 4. Replace the example requirements in `requirements/` with empty documents
-   that keep the grammar import.
+   that keep the grammar import, and strip `hw/block-diagram.yaml` back to the
+   project name with empty `rails`, `blocks` and `buses`. The example widget is
+   there to show the shape of the file, not to be edited into a real design.
 
 5. Run `hw-doctor` and `imagegen --list` and report what the
    environment can actually do, so the human knows up front if KiCad or a

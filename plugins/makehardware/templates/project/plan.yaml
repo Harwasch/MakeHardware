@@ -55,11 +55,19 @@ chunks:
     estimate_sessions: 1
     outputs: [docs/design/adr-0002-power.md]
 
+  - id: E1B
+    title: Electrical block diagram and power budget
+    discipline: electrical
+    status: todo
+    depends_on: [E1]
+    estimate_sessions: 1
+    outputs: [hw/block-diagram.yaml, docs/design/block-diagram.svg]
+
   - id: E2
     title: Schematic capture and ERC
     discipline: electrical
     status: todo
-    depends_on: [E1]
+    depends_on: [E1B]
     estimate_sessions: 2
     outputs: [hw/widget.kicad_sch]
 
