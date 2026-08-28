@@ -14,9 +14,11 @@ agent declaring victory early.
      └──────────┴───── the thing is not what they meant ───────────────┘
 ```
 
-Two things run across all six: **sourcing** (`hw-sourcing`) whenever a part is
-picked, and **documentation** (`hw-documentation`) whenever a number comes from
-outside or a decision is made.
+Four things run across all six: **sourcing** (`hw-sourcing`) whenever a part is
+picked, **documentation** (`hw-documentation`) whenever a number comes from
+outside or a decision is made, **imagery** (`hw-imagegen`) wherever a picture
+helps, and **friction capture** (`hw-retro`) whenever the human corrects you or
+a task takes far more loops than it should.
 
 ## 1. Vision — interview, then show
 
@@ -158,6 +160,22 @@ Three kinds, kept apart because they have different owners and failure modes:
 * **`docs/user/`** — manuals, spec sheet, safety. Written late, stubbed early:
   a product whose spec sheet cannot be filled in usually has a requirements
   gap.
+
+## Closing the loop back onto the toolbox
+
+Skill: `hw-retro`
+
+During the work, avoidable friction goes into `docs/design/friction-log.md` —
+three lines, one of which names the MakeHardware file that should have
+prevented it. At a milestone, `/hw-retro` synthesises those with plan estimates
+against actuals and requirements that moved after being agreed, into
+`docs/design/retro.md`.
+
+The rule that makes it useful: **every entry names a file and an edit.** An
+observation like "communication could be better" improves nothing. "Fill in the
+board-to-wire row of `hw-sourcing/references/connectors.md`, because connectors
+were relitigated three times" is a change someone can make. Those become issues
+on MakeHardware, and project N makes project N+1 better.
 
 ## Why the loop runs in this order
 

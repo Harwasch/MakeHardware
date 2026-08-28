@@ -10,15 +10,31 @@ environment build actually managed to install.
 ## Stages
 
 `hw-vision` → `hw-planning` → `hw-requirements` → design → `hw-simulation`
-→ `hw-verification`, with `hw-sourcing` and `hw-documentation` throughout.
-Konnect supplies the KiCad skills (`kicad-schematic`, `kicad-pcb`,
-`kicad-manufacture`, `kicad-review`, `kicad-library`) — prefer those for KiCad
-mechanics.
+→ `hw-verification`, with `hw-sourcing`, `hw-documentation`, `hw-imagegen` and
+`hw-retro` throughout.
+
+## Three skill sets, one rule each
+
+Three plugins provide KiCad knowledge and they overlap. The division:
+
+| Job | Use | Why |
+|---|---|---|
+| **Changing** any `.kicad_*` file | **Konnect** MCP tools, always | Direct edits corrupt these files. Konnect's own rules make this mandatory, and they win. |
+| **Reviewing** a design | **kicad-happy** (`kicad`, `emc`, `bom`) | Deeper read-only analysers: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference. |
+| **Searching for parts** | **kicad-happy** (`digikey`, `mouser`, `lcsc`, `element14`) | Real distributor stock and pricing. |
+| **Deciding** which part | **`hw-sourcing`** | The house philosophy and standards. kicad-happy finds candidates; hw-sourcing picks between them. |
+| **Simulating** | **`hw-simulation`** + the `spice` MCP | Wired to the requirements evidence flow. kicad-happy's `spice` skill is fine for a quick sanity check. |
+| **Fab output** | Either `kicad-manufacture` or `jlcpcb`/`pcbway` | Whichever matches the house you are using. |
+
+When two skills would both fire, the table decides. If it does not cover the
+case, prefer the one that reads over the one that writes, and say which you
+chose.
 
 ## Commands
 
 ```bash
 hw-doctor                 # what the toolchain can actually do right now
+imagegen --list           # which image providers have keys
 plan-render               # refresh docs/plan.svg and the README block
 plan-render --summary     # status and what is ready to start
 req-trace --gate          # traceability gate; exit 1 while gaps remain
@@ -54,6 +70,12 @@ inventing one.
 **Never take a number from memory when a datasheet exists.** If the datasheet
 cannot be fetched, record it as blocked in `docs/reference/manifest.yaml` and
 ask the human for it.
+
+**Log friction as it happens.** When the human corrects you, when something
+takes far more loops than it should, or when you had to guess — append three
+lines to `docs/design/friction-log.md` naming the MakeHardware file that should
+change. See `hw-retro`. This is the only way the toolbox gets better; a
+correction that lives only in a chat transcript is one you will make again.
 
 **Numbers and units, always.** "Low power" is not a requirement; "<= 40 uA in
 standby" is. Put the reasoning in `RATIONALE` — it is what gets re-read when

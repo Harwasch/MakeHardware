@@ -19,6 +19,14 @@ preference into the reference file in the same session**, with the reason. That
 is how this gets better; a correction that only lives in a chat transcript is a
 correction you will make again.
 
+## Finding candidates vs. choosing between them
+
+**kicad-happy finds; this skill decides.** Use its `digikey`, `mouser`, `lcsc`
+and `element14` skills for real stock, pricing and parametric search, and its
+`datasheets` skill to pull specs out of a PDF. Then apply the philosophy below
+to pick between what they return. Do not do parametric search from memory when
+a distributor skill can answer it.
+
 ## The short version
 
 Selection is a constraint problem with a tie-break, not an optimisation:

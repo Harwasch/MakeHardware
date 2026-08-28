@@ -55,9 +55,9 @@ Stages 1–3 are agreements with a human. Stages 4–6 are a loop. Full detail i
 
 | | |
 |---|---|
-| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation` |
-| **Commands** | `/hw-new-project`, `/hw-status` |
-| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `vision-board` |
+| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
+| **Commands** | `/hw-new-project`, `/hw-status`, `/hw-retro` |
+| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `vision-board`, `imagegen` |
 | **MCP servers** | `konnect` (KiCad), `spice` (ngspice/LTspice), `build123d` |
 | **Practices** | House standards for sourcing, connectors and passives — edited over time to steer the agent |
 
@@ -70,7 +70,8 @@ Stages 1–3 are agreements with a human. Stages 4–6 are a loop. Full detail i
 | Circuit simulation | ngspice via `ltspice-mcp`; LTspice opt-in |
 | 3D CAD | build123d + `build123d-mcp` |
 | Meshing / FEA | gmsh + CalculiX |
-| Vision imagery | build123d renders for geometry, Hugging Face Spaces for styling |
+| Vision imagery | build123d renders for geometry; HF Spaces or a keyed API for styling |
+| Design review | [kicad-happy](https://github.com/aklofas/kicad-happy) — EMC, thermal, derating, distributor search |
 
 Why each, and what was rejected: [docs/00-stack.md](docs/00-stack.md).
 

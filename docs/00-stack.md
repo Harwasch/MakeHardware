@@ -16,6 +16,7 @@ estimated.
 | Circuit simulation (opt-in) | **LTspice** under Wine | Only for vendor-encrypted ADI models and `.asc` editing. Off by default. |
 | 3D CAD | **build123d** 0.11.1 + **build123d-mcp** | Parametric Python CAD on OCCT. Models are code, so they diff, review and re-render on a changed number. |
 | Meshing / FEA | **gmsh** 4.12.1 + **CalculiX** 2.21 | Both in the Ubuntu archive, both headless. Thermal and structural. |
+| Design review | **kicad-happy** (MIT) | Read-only analysers Konnect does not have: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference, distributor search. Pure Python, needs no KiCad install. |
 | Vision renders | **matplotlib** + build123d tessellation | Shaded views and isometric line art from real geometry. |
 | Vision styling | **Hugging Face Spaces** (FLUX Kontext, Qwen) | Restyles a geometry render without inventing new proportions. No API key needed. |
 
@@ -106,6 +107,20 @@ So the agent works headless by default and escalates to a live GUI
 (`hw-kicad-up`) only for live board editing. This matters because the
 environment snapshot preserves **files, not processes** — a KiCad started
 during setup is gone by the time a session runs.
+
+### Konnect and kicad-happy are complementary, not competing
+
+Both provide KiCad skills, and their triggers overlap. They do different jobs:
+Konnect *changes* designs through KiCad 10's IPC API and a native S-expression
+engine, and its own rules make routing edits through it mandatory because
+direct file edits corrupt `.kicad_*` files. kicad-happy *reads* designs — pure
+Python analysers producing structured reports, plus distributor search and
+datasheet extraction.
+
+So the rule is: writes go through Konnect, reads go through kicad-happy, and
+the decision about which part to actually buy stays in `hw-sourcing` where the
+house standards live. The full precedence table ships in the project
+`CLAUDE.md`.
 
 ### This repo is a plugin, not a project
 

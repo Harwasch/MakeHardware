@@ -72,11 +72,23 @@ Create the project repo with **exactly one file** in it:
   "extraKnownMarketplaces": {
     "makehardware": {
       "source": { "source": "github", "repo": "Harwasch/MakeHardware" }
+    },
+    "kicad-happy": {
+      "source": { "source": "github", "repo": "aklofas/kicad-happy" }
     }
   },
-  "enabledPlugins": { "makehardware@makehardware": true }
+  "enabledPlugins": {
+    "makehardware@makehardware": true,
+    "kicad-happy@kicad-happy": true
+  }
 }
 ```
+
+[kicad-happy](https://github.com/aklofas/kicad-happy) is a separate MIT plugin
+that adds deep read-only KiCad analysers (EMC pre-compliance, thermal, voltage
+derating, datasheet cross-reference) and distributor search. It complements
+Konnect rather than competing with it — Konnect *changes* the design, kicad-happy
+*reviews* it. The precedence table is in the project's `CLAUDE.md`.
 
 This file has to exist *before* the first session, because Claude reads it at
 session start to decide what to install. Commit and push it.
@@ -150,6 +162,13 @@ firmware skeleton.
 At the end of the session Claude sets that chunk to `done`, re-renders the
 plan, and commits. Your README always shows current state.
 
+### Along the way — friction log
+
+Whenever you correct Claude, or something takes far more loops than it should,
+Claude appends three lines to `docs/design/friction-log.md` naming the
+MakeHardware file that should change. It costs nothing during the work and it
+is the raw material for the next section.
+
 ### Final sessions — Verification
 
 Every requirement gets closed against evidence, or it doesn't close. The gate
@@ -175,6 +194,22 @@ checkpoints — vision, plan, requirements — exist because a wrong answer ther
 is expensive, and a five-minute conversation prevents it.
 
 ---
+
+### End of project — Retro
+
+```
+/hw-retro
+```
+
+Claude reads the friction log, compares plan estimates against what actually
+happened, and finds requirements that moved after they were agreed. It writes
+`docs/design/retro.md` where **every entry names the MakeHardware file it would
+change and what the edit is** — an observation without a named file doesn't go
+in, because "communication could be better" improves nothing.
+
+Then it offers to file those as issues on MakeHardware, one per change. You
+review and apply them. That's the loop closing: work on project N makes
+project N+1 better.
 
 ## Improving the toolbox as you go
 

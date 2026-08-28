@@ -9,6 +9,8 @@ repository root, skipping anything that already exists — never overwrite the
 human's work:
 
 ```
+.claude/settings.json     declares the plugins (see step 1)
+.env.example              image API keys, if you use a keyed provider
 plan.yaml                 project plan (renders into the README)
 requirements/             StrictDoc tree + hardware grammar
 concepts/                 build123d concept modules for the vision stage
@@ -23,19 +25,24 @@ CLAUDE.md                 project-level agent instructions
 
 Then:
 
-1. Confirm `.claude/settings.json` declares this plugin. It must, or the
-   session would not have loaded this command — but if it is missing (someone
-   installed the plugin by hand), write it so future sessions install it
-   automatically:
+1. Confirm `.claude/settings.json` declares both plugins. It must declare this
+   one, or the session would not have loaded this command — but check that
+   `kicad-happy` is there too, and add it if not:
 
    ```json
    {
      "extraKnownMarketplaces": {
        "makehardware": {
          "source": { "source": "github", "repo": "Harwasch/MakeHardware" }
+       },
+       "kicad-happy": {
+         "source": { "source": "github", "repo": "aklofas/kicad-happy" }
        }
      },
-     "enabledPlugins": { "makehardware@makehardware": true }
+     "enabledPlugins": {
+       "makehardware@makehardware": true,
+       "kicad-happy@kicad-happy": true
+     }
    }
    ```
 
@@ -55,7 +62,7 @@ Then:
 4. Replace the example requirements in `requirements/` with empty documents
    that keep the grammar import.
 
-5. Run `hw-doctor` and report what the
+5. Run `hw-doctor` and `imagegen --list` and report what the
    environment can actually do, so the human knows up front if KiCad or a
    simulator is missing.
 

@@ -13,3 +13,6 @@ cad/**/out/
 *-backups/
 *.kicad_prl
 fp-info-cache
+.env
+.env.*
+!.env.example

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+exec "${HARDWARE_PYTHON:-/opt/hw-py/bin/python}" \
+  "$(dirname "$(dirname "$(readlink -f "$0")")")/scripts/imagegen.py" "$@"
