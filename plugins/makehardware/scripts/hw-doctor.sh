@@ -8,29 +8,36 @@ PREFIX=/opt/makehardware
 VENV=/opt/hw-py
 ok=0; bad=0
 
+# No `printf ... | grep -q` anywhere below. `grep -q` exits at the first match
+# and the writer then dies of SIGPIPE, which `set -o pipefail` reports as a
+# failed pipeline — a matched version banner read as a FAIL. A checker that
+# lies in that direction is worse than no checker; bash matches natively.
+_firstline() { printf '%s' "${1%%$'\n'*}" | cut -c1-58; }
+
 # Some tools report success only in their output. CalculiX `ccx -v` exits 201
 # on a perfectly good version banner, and ngspice puts its banner on line 2.
 chkout() {  # chkout <label> <expected-regex> <command...>
     local label=$1 want=$2; shift 2
+    local out
     out=$("$@" 2>&1)
-    if printf '%s' "${out}" | grep -qE "${want}"; then
+    if [[ ${out} =~ ${want} ]]; then
         printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" \
-            "$(printf '%s' "${out}" | grep -m1 -E "${want}" | cut -c1-58)"
+            "$(grep -m1 -E "${want}" <<<"${out}" | cut -c1-58)"
         ok=$((ok+1))
     else
-        printf '  \033[31mFAIL\033[0m %-22s %s\n' "${label}" \
-            "$(printf '%s' "${out}" | head -n1 | cut -c1-58)"
+        printf '  \033[31mFAIL\033[0m %-22s %s\n' "${label}" "$(_firstline "${out}")"
         bad=$((bad+1))
     fi
 }
 
 chk() {  # chk <label> <command...>
     local label=$1; shift
+    local out
     if out=$("$@" 2>&1); then
-        printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" "$(printf '%s' "${out}" | head -n1 | cut -c1-58)"
+        printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" "$(_firstline "${out}")"
         ok=$((ok+1))
     else
-        printf '  \033[31mFAIL\033[0m %-22s %s\n' "${label}" "$(printf '%s' "${out}" | head -n1 | cut -c1-58)"
+        printf '  \033[31mFAIL\033[0m %-22s %s\n' "${label}" "$(_firstline "${out}")"
         bad=$((bad+1))
     fi
 }
@@ -43,6 +50,16 @@ if [ -f "${PREFIX}/status.json" ]; then
 $(jq -r '.build_seconds' "${PREFIX}/status.json" 2>/dev/null)s):"
     jq -r '.components | to_entries[] | "  \(.key): \(.value.state) \(.value.detail)"' \
         "${PREFIX}/status.json" 2>/dev/null
+    # status.json is rewritten after every phase, so it also exists for builds
+    # that were killed at the time budget. Say so — the phases missing from the
+    # list above never ran, rather than having failed.
+    # Match "false" rather than `.complete // "true"`: jq's alternative
+    # operator fires on false as well as null, so `//` would swallow exactly
+    # the case being tested for. A status.json predating the flag reports
+    # "null" here and correctly says nothing.
+    if [ "$(jq -r '.complete' "${PREFIX}/status.json" 2>/dev/null)" = "false" ]; then
+        printf '  \033[33m!!\033[0m   build did not finish — any phase absent above never ran\n'
+    fi
     echo
 else
     echo "  (no ${PREFIX}/status.json — setup script did not run or is older than this repo)"

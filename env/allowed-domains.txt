@@ -53,8 +53,9 @@ ppa.launchpadcontent.net
 # every network level, Full included:
 #
 #   * add-apt-repository is broken (python3 is 3.11, python3-apt ships 3.12)
-#   * protobuf-compiler alone cannot build Konnect; libprotobuf-dev is required
-#   * GitHub release assets 403 for repos not attached to the session — the
-#     GitHub proxy is independent of the network access level — so Konnect is
-#     built from source no matter how open the network is
+#   * the GitHub API and release web pages 403 for repos not attached to the
+#     session, at every network level — the GitHub proxy is independent of the
+#     network access level. Release *assets*
+#     (/releases/download/<tag>/<file>) and `git clone` of a public repo are
+#     served, which is how Konnect installs
 #   * the ~5 minute setup budget, 4 vCPU / 16 GB RAM / 30 GB disk

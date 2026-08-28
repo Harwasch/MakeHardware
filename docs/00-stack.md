@@ -55,32 +55,50 @@ silent and lands three steps later as "Konnect can't connect".
 `env/setup.sh` pins the PPA with an apt preference and then explicitly asserts
 the installed major version, so this fails loudly instead.
 
-### Konnect is built from source, not downloaded
+Worth knowing that the loud failure was itself wrong for a while. The check
+was `apt-cache policy kicad | grep -q "kicad-10.0-releases"`, and under
+`set -o pipefail` a *matching* grep exits first, `apt-cache` takes SIGPIPE, and
+the pipeline reports 141. So the phase announced "PPA unreachable" on builds
+where the PPA was reachable, the index fetched and the candidate correctly
+pinned at 10.0.5 — and KiCad never got installed. The check now captures the
+output and matches it with `case`. See `docs/01-environment.md`.
 
-Downloading the prebuilt `konnect-pcm-v0.10.0-linux.zip` would be faster, and
-it does not work here. The session's GitHub proxy scopes API and release-asset
-requests to repositories attached to the session, and Konnect is not one of
-them. Both paths return 403:
+### Konnect is downloaded, not built — the proxy does serve release assets
+
+This repo used to build Konnect from source on the belief that the session's
+GitHub proxy 403s release assets. That belief came from probing the wrong two
+URLs. The proxy scopes the **API** and the release **web pages** to attached
+repositories; the asset path itself is served:
 
 ```
-https://github.com/mixelpixx/Konnect/releases/latest      -> 403
-https://api.github.com/repos/mixelpixx/Konnect/releases/latest -> 403
-  {"message":"GitHub access to this repository is not enabled for this session..."}
+https://api.github.com/repos/mixelpixx/Konnect/releases  -> 403
+https://github.com/mixelpixx/Konnect/releases/latest     -> 403
+https://github.com/mixelpixx/Konnect/releases/download/v0.10.0/\
+  konnect-v0.10.0-x86_64-unknown-linux-gnu.tar.gz        -> 200
 ```
 
-Attaching the repo does not help either: the setup script runs during the
-environment build, before any session exists, so there is nothing to attach it
-to. A plain `git clone` of the public repo *is* served, and `crates.io` is
-reachable directly, so source is the only path that works unattended.
+So `gh release download` and anything API-driven genuinely does fail here —
+that part of the original finding holds, and it is why the mistake was easy to
+make. A plain `curl` of the asset does not fail. Verified on the image: 11 MB,
+seconds to fetch, `konnect 0.10.0` runs, three dynamic dependencies, and its
+highest symbol requirement is `GLIBC_2.39` — exactly what Ubuntu 24.04 ships.
 
-It is also not the bottleneck. Measured **78 s** warm, ~3.5 min cold, and it
-only runs when the environment cache rebuilds — on a setup-script change, an
-allowlist change, or roughly weekly.
+The skills and agents are embedded in the binary, not read from the checkout:
+`konnect init --client claude` installs all six skills and both agents from the
+downloaded binary alone. So the clone is not needed for those either.
 
-The alternative, if the build ever does become a problem: mirror the binary as
-a release asset on *your own* repo, which the proxy will serve. That is
-permitted by the AGPL but carries a source-offer obligation, and it needs
-re-mirroring on every Konnect release. Not worth it at 78 seconds.
+That removes ~4 minutes from the build — the phase that used to overrun the
+budget and get the whole script killed — along with `cmake`, `pkg-config`,
+`protobuf-compiler`, `libprotobuf-dev` and a multi-GB cargo tree.
+
+Upstream publishes no checksums file, so `env/setup.sh` pins its own SHA-256 of
+the asset next to the version and treats a mismatch as a hard failure. Bump the
+two together. `MH_KONNECT_FROM_SOURCE=1` restores the source build, kept
+working as the fallback if upstream ever stops shipping a Linux asset.
+
+Note that *downloading* upstream's own asset carries none of the AGPL
+source-offer obligation that re-hosting a mirrored binary on our own repo
+would have. Not mirroring remains the right call, for a better reason.
 
 ### Image generation comes from the Hugging Face connector
 
@@ -145,11 +163,11 @@ starting structure, not shared code, so divergence there is correct.
 |---|---|
 | `add-apt-repository` | Depends on `apt_pkg`, which this image's Python 3.11 default cannot import. See `docs/01-environment.md`. |
 | KiCad from Ubuntu universe | 7.0.11, no IPC API. |
-| Konnect release binaries | GitHub proxy 403s assets from unattached repos. |
+| Building Konnect from source | Was the default until the 403 finding was retested. ~4 min for something `curl` does in seconds. Still available behind `MH_KONNECT_FROM_SOURCE=1`. |
+| Mirroring Konnect on our own repo | Would work — the proxy serves attached repos — but re-hosting the binary carries an AGPL source-offer obligation, and the upstream asset is directly fetchable anyway. |
 | LTspice as the default | Blocked domain, ~2 GB, and unnecessary — ngspice covers the loop. |
-| `pip` for the Python stack | `uv` does the same install in **10 s** vs. minutes. That headroom is what pays for the Konnect build. |
+| `pip` for the Python stack | `uv` does the same install in **10 s** vs. minutes. |
 | Doorstop, sphinx-needs | Weaker typed grammars and no ReqIF path out. |
-| Konnect release binaries (again, on merit) | Faster, but 403 from an unattached repo, and mirroring them ourselves carries an AGPL source-offer obligation for 78 seconds of build time. |
 | A template repo instead of a plugin | Copies diverge; a practice learned on one project never reaches the others. |
 | A paid image API as the default | The Hugging Face connector already does it with no key and no allowlist change. Kept as a documented upgrade path. |
 | Geometry renders *alone* for vision | They fix proportion but say nothing about material or finish, which is most of what a human reacts to. Geometry sets the numbers; generation does the styling. |
@@ -164,9 +182,17 @@ one, not the sum.
 |---|---|
 | Base apt packages | 22 s |
 | Python stack via uv (1.6 GB) | 10 s |
-| Konnect clone + cargo build | 78 s warm / ~3.5 min cold |
+| Konnect release download + install | **~5 s** (was 78 s warm / ~3.5 min cold from source) |
 | KiCad 10 from PPA | dominated by download |
-| **Total (parallel)** | **~4 min** |
+| **Total (parallel)** | **~2 min** |
 
 LTspice, when enabled, adds roughly 2 GB and pushes this past the budget —
 another reason it is opt-in.
+
+The budget is not a soft target: overrunning it kills the script mid-phase.
+That happened on a cold build where the Konnect compile was still running at
+the limit, and because the script's tail wrote `status.json` and the helper
+commands *after* everything else, the session came up with no toolchain and no
+diagnosis. The script now writes helpers first, rewrites `status.json` after
+every phase, and runs its tail from an `EXIT`/`TERM` trap, so a build that is
+cut short still explains itself to `hw-doctor`.
