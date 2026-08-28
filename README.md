@@ -17,7 +17,10 @@ MakeHardware  (this repo)          your-widget  (a project repo)
 
 ## Using it on a project
 
-In the project repo's `.claude/settings.json`:
+**Start here: [docs/03-using-it.md](docs/03-using-it.md)** walks through a whole
+project from a one-sentence idea to a verified design.
+
+The short version — in the project repo's `.claude/settings.json`:
 
 ```json
 {
@@ -105,3 +108,4 @@ docs/                             stack rationale, environment, workflow
 * [docs/00-stack.md](docs/00-stack.md) — choices, rejections, measured build budget
 * [docs/01-environment.md](docs/01-environment.md) — environment configuration
 * [docs/02-workflow.md](docs/02-workflow.md) — the six stages and their exit conditions
+* [docs/03-using-it.md](docs/03-using-it.md) — how you actually run a project with it

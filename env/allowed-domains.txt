@@ -1,30 +1,76 @@
-# MakeHardware — cloud environment "Allowed domains"
+# MakeHardware — network access for the cloud environment
 #
-# Set Network access to **Custom** and TICK
-# "Also include default list of common package managers".
-# Then paste the lines below (comments are fine to omit).
+# This choice decides what the toolchain can do. Pick one of the three below.
 #
-# Why each entry is needed:
+# ---------------------------------------------------------------------------
+# OPTION A — Custom, minimum viable (recommended starting point)
+# ---------------------------------------------------------------------------
+# Set Network access to **Custom**, TICK "Also include default list of common
+# package managers", and paste these two lines:
 
-# KiCad 10 packages. The Trusted preset allows launchpad.net and the RETIRED
-# ppa.launchpad.net, but Launchpad serves PPA content from launchpadcontent.net,
-# which is not on that list. Without this line apt-get update only *warns* and
-# `apt-get install kicad` silently installs KiCad 7.0.11 from Ubuntu universe —
-# which has no IPC API, so Konnect cannot drive it.
 ppa.launchpadcontent.net
-
-# Lets Claude read back the vision boards and reports it publishes as Artifacts.
 *.frame.claudeusercontent.com
 
+#   ppa.launchpadcontent.net
+#     KiCad 10 packages. Launchpad serves PPA content from this host. The
+#     Trusted preset lists only launchpad.net and the RETIRED ppa.launchpad.net
+#     (which no longer connects at all). Without this line apt-get update only
+#     warns, still exits 0, and apt-get install kicad silently gives you KiCad
+#     7.0.11 from Ubuntu universe — which has no IPC API, so Konnect cannot
+#     drive it.
+#
+#   *.frame.claudeusercontent.com
+#     Lets Claude read back the vision boards and reports it publishes as
+#     Artifacts.
+#
+# What you still cannot do on Option A: install LTspice, fetch datasheets from
+# vendor sites, or call a paid image-generation API.
+#
 # ---------------------------------------------------------------------------
-# Only needed if you set MH_ENABLE_LTSPICE=1. ngspice covers the default
-# simulation loop with no Wine and no download, so leave these out unless you
-# specifically need vendor-encrypted ADI models or .asc schematic editing.
+# OPTION B — Custom, plus the vendor sites you actually use
 # ---------------------------------------------------------------------------
-# ltspice.analog.com
-# *.analog.com
+# Everything in Option A, plus whichever of these matter to you. Add vendor
+# domains as you hit them; the agent will tell you which host it was denied.
 
-# Already covered by the Trusted preset, listed here only so you can see that
-# the build depends on them: pypi.org, files.pythonhosted.org, index.crates.io,
-# static.crates.io, static.rust-lang.org, github.com, codeload.github.com,
-# archive.ubuntu.com, security.ubuntu.com, *.ubuntu.com (keyserver.ubuntu.com).
+# ltspice.analog.com        # LTspice installer      (also set MH_ENABLE_LTSPICE=1)
+# *.analog.com              # ADI datasheets and models
+# *.ti.com                  # TI datasheets and app notes
+# *.microchip.com           # Microchip datasheets
+# ww1.microchip.com
+# *.st.com                  # ST datasheets
+# *.nxp.com
+# *.digikey.com             # parametric search and stock
+# *.mouser.com
+# *.snapeda.com             # symbols and footprints
+# *.samacsys.com
+# fal.run                   # paid image generation, if you outgrow HF Spaces
+# *.fal.ai
+# api.bfl.ai
+
+# ---------------------------------------------------------------------------
+# OPTION C — Full network access
+# ---------------------------------------------------------------------------
+# No allowlist at all; any domain is reachable. Worth considering for this
+# workflow specifically, because sourcing and documentation both mean fetching
+# from arbitrary vendor sites you cannot predict in advance — with an
+# allowlist, every new manufacturer is a config change before the agent can
+# read its datasheet.
+#
+# The trade is that a session can reach anywhere, so treat any credential you
+# put in the environment as exposed to whatever the agent reads. If that is
+# acceptable for this work, Option C removes a whole category of friction.
+#
+# ---------------------------------------------------------------------------
+# Already covered by "Also include default list of common package managers":
+# pypi.org, files.pythonhosted.org, index.crates.io, static.crates.io,
+# static.rust-lang.org, github.com, codeload.github.com, archive.ubuntu.com,
+# security.ubuntu.com, *.ubuntu.com (which covers keyserver.ubuntu.com, where
+# the KiCad PPA signing key comes from).
+#
+# NOT affected by any of this — these are properties of the base image and the
+# GitHub proxy, and hold at every network level including Full:
+#   * add-apt-repository is broken (python3 is 3.11, python3-apt ships 3.12)
+#   * protobuf-compiler alone cannot build Konnect; libprotobuf-dev is required
+#   * GitHub release assets 403 for repos not attached to the session, so
+#     Konnect must be built from source no matter how open the network is
+#   * the ~5 minute setup budget, 4 vCPU / 16 GB RAM / 30 GB disk

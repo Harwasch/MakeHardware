@@ -42,49 +42,57 @@ silent:
 
 The corrected script in `env/setup.sh` addresses all five.
 
-## 1. Network access
+## 1. Network access — the choice that decides what is feasible
 
-Set **Network access** to **Custom**, and tick
-**"Also include default list of common package managers"**.
+This is the one setting that changes what the toolchain can do, so decide it
+deliberately rather than accepting the default.
 
-Then add, one per line (also in `env/allowed-domains.txt`):
+| Level | What it means here |
+|---|---|
+| **Trusted** (the default) | Package registries, GitHub and Ubuntu archives only. **KiCad 10 will not install** — you silently get KiCad 7 from universe. No LTspice, no vendor datasheets. |
+| **Custom** | The Trusted list plus hosts you name. One line unlocks KiCad 10. |
+| **Full** | Any domain. Everything works, including datasheet fetching from vendors you have not thought of yet. |
 
-```
-ppa.launchpadcontent.net
-*.frame.claudeusercontent.com
-```
+[`env/allowed-domains.txt`](../env/allowed-domains.txt) sets out three concrete
+options. The short version:
 
-* `ppa.launchpadcontent.net` — KiCad 10 packages. Launchpad serves PPA content
-  from this host. The Trusted preset lists only `launchpad.net` and the retired
-  `ppa.launchpad.net`, which no longer connects. **Without this entry you get
-  KiCad 7 and no error message.**
-* `*.frame.claudeusercontent.com` — lets Claude read back the vision boards and
-  reports it publishes as Artifacts.
+* **Minimum viable** — Custom, tick *"Also include default list of common
+  package managers"*, and add `ppa.launchpadcontent.net` (KiCad 10) and
+  `*.frame.claudeusercontent.com` (so Claude can read back its own Artifacts).
+* **Practical** — the above plus the vendor domains you actually use:
+  `*.ti.com`, `*.analog.com`, `*.microchip.com`, `*.digikey.com`, and
+  `ltspice.analog.com` if you want LTspice.
+* **Full** — worth genuinely considering for this workflow. Sourcing and
+  documentation both mean fetching from vendor sites you cannot enumerate in
+  advance, so with an allowlist every new manufacturer becomes a config change
+  before the agent can read a datasheet. The trade is that a session can reach
+  anywhere; treat any credential in the environment accordingly.
 
-Add these two only if you set `MH_ENABLE_LTSPICE=1`:
+### What network access does *not* fix
 
-```
-ltspice.analog.com
-*.analog.com
-```
+These are properties of the base image and the GitHub proxy. They hold at every
+level, Full included, which is why the setup script works around them:
 
-Everything else the build needs is already in the Trusted preset: `pypi.org`,
-`files.pythonhosted.org`, `index.crates.io`, `static.rust-lang.org`,
-`github.com`, `codeload.github.com`, `archive.ubuntu.com`,
-`security.ubuntu.com`, and `*.ubuntu.com` (which covers `keyserver.ubuntu.com`,
-where the KiCad PPA signing key comes from).
+* `add-apt-repository` is broken — the image's `python3` is 3.11 and
+  `python3-apt` ships only the 3.12 module.
+* `protobuf-compiler` alone cannot build Konnect; `libprotobuf-dev` supplies
+  the well-known descriptors.
+* **GitHub release assets 403 for repos not attached to the session.** The
+  GitHub proxy is explicitly independent of the network access level, so
+  Konnect must be built from source even on Full.
+* The ~5 minute setup budget and the 4 vCPU / 16 GB / 30 GB ceiling.
 
 ### Verifying the policy from inside a session
 
-The proxy records its own denials, which is much faster than guessing:
+The proxy records its own denials, which is faster than guessing:
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status" | jq '.recentRelayFailures'
 ```
 
 A blocked host shows as
-`gateway answered 403 to CONNECT (policy denial or upstream failure)`.
-Do not try to route around it — add the domain to the allowlist.
+`gateway answered 403 to CONNECT (policy denial or upstream failure)`. Add the
+host to the allowlist rather than routing around it.
 
 ## 1b. Image generation
 
