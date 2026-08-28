@@ -64,7 +64,16 @@ session afterwards starts with the whole toolchain already on disk.
 
 ## One-time per project: bootstrap the repo
 
-Create the project repo with **exactly one file** in it:
+The fastest way is a **GitHub template repository** — make one once from
+[`templates/github-repo/`](../templates/github-repo) and every new project
+starts with the file below already in place. See
+[04-template-repo.md](04-template-repo.md). Note that the template supplies the
+settings file only; the plugin itself still arrives from the environment's
+setup script, so you still pick the right environment when you start the
+session.
+
+Doing it by hand instead — create the project repo with **exactly one file** in
+it:
 
 `.claude/settings.json`
 ```json
@@ -100,8 +109,8 @@ run:
 /hw-new-project
 ```
 
-That scaffolds `plan.yaml`, `requirements/`, `cad/`, `sim/`, `docs/` and a
-project `CLAUDE.md`, and runs `hw-doctor` so you know up front what the
+That scaffolds `plan.yaml`, `requirements/`, `hw/`, `cad/`, `sim/`, `docs/` and
+a project `CLAUDE.md`, and runs `hw-doctor` so you know up front what the
 toolchain can do.
 
 ---
@@ -146,7 +155,23 @@ dangling parents.
 
 **You argue about numbers here, where it's cheap.**
 
-### Sessions 4…N — One chunk each
+### Session 4 — Architecture
+
+The electrical architecture is settled before any schematic exists: the major
+ICs, the power tree with a current budget, and the data buses. Claude writes
+`hw/block-diagram.yaml`; `block-diagram` renders it to an editable draw.io file
+and to `docs/design/block-diagram.svg`, which shows up inline on GitHub.
+
+**You review a picture here, not a netlist.** A missing rail or a bus on the
+wrong controller is obvious on one page of boxes and nearly invisible in a
+schematic. If you want to move things around, open the `.drawio` — your
+positions are kept the next time it renders.
+
+`block-diagram --check` fails if a rail draws more than its regulator can
+deliver, and names the biggest contributors. That is the whole point of doing
+this before layout.
+
+### Sessions 5…N — One chunk each
 
 Each session starts the same way:
 

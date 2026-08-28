@@ -42,28 +42,33 @@ The environment's setup script therefore installs the plugin at user scope; see
 Then point the project at a cloud environment built from [`env/`](env/) and run
 `/hw-new-project` to scaffold it.
 
+To stop copying that file into every new repo by hand, make a **GitHub template
+repository** out of [`templates/github-repo/`](templates/github-repo) — see
+[docs/04-template-repo.md](docs/04-template-repo.md).
+
 ## The workflow
 
 ```
-1 VISION ─► 2 PLAN ─► 3 REQUIREMENTS ─► 4 DESIGN ─► 5 SIMULATE ─► 6 VERIFY
- interview   chunks &   decompose &      schematic   ngspice        evidence
- + renders   deps       validate         + CAD       FEA            + gate
-     ▲          ▲            ▲               ▲           │             │
-     │          │            │               └───────────┘             │
-     │          │            └────── numbers must move ────────────────┤
-     └──────────┴───── the thing is not what they meant ───────────────┘
+1 VISION ─► 2 PLAN ─► 3 REQS ─► 4 ARCHITECTURE ─► 5 DESIGN ─► 6 SIMULATE ─► 7 VERIFY
+ interview   chunks &  decompose  block diagram    schematic   ngspice       evidence
+ + renders   deps      + validate  + power budget   + CAD       FEA           + gate
+     ▲          ▲          ▲            ▲              ▲           │            │
+     │          │          │            │              └───────────┘            │
+     │          │          │            └──── a rail is short ──────┤            │
+     │          │          └────────── numbers must move ───────────┤            │
+     └──────────┴──────── the thing is not what they meant ─────────────────────┘
 ```
 
-Stages 1–3 are agreements with a human. Stages 4–6 are a loop. Full detail in
+Stages 1–4 are agreements with a human. Stages 5–7 are a loop. Full detail in
 [docs/02-workflow.md](docs/02-workflow.md).
 
 ## What the plugin provides
 
 | | |
 |---|---|
-| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
+| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-block-diagram`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
 | **Commands** | `/hw-new-project`, `/hw-status`, `/hw-retro` |
-| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `vision-board`, `imagegen` |
+| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `imagegen` |
 | **MCP servers** | `konnect` (KiCad), `spice` (ngspice/LTspice), `build123d` |
 | **Practices** | House standards for sourcing, connectors and passives — edited over time to steer the agent |
 
@@ -72,6 +77,7 @@ Stages 1–3 are agreements with a human. Stages 4–6 are a loop. Full detail i
 | Layer | Tool |
 |---|---|
 | Requirements | StrictDoc, with a hardware grammar and a traceability gate |
+| Architecture | `block-diagram` — one YAML spec renders an editable draw.io file, a review SVG, and a power budget with a gate |
 | Schematic / PCB | KiCad 10 + Konnect (214 MCP tools), `kicad-cli` |
 | Circuit simulation | ngspice via `ltspice-mcp`; LTspice opt-in |
 | 3D CAD | build123d + `build123d-mcp` |
@@ -107,10 +113,11 @@ script works around: [docs/01-environment.md](docs/01-environment.md).
 plugins/makehardware/
 ├── skills/                       the workflow stages
 ├── commands/                     /hw-new-project, /hw-status
-├── bin/                          hw-doctor, plan-render, req-trace, vision-board
+├── bin/                          hw-doctor, plan-render, req-trace, block-diagram, vision-board
 ├── scripts/                      their implementations
 ├── templates/project/            what /hw-new-project scaffolds
 └── .mcp.json                     konnect, spice, build123d
+templates/github-repo/            contents of the GitHub template repository
 env/                              cloud environment configuration
 docs/                             stack rationale, environment, workflow
 ```
@@ -119,5 +126,6 @@ docs/                             stack rationale, environment, workflow
 
 * [docs/00-stack.md](docs/00-stack.md) — choices, rejections, measured build budget
 * [docs/01-environment.md](docs/01-environment.md) — environment configuration
-* [docs/02-workflow.md](docs/02-workflow.md) — the six stages and their exit conditions
+* [docs/02-workflow.md](docs/02-workflow.md) — the seven stages and their exit conditions
 * [docs/03-using-it.md](docs/03-using-it.md) — how you actually run a project with it
+* [docs/04-template-repo.md](docs/04-template-repo.md) — a GitHub template repo so new projects start correct

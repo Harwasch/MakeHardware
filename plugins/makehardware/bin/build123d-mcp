@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# MakeHardware wrapper — build123d-mcp resolves --library against the session's
+# working directory and exits immediately if that directory is missing, which
+# the MCP client reports only as a closed connection. Every scaffolded project
+# has cad/, but the first session of a new project does not yet, so create it
+# rather than losing the server for the whole session.
+set -euo pipefail
+LIB="${MH_CAD_DIR:-cad}"
+mkdir -p "${LIB}" 2>/dev/null || true
+exec /opt/hw-py/bin/build123d-mcp --library "${LIB}" "$@"

@@ -1,20 +1,21 @@
 # The workflow
 
-Six stages. The first three are agreements with a human; the last three are a
+Seven stages. The first four are agreements with a human; the last three are a
 loop. Each stage has an exit condition you can check, which is what stops the
 agent declaring victory early.
 
 ```
-1 VISION ─► 2 PLAN ─► 3 REQUIREMENTS ─► 4 DESIGN ─► 5 SIMULATE ─► 6 VERIFY
- interview   chunks &   decompose &      schematic   ngspice        evidence
- + renders   deps       validate         + CAD       FEA            + gate
-     ▲          ▲            ▲               ▲           │             │
-     │          │            │               └───────────┘             │
-     │          │            └────── numbers must move ────────────────┤
-     └──────────┴───── the thing is not what they meant ───────────────┘
+1 VISION ─► 2 PLAN ─► 3 REQS ─► 4 ARCHITECTURE ─► 5 DESIGN ─► 6 SIMULATE ─► 7 VERIFY
+ interview   chunks &  decompose  block diagram    schematic   ngspice       evidence
+ + renders   deps      + validate  + power budget   + CAD       FEA           + gate
+     ▲          ▲          ▲            ▲              ▲           │            │
+     │          │          │            │              └───────────┘            │
+     │          │          │            └──── a rail is short ──────┤            │
+     │          │          └────────── numbers must move ───────────┤            │
+     └──────────┴──────── the thing is not what they meant ─────────────────────┘
 ```
 
-Four things run across all six: **sourcing** (`hw-sourcing`) whenever a part is
+Four things run across all seven: **sourcing** (`hw-sourcing`) whenever a part is
 picked, **documentation** (`hw-documentation`) whenever a number comes from
 outside or a decision is made, **imagery** (`hw-imagegen`) wherever a picture
 helps, and **friction capture** (`hw-retro`) whenever the human corrects you or
@@ -92,7 +93,38 @@ over-constrained, can every leaf's verification method actually be performed.
 > **Exit:** `req-trace` reports no structural gaps other than not-yet-verified
 > leaves, and the human has agreed any numbers that moved.
 
-## 4. Design sprint
+## 4. Architecture — the block diagram
+
+Skill: `hw-block-diagram`
+
+The last agreement before anything is wired. Requirements say what the thing
+must do; the block diagram says what parts will do it, what powers them, and
+what talks to what. Three questions, all expensive to answer later:
+
+* **What major parts exist?** ICs, regulators, connectors, modules — not passives.
+* **What powers each?** The full power tree, with a current budget per rail.
+* **What talks to what?** The data buses, with their controllers.
+
+`hw/block-diagram.yaml` is the source of truth and the only file edited by hand.
+`block-diagram` renders it to `hw/block-diagram.drawio` — editable in draw.io,
+and positions moved there are kept on the next run — and to
+`docs/design/block-diagram.svg`, which renders inline on GitHub for review.
+Generating both from one spec is what stops the picture and the architecture
+disagreeing, which is the usual fate of a block diagram.
+
+The budget is the part that earns its keep. Each rail declares what its source
+can deliver; each block declares what it draws; the tool sums the loads,
+including everything on the rails derived from it. `block-diagram --check`
+exits 1 when a rail is over, and names the contributors largest first.
+Converter efficiency is deliberately not modelled — this is a headroom check,
+not an energy model.
+
+> **Exit:** the human has looked at the image and agreed to it; every block has
+> a part number or an explicit TBD with a chunk that will resolve it; every
+> current traces to a datasheet in `docs/reference/`; `block-diagram --check`
+> passes.
+
+## 5. Design sprint
 
 Skills: Konnect's `kicad-schematic`, `kicad-pcb`, `kicad-library`, plus
 build123d for mechanical and `hw-sourcing` for every part choice.
@@ -106,7 +138,7 @@ Every artefact gets a `File` relation from the requirement it realises, and
 every decision that constrains something downstream gets an ADR in
 `docs/design/`. Both are much cheaper to add now than to reconstruct later.
 
-## 5. Simulation
+## 6. Simulation
 
 Skill: `hw-simulation`
 
@@ -122,7 +154,7 @@ A failed simulation loops back to stage 4. A simulation that cannot meet the
 number loops back to stage 3 — the requirement moves, with the human's
 agreement, and the `RATIONALE` says why.
 
-## 6. Verification
+## 7. Verification
 
 Skill: `hw-verification`
 
@@ -179,10 +211,20 @@ on MakeHardware, and project N makes project N+1 better.
 
 ## Why the loop runs in this order
 
-The expensive mistake in hardware is discovering in stage 5 that stage 3 asked
-for something impossible. Three things are arranged to catch that early: vision
+The expensive mistake in hardware is discovering in stage 6 that stage 3 asked
+for something impossible. Four things are arranged to catch that early: vision
 renders are geometry, so an envelope that cannot hold the battery shows up
 before any schematic exists; the plan makes cross-discipline dependencies
-explicit before anyone commits to a part; and requirements carry `BUDGET`
-numbers that must roll up, so an over-constrained set is arithmetic rather than
-a surprise.
+explicit before anyone commits to a part; requirements carry `BUDGET` numbers
+that must roll up, so an over-constrained set is arithmetic rather than a
+surprise; and the block diagram turns the power tree into arithmetic too, one
+stage before the schematic that would otherwise be the first place a short rail
+shows up.
+
+The block diagram sits where it does for a specific reason. It is the cheapest
+artefact that can be wrong in a way you can see: a page of boxes takes an hour
+to write and a minute to read, and a human reviewing it will catch a missing
+rail or a bus on the wrong controller far faster than they would reading a
+schematic. Putting it after requirements means it can be checked against them;
+putting it before capture means the correction costs an edit rather than a
+re-route.

@@ -1,0 +1,146 @@
+# Electrical block diagram — the architecture agreement, settled before schematic capture.
+#
+# This file is the source of truth. Both the editable draw.io file and the
+# review image are generated from it, so they cannot drift apart:
+#
+#   block-diagram                 # -> hw/block-diagram.drawio + docs/design/block-diagram.svg
+#   block-diagram --check         # validate only; exit 1 on a broken tree or an over-budget rail
+#   block-diagram --summary       # power budget per rail, no files written
+#   block-diagram --png           # also rasterise the SVG for slides
+#
+# Layout is generated, then preserved: once you tidy the .drawio by hand in
+# draw.io, later runs reuse the positions of blocks whose ids still exist.
+#
+#   kind:  connector | regulator | power | mcu | memory | sensor | radio
+#          | analog | actuator | interface | logic | other
+#          connector/regulator/power blocks form the left-hand power column.
+
+project: Example Widget
+revision: A
+
+# --------------------------------------------------------------------------
+# Power tree. Each rail names the block that produces it and, unless it comes
+# in from outside, the rail that feeds it. `max_current_a` is what the source
+# can actually deliver — the budget check sums the loads against it.
+# --------------------------------------------------------------------------
+rails:
+  - id: VBUS
+    voltage: 5.0
+    source: J1
+    max_current_a: 3.0
+    notes: USB-C sink, 5 V @ 3 A negotiated
+
+  - id: V3P3
+    voltage: 3.3
+    from: VBUS
+    source: U2
+    max_current_a: 2.0
+    notes: buck, 92% typ
+
+  - id: V1P8
+    voltage: 1.8
+    from: V3P3
+    source: U3
+    max_current_a: 0.3
+    notes: LDO, analog domain
+
+# --------------------------------------------------------------------------
+# Blocks. `powered_by` is what makes the budget real — every load a rail
+# carries has to be declared here, with a number.
+# --------------------------------------------------------------------------
+blocks:
+  - id: J1
+    name: USB-C receptacle
+    kind: connector
+    part: TYPE-C-31-M-12
+
+  - id: U2
+    name: Buck regulator
+    kind: regulator
+    part: TPS62933
+    powered_by:
+      - rail: VBUS
+        typ_current_a: 0.001
+        max_current_a: 0.002
+
+  - id: U3
+    name: Analog LDO
+    kind: regulator
+    part: TPS7A2018
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.001
+        max_current_a: 0.002
+
+  - id: U1
+    name: MCU
+    kind: mcu
+    part: STM32H563ZIT6
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.11
+        max_current_a: 0.28
+
+  - id: U4
+    name: QSPI flash
+    kind: memory
+    part: W25Q128JV
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.004
+        max_current_a: 0.025
+
+  - id: U5
+    name: 24-bit ADC
+    kind: analog
+    part: ADS1256
+    powered_by:
+      - rail: V1P8
+        typ_current_a: 0.008
+        max_current_a: 0.012
+
+  - id: U6
+    name: IMU
+    kind: sensor
+    part: LSM6DSV16X
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.001
+        max_current_a: 0.003
+
+  - id: J2
+    name: Debug header
+    kind: connector
+    part: FTSH-105-01
+
+# --------------------------------------------------------------------------
+# Data buses. A bus with a controller and several members draws as a shared
+# spine; a two-block link draws as a direct connection.
+# --------------------------------------------------------------------------
+buses:
+  - id: USB2
+    kind: usb
+    between: [J1, U1]
+    notes: full speed
+
+  - id: QSPI
+    kind: spi
+    controller: U1
+    members: [U4]
+    notes: 100 MHz
+
+  - id: SPI1
+    kind: spi
+    controller: U1
+    members: [U5, U6]
+    notes: 10 MHz, two chip selects
+
+  - id: I2C1
+    kind: i2c
+    controller: U1
+    members: [U6]
+    notes: 400 kHz, alternate to SPI1
+
+  - id: SWD
+    kind: swd
+    between: [J2, U1]

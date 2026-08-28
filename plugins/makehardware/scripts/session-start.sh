@@ -55,6 +55,20 @@ if [ -f plan.yaml ] && command -v plan-render >/dev/null 2>&1; then
     fi
 fi
 
+# --- electrical architecture -------------------------------------------------
+# A rail that cannot deliver what the design draws is the cheapest defect to
+# find and the most expensive to miss, so it is worth a line every session.
+if [ -f hw/block-diagram.yaml ] && command -v block-diagram >/dev/null 2>&1; then
+    if ! bd=$(block-diagram hw/block-diagram.yaml --summary 2>/dev/null); then
+        over=$(printf '%s' "${bd}" | grep -E 'OVER BUDGET' | awk '{print $1}' | paste -sd' ' -)
+        if [ -n "${over}" ]; then
+            lines+=("Block diagram: rails OVER BUDGET — ${over}. Run block-diagram --summary before adding load.")
+        else
+            lines+=("hw/block-diagram.yaml does not validate — run block-diagram --check.")
+        fi
+    fi
+fi
+
 if [ ${#lines[@]} -gt 0 ]; then
     printf 'MakeHardware — session brief\n'
     printf '%s\n' "${lines[@]}"
