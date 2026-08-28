@@ -15,9 +15,10 @@ This repo was created from the MakeHardware project template, so
 /hw-new-project
 ```
 
-That scaffolds `plan.yaml`, `requirements/`, `hw/`, `cad/`, `sim/` and `docs/`
-from the plugin's current templates, then runs `hw-doctor` so you know what the
-toolchain can actually do before you plan around it.
+That scaffolds `plan.yaml`, `requirements/`, `hw/`, `cad/`, `concepts/`,
+`sim/`, `docs/`, `strictdoc.toml` and a project `CLAUDE.md` from the plugin's
+current templates, then runs `hw-doctor` and `imagegen --list` so you know what
+the toolchain can actually do before you plan around it.
 
 Then start the vision interview:
 
