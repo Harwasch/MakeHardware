@@ -1,0 +1,88 @@
+# Project plan — the agreement about what work exists and in what order.
+#
+# One chunk ≈ one AI session. Keep chunks at the altitude of "a thing you could
+# hand to a session and get a reviewable result back", not individual tasks.
+#
+#   status:       todo | in_progress | blocked | done
+#   depends_on:   chunk ids that must finish first (this drives the schedule)
+#   discipline:   groups rows in the chart; use only what the project needs
+#   outputs:      files this chunk is expected to produce
+#
+# Render with:  plan_render.py            (updates docs/plan.svg and README)
+# Validate with: plan_render.py --check   (exit 1 on cycles, dangling deps)
+
+project: Example Widget
+disciplines: [mechanical, electrical, firmware, test]
+
+chunks:
+  - id: V1
+    title: Vision board and concept selection
+    discipline: mechanical
+    status: done
+    depends_on: []
+    estimate_sessions: 1
+    outputs: [concepts/, docs/design/vision.md]
+
+  - id: R1
+    title: System requirements from agreed vision
+    discipline: mechanical
+    status: done
+    depends_on: [V1]
+    estimate_sessions: 1
+    outputs: [requirements/00-vision.sdoc, requirements/10-system.sdoc]
+
+  - id: M1
+    title: Enclosure envelope and internal layout
+    discipline: mechanical
+    status: in_progress
+    depends_on: [R1]
+    estimate_sessions: 1
+    outputs: [cad/enclosure.py]
+
+  - id: M2
+    title: Thermal check on the enclosure
+    discipline: mechanical
+    status: todo
+    depends_on: [M1, E2]
+    estimate_sessions: 1
+    outputs: [sim/thermal/]
+
+  - id: E1
+    title: Power architecture and part selection
+    discipline: electrical
+    status: in_progress
+    depends_on: [R1]
+    estimate_sessions: 1
+    outputs: [docs/design/adr-0002-power.md]
+
+  - id: E2
+    title: Schematic capture and ERC
+    discipline: electrical
+    status: todo
+    depends_on: [E1]
+    estimate_sessions: 2
+    outputs: [hw/widget.kicad_sch]
+
+  - id: E3
+    title: PCB layout, DRC and fabrication outputs
+    discipline: electrical
+    status: blocked
+    depends_on: [E2, M1]
+    estimate_sessions: 2
+    outputs: [hw/widget.kicad_pcb, build/fab/]
+
+  - id: F1
+    title: Firmware bring-up skeleton
+    discipline: firmware
+    status: todo
+    depends_on: [E1]
+    estimate_sessions: 1
+    outputs: [fw/]
+
+  - id: T1
+    title: Verification run and traceability gate
+    discipline: test
+    status: todo
+    depends_on: [E3, M2, F1]
+    estimate_sessions: 1
+    outputs: [docs/design/verification-report.md]

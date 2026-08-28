@@ -1,0 +1,13 @@
+{
+  "SessionStart": [
+    {
+      "matcher": "startup|resume",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.sh\""
+        }
+      ]
+    }
+  ]
+}

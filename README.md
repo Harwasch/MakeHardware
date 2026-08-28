@@ -1,83 +1,107 @@
 # MakeHardware
 
-AI-driven hardware engineering: a cloud environment, a set of skills and a
-requirements system that let an agent take a product from a sentence to a
-verified design.
+A Claude Code **plugin** that teaches AI agents to do hardware engineering, and
+the cloud environment that gives them the tools to do it.
 
-The agent interviews you about what you actually want, shows you renders you
-can judge by eye, decomposes the agreed vision into traceable requirements,
-then runs a design → simulate → verify loop against them.
+This repo is not a hardware project. It holds the workflow, practices, skills
+and definitions; the projects themselves live in their own repos and install
+this plugin.
 
-## Quick start
+```
+MakeHardware  (this repo)          your-widget  (a project repo)
+├── the workflow                   ├── plan.yaml
+├── the skills                 ──► ├── requirements/
+├── the house practices            ├── cad/  hw/  sim/
+└── the environment setup          └── docs/{reference,design,user}
+```
 
-1. Create a cloud environment at [claude.ai/code](https://claude.ai/code).
-2. **Network access → Custom**, tick *"Also include default list of common
-   package managers"*, and add the lines from
-   [`env/allowed-domains.txt`](env/allowed-domains.txt).
-   Without `ppa.launchpadcontent.net` you silently get KiCad 7 instead of 10 —
-   see [docs/01-environment.md](docs/01-environment.md).
-3. Paste [`env/environment-variables.env`](env/environment-variables.env) into
-   **Environment variables**.
-4. Paste [`env/setup.sh`](env/setup.sh) into **Setup script**.
-5. Start a session and run `scripts/hw-doctor.sh`.
+## Using it on a project
 
-## What's in the box
+In the project repo's `.claude/settings.json`:
 
-| | |
-|---|---|
-| **Electrical** | KiCad 10 + Konnect (214 MCP tools), `kicad-cli`, ngspice via `ltspice-mcp`, LTspice optional |
-| **Mechanical** | build123d + `build123d-mcp`, gmsh, CalculiX |
-| **Requirements** | StrictDoc with a hardware grammar, plus a traceability gate |
-| **Vision** | Geometry-based concept renders you can react to |
+```json
+{
+  "extraKnownMarketplaces": {
+    "makehardware": {
+      "source": { "source": "github", "repo": "Harwasch/MakeHardware" }
+    }
+  },
+  "enabledPlugins": { "makehardware@makehardware": true }
+}
+```
+
+Then point the project at a cloud environment built from [`env/`](env/) and run
+`/hw-new-project` to scaffold it.
 
 ## The workflow
 
 ```
-1 VISION ──► 2 REQUIREMENTS ──► 3 DESIGN ──► 4 SIMULATE ──► 5 VERIFY
- interview     decompose &        schematic    ngspice        evidence
- + renders     validate           + CAD        FEA            + gate
-      ▲              ▲                ▲            │              │
-      │              │                └────────────┘              │
-      │              └────── numbers must move ───────────────────┤
-      └──────── the thing is not what they meant ─────────────────┘
+1 VISION ─► 2 PLAN ─► 3 REQUIREMENTS ─► 4 DESIGN ─► 5 SIMULATE ─► 6 VERIFY
+ interview   chunks &   decompose &      schematic   ngspice        evidence
+ + renders   deps       validate         + CAD       FEA            + gate
+     ▲          ▲            ▲               ▲           │             │
+     │          │            │               └───────────┘             │
+     │          │            └────── numbers must move ────────────────┤
+     └──────────┴───── the thing is not what they meant ───────────────┘
 ```
 
-Full detail in [docs/02-workflow.md](docs/02-workflow.md).
+Stages 1–3 are agreements with a human. Stages 4–6 are a loop. Full detail in
+[docs/02-workflow.md](docs/02-workflow.md).
+
+## What the plugin provides
+
+| | |
+|---|---|
+| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation` |
+| **Commands** | `/hw-new-project`, `/hw-status` |
+| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `vision-board` |
+| **MCP servers** | `konnect` (KiCad), `spice` (ngspice/LTspice), `build123d` |
+| **Practices** | House standards for sourcing, connectors and passives — edited over time to steer the agent |
+
+## The toolchain
+
+| Layer | Tool |
+|---|---|
+| Requirements | StrictDoc, with a hardware grammar and a traceability gate |
+| Schematic / PCB | KiCad 10 + Konnect (214 MCP tools), `kicad-cli` |
+| Circuit simulation | ngspice via `ltspice-mcp`; LTspice opt-in |
+| 3D CAD | build123d + `build123d-mcp` |
+| Meshing / FEA | gmsh + CalculiX |
+| Vision imagery | build123d renders for geometry, Hugging Face Spaces for styling |
+
+Why each, and what was rejected: [docs/00-stack.md](docs/00-stack.md).
+
+## Setting up the environment
+
+Three fields in the cloud environment dialog at
+[claude.ai/code](https://claude.ai/code):
+
+1. **Network access → Custom**, tick *"Also include default list of common
+   package managers"*, add [`env/allowed-domains.txt`](env/allowed-domains.txt).
+   Without `ppa.launchpadcontent.net` you silently get KiCad 7 instead of 10.
+2. **Environment variables** ← [`env/environment-variables.env`](env/environment-variables.env)
+3. **Setup script** ← [`env/setup.sh`](env/setup.sh)
+
+Then run `hw-doctor` in a session. Details and the five failure modes the
+script works around: [docs/01-environment.md](docs/01-environment.md).
 
 ## Layout
 
 ```
-concepts/         build123d concept modules for the vision stage
-requirements/     StrictDoc .sdoc tree + shared grammar
-cad/              build123d design models
-sim/              SPICE decks and simulation results
-env/              cloud environment configuration
-scripts/          hw-doctor, vision_board, req_trace, session-start
-.claude/skills/   hw-vision, hw-requirements, hw-simulation, hw-verification
-docs/             stack rationale, environment setup, workflow
-```
-
-## Common commands
-
-```bash
-scripts/hw-doctor.sh                                  # what works right now
-
-/opt/hw-py/bin/python scripts/vision_board.py \
-    concepts/concept_a.py concepts/concept_b.py --out build/vision
-
-/opt/hw-py/bin/strictdoc export requirements \
-    --output-dir build/requirements --formats=html,json
-/opt/hw-py/bin/python scripts/req_trace.py --gate     # exit 1 on gaps
-
-hw-display-start                                      # Xvfb :99
-hw-kicad-up project.kicad_pro                         # live KiCad for Konnect IPC
+.claude-plugin/marketplace.json   marketplace manifest
+plugins/makehardware/
+├── skills/                       the workflow stages
+├── commands/                     /hw-new-project, /hw-status
+├── bin/                          hw-doctor, plan-render, req-trace, vision-board
+├── scripts/                      their implementations
+├── templates/project/            what /hw-new-project scaffolds
+└── .mcp.json                     konnect, spice, build123d
+env/                              cloud environment configuration
+docs/                             stack rationale, environment, workflow
 ```
 
 ## Docs
 
-* [docs/00-stack.md](docs/00-stack.md) — what we chose, what we rejected, and
-  the measured build budget
-* [docs/01-environment.md](docs/01-environment.md) — environment configuration,
-  and the five failure modes in the original setup script
-* [docs/02-workflow.md](docs/02-workflow.md) — the five stages and their exit
-  conditions
+* [docs/00-stack.md](docs/00-stack.md) — choices, rejections, measured build budget
+* [docs/01-environment.md](docs/01-environment.md) — environment configuration
+* [docs/02-workflow.md](docs/02-workflow.md) — the six stages and their exit conditions

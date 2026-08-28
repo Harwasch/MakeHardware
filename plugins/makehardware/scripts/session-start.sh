@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # SessionStart hook — runs at the start of every session, cloud and local.
+# Wired up by the plugin's own hooks/hooks.json, so every project that installs
+# the plugin gets it without touching its settings.
 #
 # The environment snapshot preserves files but not processes, so anything that
 # must be *running* is started here rather than in the setup script.

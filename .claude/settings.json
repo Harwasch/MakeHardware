@@ -1,17 +1,10 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup|resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR\"/scripts/session-start.sh"
-          }
-        ]
-      }
-    ]
+  "extraKnownMarketplaces": {
+    "makehardware": {
+      "source": { "source": "github", "repo": "Harwasch/MakeHardware" }
+    }
   },
+  "enabledPlugins": { "makehardware@makehardware": true },
   "permissions": {
     "allow": [
       "Bash(ngspice:*)",
@@ -21,11 +14,11 @@
       "Bash(konnect:*)",
       "Bash(hw-doctor:*)",
       "Bash(hw-display-start:*)",
+      "Bash(plan-render:*)",
+      "Bash(req-trace:*)",
+      "Bash(vision-board:*)",
       "Bash(/opt/hw-py/bin/python:*)",
-      "Bash(/opt/hw-py/bin/strictdoc:*)",
-      "Bash(scripts/hw-doctor.sh:*)",
-      "Bash(scripts/req_trace.py:*)",
-      "Bash(scripts/vision_board.py:*)"
+      "Bash(/opt/hw-py/bin/strictdoc:*)"
     ]
   }
 }

@@ -88,7 +88,7 @@ phase_python() {
         ltspice-mcp \
         strictdoc \
         numpy scipy pandas matplotlib \
-        gmsh meshio \
+        gmsh meshio pyyaml \
         >>"${LOGDIR}/python.log" 2>&1 || return 1
 
     # Expose the console scripts without requiring the venv on PATH.

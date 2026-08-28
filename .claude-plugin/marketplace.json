@@ -1,0 +1,17 @@
+{
+  "name": "makehardware",
+  "owner": {
+    "name": "Harrison Waschura",
+    "url": "https://github.com/Harwasch/MakeHardware"
+  },
+  "plugins": [
+    {
+      "name": "makehardware",
+      "source": "./plugins/makehardware",
+      "description": "Agent-driven hardware engineering: vision, planning, requirements, design, simulation and verification workflow with KiCad, SPICE and build123d.",
+      "version": "0.1.0",
+      "author": { "name": "Harrison Waschura" },
+      "keywords": ["hardware", "kicad", "spice", "cad", "requirements", "pcb"]
+    }
+  ]
+}

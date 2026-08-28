@@ -64,8 +64,40 @@ in the concept modules, not on prose.
 
 These renders come from real geometry, so they cannot show something
 unbuildable, and every picture is tied to a bounding box and a volume. Say so:
-the human should know they are judging a real envelope, not a mood board. Do
-not claim they are photorealistic product renders, because they are not.
+the human should know they are judging a real envelope.
+
+## Then style it, without losing the proportions
+
+Geometry renders answer "is it the right size and shape". They do not answer
+"does it look like something I want", which is a question about material,
+finish, colour and context — and that question is much better answered by a
+generated image.
+
+Use both, in this order, so styling never quietly invents a different product:
+
+1. **Render the geometry first.** That fixes the proportions and the numbers.
+2. **Generate styling imagery from it** with the Hugging Face connector's
+   `dynamic_space` tool:
+   * `mcp-tools/FLUX.1-Kontext-Dev` — *image editing.* Feed it the geometry
+     render and a prompt describing material, finish and lighting. This is the
+     one to prefer: the output keeps the proportions you just rendered.
+   * `mcp-tools/FLUX.1-Krea-dev` or `mcp-tools/Qwen-Image` — text-to-image, for
+     mood and context shots (in a hand, on a bench, in the environment) where
+     exact proportion matters less.
+   * `mcp-tools/Qwen-Image-Fast` — quick iterations while you are still
+     searching for a direction.
+
+   Call `view_parameters` on a space before invoking it; the schemas differ.
+
+3. **Label every image with how it was made.** A generated image is a styling
+   proposal, not a design. Put "generated — styling only" on it and keep the
+   dimensioned line drawing beside it on the board. Never let a generated
+   image be the source of a number.
+
+If `invoke` returns *"disabled because gradio=none is set"*, image generation
+is switched off on the connector rather than unavailable — tell the human to
+change that setting in their claude.ai connector configuration, and carry on
+with geometry renders until they do.
 
 ## Leaving the stage
 

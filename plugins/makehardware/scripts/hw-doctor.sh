@@ -63,8 +63,9 @@ chk gmsh           gmsh --version
 chkout calculix    "Version [0-9]" ccx -v
 
 echo
-echo "Requirements:"
+echo "Requirements & planning:"
 chk strictdoc      "${VENV}/bin/strictdoc" version
+chk pyyaml         "${VENV}/bin/python" -c "import yaml;print('pyyaml',yaml.__version__)"
 
 echo
 echo "Display (needed only for live KiCad):"

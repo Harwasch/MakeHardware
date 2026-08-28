@@ -86,6 +86,38 @@ A blocked host shows as
 `gateway answered 403 to CONNECT (policy denial or upstream failure)`.
 Do not try to route around it — add the domain to the allowlist.
 
+## 1b. Image generation
+
+The vision stage uses generated imagery for styling on top of the geometry
+renders. **This already works through the Hugging Face connector** — no API
+key, no allowlist entry, no code. The relevant spaces are:
+
+| Space | Use |
+|---|---|
+| `mcp-tools/FLUX.1-Kontext-Dev` | Image *editing* — seed it with a geometry render so proportions survive |
+| `mcp-tools/FLUX.1-Krea-dev`, `mcp-tools/Qwen-Image` | Text-to-image for mood and context shots |
+| `mcp-tools/Qwen-Image-Fast` | Fast iterations while searching for a direction |
+
+**One setting stands in the way.** If `dynamic_space` with
+`operation: "invoke"` returns:
+
+> `The invoke operation is disabled because gradio=none is set.`
+
+then Space invocation is switched off on the connector. Fix it in the Hugging
+Face connector's configuration on claude.ai — remove `gradio=none` from the
+connector's headers, or set `gradio` to a space ID. `view_parameters` keeps
+working either way, so you can inspect a space's schema before enabling
+anything.
+
+### If you outgrow HF Spaces
+
+Free Spaces run on shared GPUs and will occasionally return `503`. For a fast,
+reliable path, add a direct image API instead: put the key in an environment
+variable and add the host to the allowlist — for example `fal.run` and
+`*.fal.ai`, `api.bfl.ai`, `api.openai.com`, or
+`generativelanguage.googleapis.com`. That is a cost decision, so it is opt-in;
+HF Spaces is the zero-config default.
+
 ## 2. Environment variables
 
 Paste from `env/environment-variables.env`. The two that change behaviour:
