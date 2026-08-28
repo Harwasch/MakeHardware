@@ -38,9 +38,11 @@ Every file is recorded in `docs/reference/manifest.yaml`:
 Record `revision` and `retrieved`, always. A datasheet that silently revised
 under you is a real failure mode, and the revision is how you notice.
 
-**When you cannot fetch it.** Vendor sites are often outside the environment's
-network allowlist, and some material is behind a login or an NDA. Do not guess
-at a number from memory and do not silently proceed. Add the entry with
+**When you cannot fetch it.** On an environment with Full network access most
+vendor sites are reachable, so fetch first and cite the file. Some material is
+still out of reach: behind a login, an NDA, a paywall (IEC and ISO standards),
+or an allowlist if the environment uses one. Do not guess at a number from
+memory and do not silently proceed. Add the entry with
 `local: null` and `blocked: <reason>`, then **ask the human to fetch it**, with
 the exact URL and what you need from it. A parameter taken from memory instead
 of a datasheet is exactly the confident wrong answer that gets a board

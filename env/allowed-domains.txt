@@ -1,12 +1,27 @@
 # MakeHardware — network access for the cloud environment
 #
-# This choice decides what the toolchain can do. Pick one of the three below.
+# ===========================================================================
+# RECOMMENDED: set Network access to **Full**. There is no allowlist to paste.
+# ===========================================================================
+#
+# Full is the right default for this workflow specifically. Sourcing and
+# documentation both mean fetching from vendor sites you cannot enumerate in
+# advance — with an allowlist, every new manufacturer is a config change
+# before the agent can read a datasheet, and the agent's fallback is to ask you
+# to go and fetch it by hand.
+#
+# The trade: a session can reach any domain. Treat any credential you put in
+# the environment's variables as exposed to whatever the agent reads.
+#
+# Nothing below is needed on Full. It is here for the tighter options.
 #
 # ---------------------------------------------------------------------------
-# OPTION A — Custom, minimum viable (recommended starting point)
+# FALLBACK — Custom, if you would rather not run open
 # ---------------------------------------------------------------------------
 # Set Network access to **Custom**, TICK "Also include default list of common
-# package managers", and paste these two lines:
+# package managers", and paste the uncommented lines.
+#
+# Minimum for the design loop to work at all:
 
 ppa.launchpadcontent.net
 *.frame.claudeusercontent.com
@@ -23,54 +38,23 @@ ppa.launchpadcontent.net
 #     Lets Claude read back the vision boards and reports it publishes as
 #     Artifacts.
 #
-# What you still cannot do on Option A: install LTspice, fetch datasheets from
-# vendor sites, or call a paid image-generation API.
+# Then add vendors as you hit them. The agent will name the denied host:
+#
+# *.ti.com  *.analog.com  *.microchip.com  ww1.microchip.com  *.st.com
+# *.nxp.com  *.digikey.com  *.mouser.com  *.snapeda.com  *.samacsys.com
+#
+# ltspice.analog.com        # only if you set MH_ENABLE_LTSPICE=1
+# fal.run  *.fal.ai  api.bfl.ai   # only for a paid image API
 #
 # ---------------------------------------------------------------------------
-# OPTION B — Custom, plus the vendor sites you actually use
+# NOT affected by any of this
 # ---------------------------------------------------------------------------
-# Everything in Option A, plus whichever of these matter to you. Add vendor
-# domains as you hit them; the agent will tell you which host it was denied.
-
-# ltspice.analog.com        # LTspice installer      (also set MH_ENABLE_LTSPICE=1)
-# *.analog.com              # ADI datasheets and models
-# *.ti.com                  # TI datasheets and app notes
-# *.microchip.com           # Microchip datasheets
-# ww1.microchip.com
-# *.st.com                  # ST datasheets
-# *.nxp.com
-# *.digikey.com             # parametric search and stock
-# *.mouser.com
-# *.snapeda.com             # symbols and footprints
-# *.samacsys.com
-# fal.run                   # paid image generation, if you outgrow HF Spaces
-# *.fal.ai
-# api.bfl.ai
-
-# ---------------------------------------------------------------------------
-# OPTION C — Full network access
-# ---------------------------------------------------------------------------
-# No allowlist at all; any domain is reachable. Worth considering for this
-# workflow specifically, because sourcing and documentation both mean fetching
-# from arbitrary vendor sites you cannot predict in advance — with an
-# allowlist, every new manufacturer is a config change before the agent can
-# read its datasheet.
+# These are properties of the base image and the GitHub proxy, and hold at
+# every network level, Full included:
 #
-# The trade is that a session can reach anywhere, so treat any credential you
-# put in the environment as exposed to whatever the agent reads. If that is
-# acceptable for this work, Option C removes a whole category of friction.
-#
-# ---------------------------------------------------------------------------
-# Already covered by "Also include default list of common package managers":
-# pypi.org, files.pythonhosted.org, index.crates.io, static.crates.io,
-# static.rust-lang.org, github.com, codeload.github.com, archive.ubuntu.com,
-# security.ubuntu.com, *.ubuntu.com (which covers keyserver.ubuntu.com, where
-# the KiCad PPA signing key comes from).
-#
-# NOT affected by any of this — these are properties of the base image and the
-# GitHub proxy, and hold at every network level including Full:
 #   * add-apt-repository is broken (python3 is 3.11, python3-apt ships 3.12)
 #   * protobuf-compiler alone cannot build Konnect; libprotobuf-dev is required
-#   * GitHub release assets 403 for repos not attached to the session, so
-#     Konnect must be built from source no matter how open the network is
+#   * GitHub release assets 403 for repos not attached to the session — the
+#     GitHub proxy is independent of the network access level — so Konnect is
+#     built from source no matter how open the network is
 #   * the ~5 minute setup budget, 4 vCPU / 16 GB RAM / 30 GB disk

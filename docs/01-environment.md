@@ -42,31 +42,29 @@ silent:
 
 The corrected script in `env/setup.sh` addresses all five.
 
-## 1. Network access — the choice that decides what is feasible
+## 1. Network access — set it to Full
 
-This is the one setting that changes what the toolchain can do, so decide it
-deliberately rather than accepting the default.
+This is the one setting that changes what the toolchain can do.
+
+**Recommended: Full.** No allowlist to paste. Full is the right default for
+this workflow specifically, because sourcing and documentation both mean
+fetching from vendor sites you cannot enumerate in advance. On an allowlist,
+every new manufacturer is a config change before the agent can read a
+datasheet — and its correct fallback is to stop and ask you to fetch it by
+hand, which is friction on the most common operation in the job.
+
+The trade is that a session can reach any domain. Treat any credential in the
+environment's variables as exposed to whatever the agent reads.
 
 | Level | What it means here |
 |---|---|
 | **Trusted** (the default) | Package registries, GitHub and Ubuntu archives only. **KiCad 10 will not install** — you silently get KiCad 7 from universe. No LTspice, no vendor datasheets. |
-| **Custom** | The Trusted list plus hosts you name. One line unlocks KiCad 10. |
-| **Full** | Any domain. Everything works, including datasheet fetching from vendors you have not thought of yet. |
+| **Custom** | The Trusted list plus hosts you name. Two lines get the design loop working; vendors are added one at a time as you hit them. |
+| **Full** | Any domain. Recommended. |
 
-[`env/allowed-domains.txt`](../env/allowed-domains.txt) sets out three concrete
-options. The short version:
-
-* **Minimum viable** — Custom, tick *"Also include default list of common
-  package managers"*, and add `ppa.launchpadcontent.net` (KiCad 10) and
-  `*.frame.claudeusercontent.com` (so Claude can read back its own Artifacts).
-* **Practical** — the above plus the vendor domains you actually use:
-  `*.ti.com`, `*.analog.com`, `*.microchip.com`, `*.digikey.com`, and
-  `ltspice.analog.com` if you want LTspice.
-* **Full** — worth genuinely considering for this workflow. Sourcing and
-  documentation both mean fetching from vendor sites you cannot enumerate in
-  advance, so with an allowlist every new manufacturer becomes a config change
-  before the agent can read a datasheet. The trade is that a session can reach
-  anywhere; treat any credential in the environment accordingly.
+If you would rather not run open, [`env/allowed-domains.txt`](../env/allowed-domains.txt)
+has the Custom fallback: `ppa.launchpadcontent.net` and
+`*.frame.claudeusercontent.com` as the minimum, plus vendor domains.
 
 ### What network access does *not* fix
 

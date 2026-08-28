@@ -79,9 +79,12 @@ Why each, and what was rejected: [docs/00-stack.md](docs/00-stack.md).
 Three fields in the cloud environment dialog at
 [claude.ai/code](https://claude.ai/code):
 
-1. **Network access → Custom**, tick *"Also include default list of common
-   package managers"*, add [`env/allowed-domains.txt`](env/allowed-domains.txt).
-   Without `ppa.launchpadcontent.net` you silently get KiCad 7 instead of 10.
+1. **Network access → Full.** Nothing to paste. Sourcing and documentation
+   mean fetching datasheets from vendors you can't enumerate in advance, so an
+   allowlist makes every new manufacturer a config change.
+   [`env/allowed-domains.txt`](env/allowed-domains.txt) has the tighter
+   Custom fallback if you'd rather not run open — note that on **Trusted** you
+   silently get KiCad 7 instead of 10.
 2. **Environment variables** ← [`env/environment-variables.env`](env/environment-variables.env)
 3. **Setup script** ← [`env/setup.sh`](env/setup.sh)
 
