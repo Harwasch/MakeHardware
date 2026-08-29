@@ -135,7 +135,14 @@ plugins/makehardware/
 templates/github-repo/            contents of the GitHub template repository
 env/                              cloud environment configuration
 docs/                             stack rationale, environment, workflow
+tests/smoke.sh                    scaffolds a throwaway project and drives the gates
 ```
+
+`tests/smoke.sh` needs only `python3` with `pyyaml`. It scaffolds a project
+from the template and checks the things that used to have nothing behind them:
+a `done` chunk whose outputs are missing, a `done` chunk whose review is
+unsigned, an artefact edited after sign-off, and the power budget's voltage
+referral.
 
 ## Docs
 

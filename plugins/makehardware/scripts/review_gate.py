@@ -127,15 +127,18 @@ def uncommitted(paths: list[str]) -> list[str]:
     """Which of these paths git does not yet have — i.e. are not on GitHub.
 
     A link to an uncommitted file is a 404, and that is the single most likely
-    way a review request wastes the human's time.
+    way a review request wastes the human's time. Two git calls for the whole
+    set, not two per path: a vision review carries a directory of renders.
     """
-    out = []
-    for p in paths:
-        status = _git("status", "--porcelain", "--", p)
-        tracked = _git("ls-files", "--", p)
-        if status or not tracked:
-            out.append(p)
-    return out
+    paths = [os.path.normpath(p) for p in paths]
+    if not paths:
+        return []
+    tracked = {os.path.normpath(line)
+               for line in _git("ls-files", "--", *paths).splitlines() if line}
+    dirty = {os.path.normpath(line[3:].strip().strip('"').split(" -> ")[-1])
+             for line in _git("status", "--porcelain", "--", *paths).splitlines()
+             if len(line) > 3}
+    return [p for p in paths if p not in tracked or p in dirty]
 
 
 # ---------------------------------------------------------------------------
@@ -210,8 +213,15 @@ def digest(path: str) -> str | None:
     return h.hexdigest()[:16]
 
 
+IMAGE = {".png", ".jpg", ".jpeg", ".gif", ".svg"}
+
+
 def viewable(path: str) -> bool:
     return os.path.splitext(path)[1].lower() in VIEWABLE
+
+
+def is_image(path: str) -> bool:
+    return os.path.splitext(path)[1].lower() in IMAGE
 
 
 def needs_an_app(path: str) -> bool:
@@ -266,38 +276,52 @@ def write_packet(review: dict) -> str:
     if review.get("summary"):
         o += [review["summary"].strip(), ""]
 
-    refs = [{"path": p, "sha256": None} for p in review.get("references") or []]
-    o += ["## What to look at", ""]
-    shown = [a for a in arts if viewable(a["path"])]
-    downloads = [a for a in arts + refs if not viewable(a["path"])]
-    shown += [a for a in refs if viewable(a["path"])]
+    refs = [p for p in review.get("references") or []]
 
-    images = [a for a in shown
-              if os.path.splitext(a["path"])[1].lower()
-              in {".png", ".jpg", ".jpeg", ".gif", ".svg"}]
-    for a in images:
-        rel = os.path.relpath(a["path"], rel_base) if rel_base else a["path"]
-        o += [f'### {os.path.basename(a["path"])}', "",
-              f'![{os.path.basename(a["path"])}]({rel})', ""]
+    def _table(paths: list[str]) -> list[str]:
+        rows = ["| File | Opens in |", "|---|---|"]
+        for path in paths:
+            url = blob_url(path, slug, ref) or path
+            rows.append(f'| [{path}]({url}) | {_kind(path)} |')
+        return rows + [""]
 
-    docs = [a for a in shown if a not in images]
-    if docs:
-        o += ["| Open in the browser | |", "|---|---|"]
-        for a in docs:
-            url = blob_url(a["path"], slug, ref) or a["path"]
-            o.append(f'| [{a["path"]}]({url}) | {_kind(a["path"])} |')
-        o.append("")
+    def _images(paths: list[str]) -> list[str]:
+        out = []
+        for path in paths:
+            if not is_image(path):
+                continue
+            rel = os.path.relpath(path, rel_base) if rel_base else path
+            out += [f'**{os.path.basename(path)}**', "",
+                    f'![{os.path.basename(path)}]({rel})', ""]
+        return out
 
-    if downloads:
-        o += ["### Download to open in an application", "",
-              "These need a real application, so they are here for completeness "
-              "rather than for review. Everything above should be enough to "
-              "decide.", "",
-              "| File | Opens in |", "|---|---|"]
-        for a in downloads:
-            url = blob_url(a["path"], slug, ref) or a["path"]
-            o.append(f'| [{a["path"]}]({url}) | {_kind(a["path"])} |')
-        o.append("")
+    # The agreement comes first and is labelled as such, because the whole
+    # record turns on which files the human actually agreed to: those are the
+    # ones that make the review stale when they change.
+    agreed = [a["path"] for a in arts]
+    o += ["## What you are agreeing to", ""]
+    if agreed:
+        o += _images(agreed)
+        rest = [p for p in agreed if not is_image(p)]
+        if rest:
+            o += _table(rest)
+        if not any(viewable(p) for p in agreed):
+            o += ["> None of these render in a browser. Ask for a PDF, an SVG "
+                  "or a PNG rather than downloading a design file — that is on "
+                  "us, not on you.", ""]
+    else:
+        o += ["> Nothing was attached to this review, which means there is "
+              "nothing to agree to. That is a mistake in how it was raised.", ""]
+
+    if refs:
+        o += ["## For context", "",
+              "Sources and working files. Not part of the agreement — these "
+              "change as work goes on, and changing them does not invalidate "
+              "your sign-off.", ""]
+        o += _images(refs)
+        rest = [p for p in refs if not is_image(p)]
+        if rest:
+            o += _table(rest)
 
     questions = review.get("questions") or []
     if questions:
@@ -342,11 +366,21 @@ def _kind(path: str) -> str:
         ".md": "renders on GitHub", ".svg": "renders on GitHub",
         ".png": "renders on GitHub", ".jpg": "renders on GitHub",
         ".pdf": "GitHub's PDF viewer", ".csv": "GitHub table view",
+        ".yaml": "plain text on GitHub", ".yml": "plain text on GitHub",
+        ".json": "plain text on GitHub", ".txt": "plain text on GitHub",
         ".html": "download", ".drawio": "draw.io / VS Code extension",
         ".kicad_sch": "KiCad", ".kicad_pcb": "KiCad", ".kicad_pro": "KiCad",
         ".step": "any CAD", ".stp": "any CAD", ".stl": "GitHub 3D viewer",
         ".sdoc": "StrictDoc source", ".asc": "LTspice", ".cir": "ngspice",
-    }.get(ext, "download")
+        ".gbr": "a gerber viewer", ".dxf": "any CAD", ".zip": "download",
+        ".raw": "the SPICE raw parser",
+    }.get(ext) or (
+        # Anything left that is text renders as text on GitHub, which is worth
+        # saying: it means the human can read it without downloading it.
+        "plain text on GitHub"
+        if ext in {".py", ".sh", ".c", ".h", ".cpp", ".rs", ".go", ".js", ".ts",
+                   ".toml", ".ini", ".cfg", ".rpt", ".net", ".log", ".xml"}
+        else "download")
 
 
 # ---------------------------------------------------------------------------
@@ -397,13 +431,19 @@ def cmd_open(args) -> int:
         for m in missing:
             print(f"    - {m}")
 
-    if present and not any(viewable(f) for f in present):
+    if not present:
+        print("\n  WARNING: this review has no artefacts. There is nothing for "
+              "the human to look at,\n  so there is nothing to agree to and "
+              "nothing that can go stale. Build the artefact\n  first — see the "
+              "hw-review skill for what renders on GitHub per stage.")
+    elif not any(viewable(f) for f in present):
         print("\n  WARNING: nothing here renders in a browser. The human is in "
-              "the GitHub web UI;\n  export a PDF, an SVG or a PNG before asking "
-              "them to review this.")
-    app_only = [f for f in present if needs_an_app(f)]
-    if app_only and len([f for f in present if viewable(f)]) == 0:
-        print("  These need an application to open: " + ", ".join(app_only[:6]))
+              "the GitHub web UI,\n  so this is a download, not a review. Export "
+              "a PDF, an SVG or a PNG first.")
+        app_only = [f for f in present if needs_an_app(f)]
+        if app_only:
+            print("  These need an application to open: "
+                  + ", ".join(app_only[:6]))
 
     unpushed = uncommitted([review["packet"], *present, *refs])
     if unpushed:
