@@ -1,4 +1,9 @@
 # Build and simulation output — regenerate it, do not commit it.
+#
+# Note what is NOT here: docs/design/, docs/review/ and the renders under
+# docs/design/vision/ are committed on purpose. They are what the human
+# reviews from github.com, and an artefact nobody can see is not a
+# deliverable — see the hw-review skill.
 build/
 sim/**/*.raw
 sim/**/*.log

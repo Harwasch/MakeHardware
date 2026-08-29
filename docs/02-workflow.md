@@ -15,11 +15,64 @@ agent declaring victory early.
      └──────────┴──────── the thing is not what they meant ─────────────────────┘
 ```
 
-Four things run across all seven: **sourcing** (`hw-sourcing`) whenever a part is
+Five things run across all seven: **review** (`hw-review`) at every milestone
+and whenever you had to guess, **sourcing** (`hw-sourcing`) whenever a part is
 picked, **documentation** (`hw-documentation`) whenever a number comes from
 outside or a decision is made, **imagery** (`hw-imagegen`) wherever a picture
 helps, and **friction capture** (`hw-retro`) whenever the human corrects you or
 a task takes far more loops than it should.
+
+## The exit conditions have a mechanism
+
+Every stage below states an exit condition, and most of them end in "the human
+agreed". That used to be a sentence with nothing behind it, and the predictable
+happened: concepts were rendered and never shown, the requirements export was
+generated on every run and never mentioned, and four stages in a row were
+reported complete on agreements that had never been made. The cost was not the
+wasted renders — it was that the plan, the requirements and the architecture
+were all built on top of them.
+
+So agreement is now an artefact, like evidence:
+
+```bash
+review-gate open <milestone> --artifact <what renders> --question "..."
+#   ... ask the human directly, with the github.com link, and block ...
+review-gate sign <milestone> --approve --by <name> --note "<their words>"
+review-gate check --gate        # exit 1 while any milestone is open or stale
+```
+
+`docs/review/reviews.yaml` is the record, and it carries the digest of every
+artefact as it stood when the human looked at it — change one afterwards and
+the review reads **stale** and the gate fails. A chunk in `plan.yaml` that
+names a `review:` cannot be marked `done` until that review is signed off;
+`plan-render --check` refuses it. Same discipline as `req-trace --gate`
+applies to evidence, applied to agreement.
+
+**The one rule: an artefact the human has not seen is not a deliverable.**
+
+### Which means the artefact has to be one they can see
+
+The agent is usually working in a **cloud VM**. The human is not at that
+terminal and does not have KiCad, draw.io or build123d — what they have is the
+repository on **github.com, in a browser**. So every review produces something
+that renders there, committed and pushed, alongside the source:
+
+| Stage | What the human opens |
+|---|---|
+| 1 Vision | `docs/design/vision.md` — concepts, renders, numbers, open questions |
+| 2 Plan | `docs/plan.md` (scope and task descriptions) + `docs/plan.svg` (the dependency Gantt) |
+| 3 Requirements | `docs/design/requirements-map.svg` — the tree, its statuses and its gaps |
+| 4 Architecture | `docs/design/block-diagram.svg` + the power budget as text |
+| 5 Design | a schematic **PDF**, board layer **PDF**s and 3D **PNG**s, CAD renders |
+| 6 Simulation | the numbers in a markdown table, failing corner first |
+| 7 Verification | the coverage number and the gaps, in `docs/design/` |
+
+Diagrams are generated as **draw.io** files from their spec, with an SVG
+rendered from the same model, so the editable file and the review image cannot
+disagree. GitHub renders the SVG; draw.io opens the other.
+
+`hw-review` covers the loop and `hw-review/references/exports.md` has the
+export commands per artefact type.
 
 ## 1. Vision — interview, then show
 
@@ -45,9 +98,13 @@ labelled as styling proposals and never carry a number.
 invites polite agreement; a pair forces a real preference, and the reason given
 is worth more than the choice.
 
-> **Exit:** the human points at one concept and its numbers without qualifying.
-> Agreed intent goes to `requirements/00-vision.sdoc` as `VIS-*` entries, in
-> their words.
+The renders and `docs/design/vision.md` go under `docs/design/`, committed —
+not `build/`, which nobody can see.
+
+> **Exit:** `review-gate check vision --gate` passes — the human has looked at
+> the document and pointed at one concept and its numbers without qualifying,
+> and that is signed off in `docs/review/reviews.yaml`. Agreed intent goes to
+> `requirements/00-vision.sdoc` as `VIS-*` entries, in their words.
 
 ## 2. Plan — what work exists, and in what order
 
@@ -66,8 +123,15 @@ The plan is a checkpoint, and the two real questions are: **is this all the
 work** (test, documentation and manufacturing are what people forget), and
 **is the order right** (the human usually knows a constraint you do not).
 
-> **Exit:** `plan-render --check` passes, and the human has agreed the chunk
-> list and the ordering.
+`plan-render` writes the Gantt (`docs/plan.svg`), the editable graph
+(`docs/plan.drawio`) and `docs/plan.md` — the scope and every chunk's
+description, with no statuses in it, so an agreement survives a week of
+ordinary progress and breaks the moment the work is redefined. `--check` also
+refuses a `done` chunk whose declared `outputs` are not on disk, which is the
+bookkeeping error that quietly makes a status report wrong.
+
+> **Exit:** `plan-render --check` passes, and `review-gate check plan --gate`
+> passes — the human has agreed the chunk list and the ordering.
 
 ## 3. Requirements — decompose, then validate
 
@@ -90,8 +154,14 @@ Then the agent checks what neither tool can see: do the children's budgets add
 up to the parent's, are any two requirements contradictory, is the set
 over-constrained, can every leaf's verification method actually be performed.
 
+`req-trace --map` draws the tree — one column per level, an arrow to every
+requirement that refines another, statuses on the nodes and the gate's
+findings in red. That is what a human can actually review; a list of UIDs is
+how a gap survives a review.
+
 > **Exit:** `req-trace` reports no structural gaps other than not-yet-verified
-> leaves, and the human has agreed any numbers that moved.
+> leaves, and `review-gate check requirements --gate` passes — the human has
+> agreed any numbers that moved.
 
 ## 4. Architecture — the block diagram
 
@@ -119,10 +189,10 @@ exits 1 when a rail is over, and names the contributors largest first.
 Converter efficiency is deliberately not modelled — this is a headroom check,
 not an energy model.
 
-> **Exit:** the human has looked at the image and agreed to it; every block has
-> a part number or an explicit TBD with a chunk that will resolve it; every
-> current traces to a datasheet in `docs/reference/`; `block-diagram --check`
-> passes.
+> **Exit:** `review-gate check architecture --gate` passes — the human has
+> looked at the image and agreed to it; every block has a part number or an
+> explicit TBD with a chunk that will resolve it; every current traces to a
+> datasheet in `docs/reference/`; `block-diagram --check` passes.
 
 ## 5. Design sprint
 
@@ -138,6 +208,21 @@ Every artefact gets a `File` relation from the requirement it realises, and
 every decision that constrains something downstream gets an ADR in
 `docs/design/`. Both are much cheaper to add now than to reconstruct later.
 
+**Each large design stage ends in a review**, on the same mechanism as the
+first four. A `.kicad_sch` or a `.step` is a download, not a review, so export
+first: `kicad-cli sch export pdf`, `kicad-cli pcb export pdf` for the layer
+plots and `kicad-cli pcb render` for both sides, `vision-board` for a CAD
+module. Commit them under `docs/design/`, then
+`review-gate open schematic --artifact docs/design/schematic.pdf`. The ERC and
+DRC counts go in the request as numbers, not as an attachment nobody opens.
+
+Before the board is routed, run the pre-route checks in
+`hw-verification/references/pcb-layout.md`. Net class widths against pad
+sizes, clearances against pad pitch, DRC on the placed board, and the
+opposite side under every thermal-via footprint. All four are arithmetic, all
+four take a minute, and every one of them has cost hours by being diagnosed
+as board density instead.
+
 ## 6. Simulation
 
 Skill: `hw-simulation`
@@ -145,10 +230,14 @@ Skill: `hw-simulation`
 ngspice through the `spice` MCP server for electrical; gmsh + CalculiX for
 thermal and structural. Measurements come back as parsed numbers, not plots.
 
-Three rules that keep this honest: **cross-check against closed form** wherever
+Four rules that keep this honest: **cross-check against closed form** wherever
 one exists; **read the `observations` field**, because ngspice will print
-`singular matrix` once and then write plausible numbers anyway; and **sweep
-corners** — tolerance, temperature, supply.
+`singular matrix` once and then write plausible numbers anyway; **sweep
+corners** — tolerance, temperature, supply; and **before concluding an
+approach cannot work, list the design levers you did not vary**. A negative
+result from one configuration is a result about that configuration, and the
+levers usually left fixed are the geometry and topology ones that corner
+sweeping does not touch.
 
 A failed simulation loops back to stage 4. A simulation that cannot meet the
 number loops back to stage 3 — the requirement moves, with the human's
@@ -174,7 +263,9 @@ The last check is the one no tool performs: walk back up to the `VIS-` entries
 and ask whether the thing designed is the thing the human described.
 
 > **Exit:** gate passes, ERC and DRC are clean on the current files, budget
-> roll-ups reconcile, and the vision still holds.
+> roll-ups reconcile, the vision still holds, and `review-gate check --gate`
+> is clear — including any milestone that went **stale** because an agreed
+> artefact changed underneath it.
 
 ## Documentation, throughout
 
@@ -209,10 +300,30 @@ board-to-wire row of `hw-sourcing/references/connectors.md`, because connectors
 were relitigated three times" is a change someone can make. Those become issues
 on MakeHardware, and project N makes project N+1 better.
 
+## Review, throughout
+
+Skill: `hw-review`
+
+The four milestones are the floor, not the ceiling. Go back to the human as
+well whenever **you had to guess** (a guess you did not surface is a defect
+with a delay on it), whenever you are about to do something **expensive or
+irreversible** — order parts, generate fabrication output, commit to a process
+— whenever **a number moved after it was agreed**, and whenever two readings
+of the brief would lead to different hardware.
+
+Between milestones the cheap thing is to keep the generated artefacts current
+and committed: `plan-render`, `block-diagram` and `req-trace --map` each
+re-render from their spec in one command. A repository whose pictures are
+current is one the human can review whenever they feel like it, which is worth
+more than any scheduled checkpoint.
+
 ## Why the loop runs in this order
 
 The expensive mistake in hardware is discovering in stage 6 that stage 3 asked
-for something impossible. Four things are arranged to catch that early: vision
+for something impossible. The more expensive one is discovering in stage 6
+that stage 1 was never agreed. Five things are arranged to catch those early:
+every stage's agreement is a committed record rather than a sentence, so a
+stage cannot be reported complete without one; and beyond that, vision
 renders are geometry, so an envelope that cannot hold the battery shows up
 before any schematic exists; the plan makes cross-discipline dependencies
 explicit before anyone commits to a part; requirements carry `BUDGET` numbers

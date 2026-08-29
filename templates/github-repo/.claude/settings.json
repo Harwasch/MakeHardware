@@ -1,14 +1,41 @@
 {
   "extraKnownMarketplaces": {
     "makehardware": {
-      "source": { "source": "github", "repo": "Harwasch/MakeHardware" }
+      "source": {
+        "source": "github",
+        "repo": "Harwasch/MakeHardware"
+      }
     },
     "kicad-happy": {
-      "source": { "source": "github", "repo": "aklofas/kicad-happy" }
+      "source": {
+        "source": "github",
+        "repo": "aklofas/kicad-happy"
+      }
     }
   },
   "enabledPlugins": {
     "makehardware@makehardware": true,
     "kicad-happy@kicad-happy": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ngspice:*)",
+      "Bash(kicad-cli:*)",
+      "Bash(gmsh:*)",
+      "Bash(ccx:*)",
+      "Bash(konnect:*)",
+      "Bash(pdftotext:*)",
+      "Bash(pdftoppm:*)",
+      "Bash(hw-doctor:*)",
+      "Bash(hw-display-start:*)",
+      "Bash(plan-render:*)",
+      "Bash(req-trace:*)",
+      "Bash(block-diagram:*)",
+      "Bash(vision-board:*)",
+      "Bash(review-gate:*)",
+      "Bash(imagegen:*)",
+      "Bash(/opt/hw-py/bin/python:*)",
+      "Bash(/opt/hw-py/bin/strictdoc:*)"
+    ]
   }
 }

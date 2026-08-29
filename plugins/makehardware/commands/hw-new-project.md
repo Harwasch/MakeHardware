@@ -18,7 +18,8 @@ cad/                      design models
 hw/                       block-diagram spec + the KiCad project
 sim/                      SPICE decks and results
 docs/reference/           external datasheets and app notes + manifest.yaml
-docs/design/              ADRs, architecture, verification report
+docs/design/              ADRs, architecture, vision doc, verification report
+docs/review/              human sign-off ledger and review packets
 docs/user/                manuals and the product spec sheet
 strictdoc.toml
 CLAUDE.md                 project-level agent instructions
@@ -69,5 +70,18 @@ Then:
    environment can actually do, so the human knows up front if KiCad or a
    simulator is missing.
 
+6. Confirm the repository has a **remote on github.com** — `git remote -v`.
+   The whole review mechanism links the human at
+   `https://github.com/<owner>/<repo>/blob/<branch>/...`, and without a remote
+   `review-gate` can only print paths. If there is no remote, say so now
+   rather than at the first review.
+
 Do **not** invent a vision, a plan or requirements here. Scaffolding creates
 the empty structure; `hw-vision` fills the first of it, with the human.
+
+Then say plainly how the workflow will run: each of the first four stages —
+vision, plan, requirements, architecture — and each large design stage ends
+with an artefact committed to this repository and **a question put to them
+with a link to it**, and nothing moves on until they answer. That is worth
+saying once at the start, because it sets the expectation that they will be
+interrupted, which is the point.

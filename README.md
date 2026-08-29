@@ -62,13 +62,25 @@ repository** out of [`templates/github-repo/`](templates/github-repo) — see
 Stages 1–4 are agreements with a human. Stages 5–7 are a loop. Full detail in
 [docs/02-workflow.md](docs/02-workflow.md).
 
+**Every agreement is a recorded one.** The agent is normally working in a cloud
+VM, so the human's only review surface is this repository on github.com. At each
+milestone the agent commits an artefact that renders there — a vision document,
+the plan's scope and Gantt, the requirements map, the block diagram, a schematic
+PDF — asks the human directly with the link, and records what they said in
+`docs/review/reviews.yaml`. `review-gate check --gate` fails while a milestone
+is unanswered, or while an artefact has changed since it was signed off. A
+chunk in `plan.yaml` cannot be marked `done` until its review is signed and its
+declared outputs exist on disk.
+
+The rule behind it: **an artefact the human has not seen is not a deliverable.**
+
 ## What the plugin provides
 
 | | |
 |---|---|
-| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-block-diagram`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
-| **Commands** | `/hw-new-project`, `/hw-status`, `/hw-retro` |
-| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `imagegen` |
+| **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-block-diagram`, `hw-review`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
+| **Commands** | `/hw-new-project`, `/hw-status`, `/hw-review`, `/hw-retro` |
+| **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `review-gate`, `imagegen` |
 | **MCP servers** | `konnect` (KiCad), `spice` (ngspice/LTspice), `build123d` |
 | **Practices** | House standards for sourcing, connectors and passives — edited over time to steer the agent |
 
@@ -76,8 +88,10 @@ Stages 1–4 are agreements with a human. Stages 5–7 are a loop. Full detail i
 
 | Layer | Tool |
 |---|---|
-| Requirements | StrictDoc, with a hardware grammar and a traceability gate |
+| Human review | `review-gate` — artefacts that render on GitHub, a link put to the human, a committed sign-off with a digest per artefact |
+| Requirements | StrictDoc, with a hardware grammar and a traceability gate, plus a draw.io/SVG requirements map |
 | Architecture | `block-diagram` — one YAML spec renders an editable draw.io file, a review SVG, and a power budget with a gate |
+| Planning | `plan-render` — a dependency Gantt, an editable draw.io graph, and a scope document, with `done` checked against the filesystem |
 | Schematic / PCB | KiCad 10 + Konnect (214 MCP tools), `kicad-cli` |
 | Circuit simulation | ngspice via `ltspice-mcp`; LTspice opt-in |
 | 3D CAD | build123d + `build123d-mcp` |
@@ -112,8 +126,9 @@ script works around: [docs/01-environment.md](docs/01-environment.md).
 .claude-plugin/marketplace.json   marketplace manifest
 plugins/makehardware/
 ├── skills/                       the workflow stages
-├── commands/                     /hw-new-project, /hw-status
-├── bin/                          hw-doctor, plan-render, req-trace, block-diagram, vision-board
+├── commands/                     /hw-new-project, /hw-status, /hw-review, /hw-retro
+├── bin/                          hw-doctor, plan-render, req-trace, block-diagram,
+│                                 vision-board, review-gate, imagegen
 ├── scripts/                      their implementations
 ├── templates/project/            what /hw-new-project scaffolds
 └── .mcp.json                     konnect, spice, build123d

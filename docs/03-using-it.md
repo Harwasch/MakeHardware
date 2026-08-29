@@ -12,7 +12,7 @@ Harwasch/MakeHardware                 Harwasch/thermal-probe
 skills:   how to run each stage       plan.yaml       the work and its order
 commands: /hw-new-project             requirements/   what it must do
 bin:      plan-render, req-trace  ──► cad/  hw/  sim/ the design
-practices: house standards            docs/           reference, design, user
+practices: house standards            docs/           reference, design, review, user
 env/:     the machine setup           concepts/       vision models
 ```
 
@@ -102,6 +102,12 @@ Konnect rather than competing with it — Konnect *changes* the design, kicad-ha
 This file has to exist *before* the first session, because Claude reads it at
 session start to decide what to install. Commit and push it.
 
+[`templates/github-repo/.claude/settings.json`](../templates/github-repo/.claude/settings.json)
+is this file plus a `permissions.allow` list for the toolchain's commands
+(`plan-render`, `req-trace`, `review-gate`, `kicad-cli`, `ngspice` …), so you
+are not prompted for each one. Copy that version rather than the four lines
+above if you want the quieter session.
+
 Then start a cloud session on that repo, in the environment you just built, and
 run:
 
@@ -120,6 +126,32 @@ toolchain can do.
 The rhythm is **one session per chunk of work**, and the plan is what keeps
 sessions from stepping on each other.
 
+### How you get asked
+
+Claude is running in a cloud VM. You are not at that terminal, you do not have
+KiCad or draw.io, and you are not going to run a command to see the work. What
+you have is **this repository on github.com, in a browser** — so that is what
+the workflow is built around.
+
+At each milestone Claude commits something that renders on GitHub, then stops
+and asks you, with the link:
+
+> Vision is ready for review — two concepts, numbers under each.
+> `https://github.com/you/thermal-probe/blob/main/docs/review/vision.md`
+>
+> `[ Concept A — the wand ]` `[ Concept B — the instrument ]` `[ Neither ]`
+
+You click, look, answer. Claude writes down what you said in
+`docs/review/reviews.yaml` and only then moves on. If it later changes
+something you signed off, the review goes **stale** and it has to come back and
+ask again — which is the point: everything downstream was resting on the
+version you actually saw.
+
+You can also just browse the repo whenever you like. `docs/plan.md`,
+`docs/design/vision.md`, `docs/design/requirements-map.svg` and
+`docs/design/block-diagram.svg` are always current, because they are
+regenerated from their specs rather than written by hand.
+
 ### Session 1 — Vision
 
 > "I want a handheld probe that logs temperature in a walk-in freezer for a
@@ -128,11 +160,14 @@ sessions from stepping on each other.
 Claude interviews you on the things that change the architecture — where it's
 held, power source, the one number that must be true, volume, anti-goals,
 regulatory. Then it builds two or three concepts as build123d models, renders
-them, styles them, and publishes a vision board.
+them, styles them, and writes `docs/design/vision.md` — the concepts side by
+side with their envelopes, volumes and masses, and the open questions at the
+end.
 
 **You look at pictures and say which one, and why.** That reason is the most
 valuable thing produced in this session. Agreed intent gets written as `VIS-*`
-entries in your words.
+entries in your words, and the sign-off is recorded so nothing later can quietly
+proceed as though you had said something else.
 
 ### Session 2 — Plan
 
@@ -144,6 +179,11 @@ manufacturing are the ones people forget), and is the order right (you usually
 know a constraint Claude doesn't — a part you already have, a supplier lead
 time, a review you must pass).
 
+You review `docs/plan.md` — every chunk, what it is, what it needs first, what
+it produces — with the chart embedded at the top. It deliberately carries no
+statuses, so your agreement survives a week of ordinary progress and only
+breaks when the *work* changes.
+
 This is where you decide the project is mechanical-only, or
 mechanical + electrical + firmware + test.
 
@@ -153,7 +193,11 @@ Vision becomes testable requirements with numbers and units, decomposed so
 every one traces to something you asked for. `req-trace` refuses orphans and
 dangling parents.
 
-**You argue about numbers here, where it's cheap.**
+**You argue about numbers here, where it's cheap.** You do it over
+`docs/design/requirements-map.svg` — the whole tree on one page, an arrow from
+each requirement to the one that refines it, and anything the gate is unhappy
+about outlined in red. A requirement with nothing above it is visible in a
+second and invisible in a list.
 
 ### Session 4 — Architecture
 
@@ -179,13 +223,20 @@ Each session starts the same way:
 /hw-status
 ```
 
-which tells you what's blocked, what's ready to start, and where requirements
-coverage stands. You pick a ready chunk — or say "take the next one" — and
-Claude does it: schematic capture, enclosure geometry, a simulation, a
-firmware skeleton.
+which tells you what's blocked, what's ready to start, where requirements
+coverage stands, and **what's waiting on an answer from you**. You pick a ready
+chunk — or say "take the next one" — and Claude does it: schematic capture,
+enclosure geometry, a simulation, a firmware skeleton.
+
+Each large design stage ends the same way as the first four: a PDF of the
+schematic, layer plots and a 3D render of the board, renders of the enclosure —
+committed, and a question with the link. You never have to open KiCad to say
+"that connector is on the wrong edge".
 
 At the end of the session Claude sets that chunk to `done`, re-renders the
-plan, and commits. Your README always shows current state.
+plan, and commits. It cannot mark a chunk done if the files that chunk was
+supposed to produce are not there, or if you have not signed off its review —
+`plan-render --check` refuses both. Your README always shows current state.
 
 ### Along the way — friction log
 
@@ -213,10 +264,18 @@ rather than a summary impression.
 | Designs, simulates, documents | Review the diff, and the ADRs |
 | Reports coverage and gaps honestly | Decide when it's good enough to build |
 | Fetches datasheets where it can | Supply the ones behind a login or a paywall |
+| Commits something you can open in a browser, and asks | Click the link and answer |
 
-The pattern: **Claude proposes with evidence, you decide.** The three
-checkpoints — vision, plan, requirements — exist because a wrong answer there
-is expensive, and a five-minute conversation prevents it.
+The pattern: **Claude proposes with evidence, you decide.** The four
+checkpoints — vision, plan, requirements, architecture — plus one per design
+stage exist because a wrong answer there is expensive, and a five-minute
+conversation prevents it. They are enforced rather than encouraged: a stage
+whose review is unsigned or stale fails `review-gate check --gate`, and a chunk
+that depends on it cannot be marked done.
+
+If you would rather Claude ran further ahead before checking in, say so — but
+the default is to interrupt you, because the alternative is a project built on
+an agreement nobody made.
 
 ---
 

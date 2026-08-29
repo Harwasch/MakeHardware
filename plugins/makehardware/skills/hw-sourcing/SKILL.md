@@ -27,6 +27,44 @@ and `element14` skills for real stock, pricing and parametric search, and its
 to pick between what they return. Do not do parametric search from memory when
 a distributor skill can answer it.
 
+## Read datasheets locally, and do not fan out
+
+Datasheet research is unusually token-heavy: every PDF arrives as one large
+blob, and a parametric comparison wants several of them. Two rules keep that
+from consuming a session's whole budget.
+
+**Fetch and extract locally rather than pulling a PDF through an agent's
+context.** `WebFetch` cannot read most datasheets — it comes back saying the
+specifications are "embedded within the compressed PDF content stream and are
+not directly readable". The environment installs `pypdf` and `poppler-utils`
+for exactly this:
+
+```bash
+curl -sL -o docs/reference/lmg2610-ds.pdf https://www.ti.com/lit/ds/symlink/lmg2610.pdf
+
+/opt/hw-py/bin/python -c '
+from pypdf import PdfReader
+r = PdfReader("docs/reference/lmg2610-ds.pdf")
+text = "\n".join(p.extract_text() or "" for p in r.pages)
+open("build/lmg2610.txt", "w").write(text)
+print(len(r.pages), "pages,", len(text), "chars")'
+
+grep -n -i -E -A4 "quiescent|thermal resistance|R_DS" build/lmg2610.txt
+```
+
+Then read the section you need, not the document. `pdftotext -layout` is the
+fallback when `pypdf` mangles a table.
+
+**Serialise the research, or cap it at two or three concurrent agents.** Seven
+parallel research agents each fetching and parsing multi-megabyte datasheets
+exhausted a five-hour account limit before all but one had returned, taking
+out the other six and every verification agent behind them. The work was not
+wrong, it was sized wrong. Extract locally as above and fan out over the
+*extracted text* if you fan out at all — never over PDF fetches.
+
+Every datasheet you fetch is recorded in `docs/reference/manifest.yaml` with
+its revision and retrieval date; see `hw-documentation`.
+
 ## The short version
 
 Selection is a constraint problem with a tie-break, not an optimisation:

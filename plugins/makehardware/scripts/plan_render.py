@@ -624,13 +624,23 @@ def summary(plan: dict, placed: dict, total: int, crit: set[str]) -> None:
     waiting = []
     for c in chunks:
         rv = review_state(c, ledger)
-        if rv and rv[0] != "approved":
-            waiting.append((c, rv))
+        if not rv or rv[0] == "approved":
+            continue
+        # A review that has never been requested is only news for work that has
+        # started. Listing one for every `todo` chunk is noise, and noise is
+        # how a real "the human is waiting on you" line stops being read.
+        if rv[0] == "missing" and c.get("status") == "todo":
+            continue
+        waiting.append((c, rv))
     if waiting:
-        print("  Waiting on human review:")
+        print("  Human review outstanding:")
         for c, (st, detail) in waiting:
-            print(f'    - {c["id"]}: review {c["review"]!r} is {st}'
-                  + (f" ({detail})" if detail else ""))
+            word = {"missing": "has never been requested",
+                    "requested": "is awaiting an answer",
+                    "changes_requested": "came back with changes",
+                    "stale": "went stale — an agreed artefact changed"}[st]
+            print(f'    - {c["id"]}: review {c["review"]!r} {word}'
+                  + (f" ({detail})" if detail and st != "missing" else ""))
         print()
 
     print("  * = on the critical path")
