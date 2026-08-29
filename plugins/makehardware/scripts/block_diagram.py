@@ -191,10 +191,21 @@ def budget(spec: dict) -> list[dict]:
     """Per rail: what it must deliver, against what its source can supply.
 
     A rail carries its own loads plus everything drawn by the rails derived
-    from it, referred through their regulators. Efficiency is deliberately not
-    modelled — this is a headroom check, not an energy model, and pretending to
-    know a converter's curve at an unknown operating point would be worse than
-    the honest conservative number.
+    from it, **referred through the voltage ratio**. A child rail's amps are
+    not the parent's amps: 67 A at 48 V is 8.0 A off a 400 V input, and adding
+    the 67 A straight on declares the 400 V rail eight times over budget when
+    it is fine. Power is what crosses a converter, so the current referred up
+    is `I_child × V_child / V_parent`.
+
+    Efficiency is deliberately not modelled — this is a headroom check, not an
+    energy model, and pretending to know a converter's curve at an unknown
+    operating point would be worse than the honest conservative number. The
+    referred current is therefore the ideal one, and it is optimistic by
+    exactly the converter's loss. Where that matters (a battery-life claim, a
+    thermal budget), work the number out explicitly and record it in an ADR.
+
+    A rail with no declared voltage cannot be referred, so its children roll up
+    1:1 and the rail is flagged; see validate().
     """
     rails = spec.get("rails") or []
     blocks = spec["blocks"]
@@ -206,6 +217,7 @@ def budget(spec: dict) -> list[dict]:
             "id": rid, "voltage": r.get("voltage"), "from": r.get("from"),
             "source": r.get("source"), "limit": r.get("max_current_a"),
             "typ": 0.0, "max": 0.0, "loads": [], "notes": r.get("notes"),
+            "unreferred": [],
         }
 
     for b in blocks:
@@ -230,11 +242,24 @@ def budget(spec: dict) -> list[dict]:
 
     for rid in sorted(rows, key=depth, reverse=True):
         parent = rows[rid]["from"]
-        if parent in rows:
-            rows[parent]["typ"] += rows[rid]["typ"]
-            rows[parent]["max"] += rows[rid]["max"]
-            rows[parent]["loads"].append(
-                (rid, f"(rail {rid} and everything on it)", rows[rid]["typ"], rows[rid]["max"]))
+        if parent not in rows:
+            continue
+        vc, vp = rows[rid]["voltage"], rows[parent]["voltage"]
+        try:
+            ratio = float(vc) / float(vp)
+        except (TypeError, ValueError, ZeroDivisionError):
+            # No usable voltage on one end. Roll up 1:1, which is conservative
+            # for a step-down and wrong for a step-up, and say so rather than
+            # inventing a ratio.
+            ratio = 1.0
+            rows[parent]["unreferred"].append(rid)
+        typ, mx = rows[rid]["typ"] * ratio, rows[rid]["max"] * ratio
+        rows[parent]["typ"] += typ
+        rows[parent]["max"] += mx
+        label = f"(rail {rid} and everything on it)"
+        if ratio != 1.0:
+            label += f" referred at {vc} V / {vp} V"
+        rows[parent]["loads"].append((rid, label, typ, mx))
 
     for row in rows.values():
         limit = row["limit"]
@@ -803,6 +828,24 @@ def print_budget(spec: dict, rows: list[dict]) -> None:
         print(f'  {r["id"]:<8} {r["voltage"]:>6} {r["typ"]:>8.3f} {r["max"]:>8.3f} '
               f'{limit:>9} {head:>9}{flag}')
     print()
+
+    # Say when a child rail's current was referred, because the number a
+    # reader expects to see is the child's amps and it deliberately is not.
+    referred = [(r["id"], bid, name) for r in rows
+                for bid, name, _t, _m in r["loads"] if "referred at" in name]
+    if referred:
+        print("  Child rails are referred through the voltage ratio "
+              "(I_child x V_child / V_parent), ideal — no converter loss:")
+        for rid, bid, name in referred:
+            print(f"      {rid} <- {bid} {name.split('referred at')[1].strip()}")
+        print()
+    for r in rows:
+        if r.get("unreferred"):
+            print(f'  {r["id"]}: could not refer '
+                  f'{", ".join(r["unreferred"])} — a voltage is missing, so '
+                  f'those rolled up 1:1 and this budget is wrong by the '
+                  f'converter ratio.\n')
+
     for r in rows:
         if r["over"] or r["tight"]:
             word = "exceeds" if r["over"] else "is within 20% of"

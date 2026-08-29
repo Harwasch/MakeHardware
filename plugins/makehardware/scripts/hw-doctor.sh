@@ -42,6 +42,49 @@ chk() {  # chk <label> <command...>
     fi
 }
 
+# A python entry point fails in two completely different ways that look
+# identical in a one-line report, and they have opposite fixes:
+#
+#   not installed   — its install group never landed. Read python.log, rerun
+#                     the environment build.
+#   import error    — it is installed and its dependencies are wrong, which in
+#                     practice means two packages fighting over one venv.
+#                     Reinstalling changes nothing; it needs its own venv.
+#
+# So say which. This is the difference between "the environment is broken" and
+# "these two servers cannot share an interpreter".
+chkpy() {  # chkpy <label> <path> [args...]
+    local label=$1 path=$2; shift 2
+    local out rc
+    if [ ! -x "${path}" ]; then
+        printf '  \033[31mFAIL\033[0m %-22s not installed — its group failed; see %s\n' \
+            "${label}" "${PREFIX}/logs/python.log"
+        bad=$((bad+1))
+        return
+    fi
+    out=$("${path}" "$@" 2>&1); rc=$?
+    if [ ${rc} -eq 0 ]; then
+        printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" "$(_firstline "${out}")"
+        ok=$((ok+1))
+        return
+    fi
+    local missing
+    case ${out} in
+        *ModuleNotFoundError*|*ImportError*|*"cannot import name"*)
+            missing=$(printf '%s' "${out}" \
+                | grep -m1 -oE "(ModuleNotFoundError|ImportError):.*" | cut -c1-52)
+            printf '  \033[31mFAIL\033[0m %-22s import error, not a missing binary: %s\n' \
+                "${label}" "${missing}"
+            printf '       %-22s installed at %s — give it its own venv rather than reinstalling\n' \
+                "" "${path}"
+            ;;
+        *)
+            printf '  \033[31mFAIL\033[0m %-22s %s\n' "${label}" "$(_firstline "${out}")"
+            ;;
+    esac
+    bad=$((bad+1))
+}
+
 echo "MakeHardware environment check"
 echo
 
@@ -70,19 +113,28 @@ echo "Electrical:"
 chkout ngspice     "ngspice-[0-9]+" ngspice --version
 chk kicad-cli      kicad-cli version
 chk konnect        konnect --version
-chk ltspice-mcp    "${VENV}/bin/ltspice-mcp" --help
+chkpy ltspice-mcp  "${VENV}/bin/ltspice-mcp" --help
 
 echo
 echo "Mechanical:"
 chk build123d      "${VENV}/bin/python" -c "import build123d;print('build123d',build123d.__version__)"
-chk build123d-mcp  "${VENV}/bin/build123d-mcp" --version
+chkpy build123d-mcp "${VENV}/bin/build123d-mcp" --version
 chk gmsh           gmsh --version
 chkout calculix    "Version [0-9]" ccx -v
 
 echo
-echo "Requirements & planning:"
+echo "Documentation & datasheets:"
+# The house rule is "never take a number from memory when a datasheet exists",
+# so a missing PDF text extractor is not a cosmetic gap.
+chk pdftotext      pdftotext -v
+chk pypdf          "${VENV}/bin/python" -c "import pypdf;print('pypdf',pypdf.__version__)"
+
+echo
+echo "Requirements, planning & review:"
 chk strictdoc      "${VENV}/bin/strictdoc" version
 chk pyyaml         "${VENV}/bin/python" -c "import yaml;print('pyyaml',yaml.__version__)"
+chk review-gate    "${VENV}/bin/python" \
+    "$(dirname "$(readlink -f "$0")")/review_gate.py" --help
 
 echo
 echo "Display (needed only for live KiCad):"

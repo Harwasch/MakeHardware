@@ -12,17 +12,29 @@ Both come from real geometry, so unlike an image model the pictures cannot
 show something unbuildable, and every one of them is attached to numbers.
 When the human says "too tall", you change a parameter and re-render.
 
+The renders default to `docs/design/vision/`, not to `build/`, and a vision
+**document** is written beside them. That is deliberate: the human reviewing
+this is usually looking at github.com while the agent works in a cloud VM, so
+an image under `build/` is an image nobody will ever see. `docs/design/vision.md`
+renders inline on GitHub with every concept, its numbers and the open
+questions, and it is the artefact the vision review signs off.
+
 Usage:
-    scripts/vision_board.py concepts/concept_a.py [concepts/concept_b.py ...] \
-        --out build/vision
+    scripts/vision_board.py concepts/concept_a.py [concepts/concept_b.py ...]
+
+    scripts/vision_board.py concepts/*.py \
+        --out docs/design/vision --doc docs/design/vision.md \
+        --question "Which of these, and why?"
 
 Each concept file is a plain Python module that defines:
-    PART   : a build123d Part / Compound          (required)
-    TITLE  : str                                  (optional)
-    NOTES  : str                                  (optional)
+    PART      : a build123d Part / Compound          (required)
+    TITLE     : str                                  (optional)
+    NOTES     : str                                  (optional)
+    MATERIAL  : str                                  (optional)
+    RATIONALE : str  — what this concept is betting on (optional)
 
-Writes <out>/<stem>/{iso.svg,view-*.png} plus <out>/manifest.json, which is
-what you feed into the vision-board Artifact.
+Writes <out>/<stem>/{iso.svg,view-*.png}, <out>/manifest.json and the vision
+document.
 """
 from __future__ import annotations
 
@@ -189,6 +201,8 @@ def render_concept(path: str, outdir: str, material: str = "cobalt") -> dict:
         "id": stem,
         "title": getattr(module, "TITLE", stem.replace("_", " ").title()),
         "notes": getattr(module, "NOTES", ""),
+        "rationale": getattr(module, "RATIONALE", ""),
+        "material": getattr(module, "MATERIAL", material),
         "source": path,
         "metrics": measure(part),
         "images": {},
@@ -200,14 +214,127 @@ def render_concept(path: str, outdir: str, material: str = "cobalt") -> dict:
     out = os.path.join(target, "iso.svg")
     iso_svg(part, out)
     entry["images"]["iso"] = os.path.relpath(out, outdir)
+
+    # Styling imagery, if hw-imagegen has already produced any. It is picked
+    # up by filename rather than passed in, so re-running the board after a
+    # styling pass folds the new images into the document automatically.
+    entry["styling"] = sorted(
+        os.path.relpath(os.path.join(target, f), outdir)
+        for f in os.listdir(target)
+        if f.startswith("style-") and f.lower().endswith((".png", ".jpg", ".webp")))
     return entry
+
+
+# ---------------------------------------------------------------------------
+# The vision document
+#
+# The reason this exists rather than only an Artifact: the human is reviewing
+# from github.com, usually on a different machine from the one the agent is
+# working on. A render that is not committed to the repository, in a file that
+# GitHub renders, is a render nobody sees — and a vision stage reported as
+# complete on renders nobody saw is exactly the failure this document is here
+# to stop.
+# ---------------------------------------------------------------------------
+VISION_DOC = "docs/design/vision.md"
+
+
+def render_doc(manifest: dict, outdir: str, doc_path: str,
+               project: str | None = None,
+               description: str | None = None,
+               questions: list[str] | None = None) -> str:
+    concepts = manifest["concepts"]
+    base = os.path.dirname(doc_path) or "."
+
+    def rel(img: str) -> str:
+        return os.path.relpath(os.path.join(outdir, img), base)
+
+    o = [f'# Vision — {project or "this product"}', "",
+         "What we think you asked for, drawn from real geometry. Every image "
+         "below comes from a parametric model, so nothing here is a shape that "
+         "cannot be built, and every number is measured off the model rather "
+         "than estimated.", ""]
+    if description:
+        o += [description.strip(), ""]
+
+    if len(concepts) > 1:
+        o += ["## The choice", "",
+              "| | " + " | ".join(f'**{c["title"]}**' for c in concepts) + " |",
+              "|---|" + "---|" * len(concepts) + "",
+              "| Envelope (mm) | " + " | ".join(
+                  " × ".join(str(v) for v in c["metrics"]["bbox_mm"])
+                  for c in concepts) + " |",
+              "| Volume (mm³) | " + " | ".join(
+                  f'{c["metrics"]["volume_mm3"]:,.0f}' for c in concepts) + " |",
+              "| Approx. mass (g) | " + " | ".join(
+                  f'{c["metrics"]["approx_mass_g_at_1p4"]:,.0f}' for c in concepts) + " |",
+              ""]
+
+    for c in concepts:
+        m = c["metrics"]
+        o += [f'## {c["title"]}', ""]
+        if c.get("notes"):
+            o += [c["notes"].strip(), ""]
+        if c.get("rationale"):
+            o += [f'**What this one bets on:** {c["rationale"].strip()}', ""]
+        o += [f'**{" × ".join(str(v) for v in m["bbox_mm"])} mm** · '
+              f'{m["volume_mm3"]:,.0f} mm³ · '
+              f'~{m["approx_mass_g_at_1p4"]:,.0f} g at 1.4 g/cm³ · '
+              f'model: `{c["source"]}`', ""]
+
+        if "hero" in c["images"]:
+            o += [f'![{c["title"]} — three-quarter view]({rel(c["images"]["hero"])})', ""]
+        pair = [k for k in ("front", "top") if k in c["images"]]
+        if pair:
+            o += ["| " + " | ".join(k.title() for k in pair) + " |",
+                  "|" + "---|" * len(pair),
+                  "| " + " | ".join(f'![{k}]({rel(c["images"][k])})' for k in pair) + " |",
+                  ""]
+        if "iso" in c["images"]:
+            o += ["<details><summary>Dimensioned isometric line drawing</summary>", "",
+                  f'![{c["title"]} — isometric]({rel(c["images"]["iso"])})', "",
+                  "</details>", ""]
+        if c.get("styling"):
+            o += ["### Styling proposals", "",
+                  "*Generated imagery — styling only. These carry no dimensions; "
+                  "the numbers above and the line drawing are the geometry.*", ""]
+            for img in c["styling"]:
+                o += [f'![styling proposal — generated, not dimensioned]({rel(img)})', ""]
+
+    o += ["## What we need from you", ""]
+    for i, q in enumerate(questions or [
+            "Which concept, and what made you pick it? The reason matters more "
+            "than the choice.",
+            "Is anything in the envelope wrong — too big, too small, wrong "
+            "proportions?",
+            "What is missing that you assumed we knew?"], 1):
+        o += [f"{i}. {q}"]
+    o += ["",
+          "Whatever you agree to here becomes the `VIS-` entries in "
+          "`requirements/00-vision.sdoc`, in your words, and everything "
+          "downstream is built on it.", "",
+          "---", "",
+          "<sub>Generated by `vision-board` from the models in `concepts/`. "
+          "Change a parameter and re-run; do not edit this file.</sub>", ""]
+
+    os.makedirs(base, exist_ok=True)
+    with open(doc_path, "w") as fh:
+        fh.write("\n".join(o))
+    return doc_path
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("concepts", nargs="+", help="python files each defining PART")
-    ap.add_argument("--out", default="build/vision")
+    ap.add_argument("--out", default="docs/design/vision",
+                    help="where the renders go — under docs/ so GitHub shows them")
+    ap.add_argument("--doc", default=VISION_DOC,
+                    help="the vision document; --doc '' to skip")
+    ap.add_argument("--project", help="product name for the document title")
+    ap.add_argument("--description",
+                    help="the vision in prose, in the human's words")
+    ap.add_argument("--question", action="append",
+                    help="a question to put to the human; repeatable")
     ap.add_argument("--material", default="cobalt", choices=sorted(MATERIALS))
     args = ap.parse_args()
 
@@ -223,6 +350,15 @@ def main() -> int:
     with open(os.path.join(args.out, "manifest.json"), "w") as fh:
         json.dump(manifest, fh, indent=2)
     print(f"\n{len(manifest['concepts'])} concept(s) -> {args.out}/manifest.json")
+
+    if args.doc:
+        render_doc(manifest, args.out, args.doc, args.project,
+                   args.description, args.question)
+        print(f"wrote {args.doc}")
+        print("\nCommit and push the document and the renders, then open the "
+              "review:\n"
+              f"  review-gate open vision --artifact {args.doc} "
+              f"--artifact {args.out}")
     return 0
 
 
