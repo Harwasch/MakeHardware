@@ -32,9 +32,21 @@ kicad-cli sch export bom hw/probe.kicad_sch --output docs/design/bom.csv
 the review summary as a number — "ERC: 0 errors, 3 warnings, all
 unconnected-pin on the debug header" — not as an attachment nobody opens.
 
+**Prefer the per-sheet SVGs over the PDF for anything under about four
+sheets.** Pass the SVG directory as an `--artifact` and `review-gate` embeds
+each sheet inline in the review packet, so the human scrolls one page instead
+of opening GitHub's PDF viewer — which is serviceable on a desktop and
+unpleasant on a phone. Commit the PDF too, for printing and for anyone who
+wants the whole thing in one file.
+
 ## KiCad board
 
 ```bash
+# The board in 3D, which GitHub renders interactively in the blob view.
+kicad-cli pcb export step hw/probe.kicad_pcb --output docs/design/pcb.step
+# (and an STL alongside it if you want the viewer: kicad-cli has no STL
+#  exporter, so convert the STEP, or export from build123d.)
+
 # Layer plots, one page each, in one PDF.
 kicad-cli pcb export pdf hw/probe.kicad_pcb \
     --output docs/design/pcb-layers.pdf \
@@ -66,19 +78,26 @@ vision-board cad/enclosure.py --out docs/design/enclosure \
     --doc docs/design/enclosure.md --project "Enclosure, rev C"
 ```
 
-For an assembly, export STEP for anyone who wants it in CAD **and** renders
-for everyone else:
+For an assembly, export STEP for anyone who wants it in CAD — and **STL as
+well**, because GitHub renders STL in an interactive 3D viewer in the blob
+view. That is the one case where the human can rotate and zoom the actual
+geometry without installing anything, and it beats any static render:
 
 ```bash
 /opt/hw-py/bin/python -c "
-from build123d import export_step
+from build123d import export_step, export_stl
 import cad.enclosure as m
-export_step(m.PART, 'docs/design/enclosure.step')"
+export_step(m.PART, 'docs/design/enclosure.step')   # for CAD
+export_stl(m.PART, 'docs/design/enclosure.stl')     # for GitHub's 3D viewer"
 ```
 
-A cross-section render is usually the most informative single image of an
-enclosure: it shows the wall thicknesses, the internal clearances and where
-the board actually sits.
+Keep the STL coarse enough to stay small — it is for looking at, not for
+manufacturing — and say in the review request that it is a review mesh.
+
+A cross-section render is still usually the most informative single *image* of
+an enclosure: it shows the wall thicknesses, the internal clearances and where
+the board actually sits, and it is the one view a 3D viewer will not give you
+by default.
 
 ## Requirements
 
