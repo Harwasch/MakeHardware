@@ -30,12 +30,35 @@ Use hw-vision. I want to build <one sentence>.
 
 ```bash
 hw-doctor                 # what the toolchain can actually do right now
-/hw-status                # plan progress, what is ready to start, requirements coverage
-plan-render               # refresh docs/plan.svg and the block above
+/hw-status                # progress, what is ready to start, what is waiting on you
+/hw-review <milestone>    # build the artefact, ask you about it, record the answer
+plan-render               # refresh docs/plan.{svg,md,drawio} and the block above
+plan-render --check       # exit 1 on a `done` chunk whose outputs or review are missing
 block-diagram             # refresh the architecture diagram and power budget
 block-diagram --check     # architecture gate; exit 1 on an over-budget rail
 req-trace --gate          # traceability gate; exit 1 while gaps remain
+req-trace --map           # redraw the requirements map
+review-gate list          # where every human review stands
 ```
+
+## How you get asked things
+
+Claude runs in a cloud VM, so it cannot show you anything directly. At each
+milestone — the vision, the plan, the requirements, the architecture, and each
+large design stage — it commits something that renders here on GitHub and then
+asks you, with the link:
+
+| Look at | For |
+|---|---|
+| `docs/design/vision.md` | the concepts, their envelopes and masses |
+| `docs/plan.md` | what each chunk of work actually is |
+| `docs/design/requirements-map.svg` | the requirement tree and its gaps |
+| `docs/design/block-diagram.svg` | the power tree and the buses |
+| `docs/design/*.pdf` | schematics and board layer plots |
+
+Your answer goes into `docs/review/reviews.yaml`, and nothing downstream is
+marked done without it. If Claude later changes something you signed off, that
+review goes stale and it has to come back and ask again.
 
 ## Before you start: the environment
 

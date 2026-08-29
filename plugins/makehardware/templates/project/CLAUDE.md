@@ -10,11 +10,15 @@ environment build actually managed to install.
 ## Stages
 
 `hw-vision` → `hw-planning` → `hw-requirements` → `hw-block-diagram` → design
-→ `hw-simulation` → `hw-verification`, with `hw-sourcing`, `hw-documentation`,
-`hw-imagegen` and `hw-retro` throughout.
+→ `hw-simulation` → `hw-verification`, with `hw-review`, `hw-sourcing`,
+`hw-documentation`, `hw-imagegen` and `hw-retro` throughout.
 
 The block diagram sits between requirements and schematic capture on purpose:
 the architecture and the power budget are agreed before anything is wired.
+
+Each of the first four stages ends in a **recorded human review**, and so does
+each large design stage. `review-gate check --gate` is the gate;
+`docs/review/reviews.yaml` is the record.
 
 ## Three skill sets, one rule each
 
@@ -38,18 +42,38 @@ chose.
 ```bash
 hw-doctor                 # what the toolchain can actually do right now
 imagegen --list           # which image providers have keys
-plan-render               # refresh docs/plan.svg and the README block
-plan-render --summary     # status and what is ready to start
+plan-render               # refresh docs/plan.{svg,md,drawio} and the README
+plan-render --summary     # status, what is ready, what awaits review
+plan-render --check       # exit 1 on a `done` chunk whose outputs or review are missing
 req-trace --gate          # traceability gate; exit 1 while gaps remain
+req-trace --map           # the requirements map, SVG + draw.io
 block-diagram             # refresh hw/block-diagram.drawio and the review image
 block-diagram --check     # architecture gate; exit 1 on an over-budget rail
-vision-board concepts/*.py --out build/vision
+vision-board concepts/*.py            # renders + docs/design/vision.md
+review-gate list          # where every human review stands
+review-gate check --gate  # exit 1 while a milestone is unsigned or stale
 ```
 
 Python for CAD and analysis is `/opt/hw-py/bin/python`. Do not `pip install`
 into the system Python.
 
 ## Rules that matter
+
+**An artefact the human has not seen is not a deliverable.** This session is
+running in a cloud VM; the human is looking at this repository on github.com in
+a browser. Anything you want reviewed has to be committed, pushed, and in a
+format that renders there — a PDF of the schematic, a PNG of the board, an SVG
+of the diagram. A `.kicad_sch`, a `.step` or a `.drawio` is a download, not a
+review, and a render under `build/` is a render nobody sees.
+
+**Get the review, do not assume it.** At the vision, the plan, the
+requirements and the architecture — and at each large design stage — build the
+artefact, commit it, `review-gate open`, then **ask the human directly with
+`AskUserQuestion`, with the github.com link, and block on the answer**. Record
+what they said with `review-gate sign`, in their words. Do not sign on their
+behalf, do not read approval into silence or into a message about something
+else, and do not mark a chunk `done` while its review is open or stale. See
+`hw-review`.
 
 **Keep the plan current.** Update `status` in `plan.yaml` as work completes and
 re-render in the same session. A stale plan is worse than no plan, because
@@ -81,6 +105,11 @@ inventing one.
 cannot be fetched, record it as blocked in `docs/reference/manifest.yaml` and
 ask the human for it.
 
+**Before concluding an approach cannot work, list the levers you did not
+vary.** A negative result from one configuration is a result about that
+configuration. Corner sweeps cover tolerance, temperature and supply; they do
+not cover layer count, geometry or topology, which are usually the real levers.
+
 **Log friction as it happens.** When the human corrects you, when something
 takes far more loops than it should, or when you had to guess — append three
 lines to `docs/design/friction-log.md` naming the MakeHardware file that should
@@ -104,8 +133,27 @@ the number has to move.
 * The environment snapshot preserves files, not processes.
 * `hw/block-diagram.drawio` and the SVG are generated. Edit
   `block-diagram.yaml`; rearranging blocks in draw.io is fine and is kept.
+* Konnect's schematic tools are file-based; its **PCB tools need a live
+  KiCad**. When `check_kicad_ui` says `ipc_responsive: false`, script the board
+  with KiCad's own `pcbnew` API — same object model, so still not text editing.
+* A net class track width wider than the pads on its nets is unroutable, and
+  nothing warns you. Route at pad width and restore the width afterwards. Run
+  DRC on the placed, unrouted board. See `hw-verification`.
+* `_ThermalVias` footprint variants punch vias through to the other side and
+  short whatever is opposite. Check before placing.
+* KiCad's Specctra DSN export writes fractional coordinates into a file it
+  declares as integers, and freerouting then routes nothing while blaming the
+  maze search. Round-trip and integerise the DSN first.
+* `WebFetch` cannot read most datasheet PDFs. Download and extract with
+  `pypdf` or `pdftotext`, both installed.
 
 ## Publishing
 
-Vision boards, plans and traceability reports should be published as Artifacts,
-with the images and the numbers together. Lead with gaps, not percentages.
+The repository is the primary surface: commit the review artefacts under
+`docs/` so they render on github.com, and put the link in front of the human.
+Publishing a vision board, a plan or a traceability report as an Artifact as
+well is good — the images and the numbers together — but it is in addition to
+the committed version, not instead of it. A session ends and its Artifacts go
+with it; the repo is what the human still has tomorrow.
+
+Lead with gaps, not percentages.

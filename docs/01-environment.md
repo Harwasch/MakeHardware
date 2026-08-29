@@ -110,6 +110,12 @@ level, Full included, which is why the setup script works around them:
   (`/releases/download/<tag>/<file>`) is **not** blocked, which is why Konnect
   installs by `curl` rather than a source build. `git clone` of a public repo
   is served too.
+* **`WebFetch` cannot read most datasheet PDFs.** It returns text saying the
+  specifications are "embedded within the compressed PDF content stream". The
+  script therefore installs `poppler-utils` and `pypdf` — fetch the PDF and
+  extract locally. `apt-get install poppler-utils` inside a session fails
+  because the package is not in the image's sources, so it has to happen at
+  build time.
 * The ~5 minute setup budget and the 4 vCPU / 16 GB / 30 GB ceiling.
 
 ### Verifying the policy from inside a session
@@ -190,6 +196,13 @@ SessionStart hook surfaces anything degraded at the top of the session.
 install overlap, so the wall clock is roughly the longest phase (~2 min) rather
 than the sum.
 
+**One package must not be able to take out the toolchain.** The Python phase
+installs in small groups rather than one transaction, ordered by what depends
+on them: `strictdoc` and `pyyaml` — the requirements, planning and review
+gates — go first and alone, and a failure there fails the phase. Everything
+after that can fail individually and returns DEGRADED, so `hw-doctor` names
+the one thing that is missing instead of five things that share a cause.
+
 **It survives being killed.** The helper commands and `/etc/ltspice-mcp.toml`
 are written before the long phases, `status.json` is rewritten after each
 phase, and the tail runs from an `EXIT`/`TERM` trap. A build cut short at the
@@ -264,10 +277,25 @@ scripts/hw-doctor.sh
 Expected on a fully-provisioned environment:
 
 ```
-Electrical:   ngspice, kicad-cli (10.x), konnect, ltspice-mcp
-Mechanical:   build123d, build123d-mcp, gmsh, calculix
-Requirements: strictdoc
+Electrical:     ngspice, kicad-cli (10.x), konnect, ltspice-mcp
+Mechanical:     build123d, build123d-mcp, gmsh, calculix
+Datasheets:     pdftotext, pypdf
+Requirements:   strictdoc, pyyaml, review-gate
 ```
 
 `kicad-cli` failing while everything else passes means the allowlist entry for
 `ppa.launchpadcontent.net` is missing.
+
+Two report lines are worth reading carefully:
+
+* **`import error, not a missing binary`** on an MCP server means it is
+  installed and its dependencies are wrong. Reinstalling will not help; it
+  needs its own virtualenv. `build123d-mcp` (`mcp>=2,<3`) and `ltspice-mcp`
+  (`mcp[cli]<2`) cannot share one, which is why the setup script gives each of
+  them one and symlinks the console script back onto `PATH`.
+* **`not installed — its group failed`** means one of the Python install
+  groups did not land. `/opt/makehardware/logs/python.log` names the group.
+  The groups exist so that a transient failure on, say, `matplotlib` cannot
+  also take out `strictdoc`: the requirements, planning and review gates
+  install first, in their own transaction, and everything else is allowed to
+  degrade around them.

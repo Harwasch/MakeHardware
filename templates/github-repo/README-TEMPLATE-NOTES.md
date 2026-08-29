@@ -24,6 +24,8 @@ not inherit it — or keep it, it is harmless.
 ## Keeping it in sync
 
 `.claude/settings.json` here is a copy of
-`plugins/makehardware/templates/project/.claude/settings.json`. If you change
+`plugins/makehardware/templates/project/.claude/settings.json` — the two
+marketplaces, the two plugins, and a `permissions.allow` list for the
+toolchain's own commands so a session is not prompted for each one. If you change
 the plugin set, change both. There is no automation for this; it is two files
 and it changes about once a year.

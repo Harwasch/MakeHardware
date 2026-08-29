@@ -42,25 +42,45 @@ reliably. As soon as you can put numbers on an envelope, build the massing
 model and render it.
 
 Write each concept as a plain build123d module under `concepts/`, defining
-`PART`, plus optional `TITLE`, `NOTES`, `MATERIAL`:
+`PART`, plus optional `TITLE`, `NOTES`, `MATERIAL`, `RATIONALE`:
 
 ```bash
-/opt/hw-py/bin/python scripts/vision_board.py \
-    concepts/concept_a.py concepts/concept_b.py --out build/vision
+vision-board concepts/concept_a.py concepts/concept_b.py \
+    --project "Thermal Probe" \
+    --description "<the vision in the human's own words>"
 ```
 
 That writes shaded three-quarter, front and top views, an isometric line
 drawing with hidden edges, and a `manifest.json` carrying the bounding box,
-volume and an approximate mass for each concept.
+volume and approximate mass for each concept — **into `docs/design/vision/`,
+not `build/`** — plus `docs/design/vision.md`, the vision document.
+
+The document is the point. It renders inline on github.com with every concept,
+its numbers side by side, the styling proposals labelled as such and the open
+questions at the end. You are almost certainly running in a cloud VM; the
+human is looking at the repository in a browser, so a render under `build/` is
+a render nobody sees. **Commit and push it before you ask anyone to look.**
+
+## Build the thing they asked for, at the scope they asked for it
+
+Two bare coil pads is not a product. If the human described something they
+would hold, sell or install, the concept has to be recognisable as that thing
+— an envelope, the interface they touch, the ports, roughly where the mass
+is. A concept scoped to the sub-assembly you find most interesting invites a
+polite yes to a question nobody asked, and there is nobody in a position to
+catch it until much later.
+
+When you genuinely cannot model the whole product yet, say what the model
+covers and what it leaves out, in the document, above the picture.
 
 **Always offer at least two concepts that differ in a way the human can name**
 ("softer vs. more instrument-like", "one-handed vs. two-handed"). A single
 concept invites polite agreement; a pair forces a real preference, and the
 reason they give you is worth more than the choice.
 
-Then publish the set as an Artifact — renders, the numbers beside each one,
-and the open questions — and ask the human to react. Iterate on the parameters
-in the concept modules, not on prose.
+Then commit the document and the renders, and put it in front of the human —
+see **`hw-review`** for the mechanism. Iterate on the parameters in the
+concept modules, not on prose.
 
 These renders come from real geometry, so they cannot show something
 unbuildable, and every picture is tied to a bounding box and a volume. Say so:
@@ -89,6 +109,34 @@ still a good board.
 
 ## Leaving the stage
 
-You are done when the human can point at one concept and the numbers beside it
-without qualifying. Write what they agreed into `requirements/00-vision.sdoc`
-as `VIS-*` entries in their words, then move to `hw-requirements`.
+The vision stage is done when **a human has looked at the document and said
+which concept, and that is recorded in the repository.** Not when the renders
+exist. This stage has been reported complete on renders nobody saw, and the
+plan, the requirements and the architecture were then all built on an
+agreement that had never been made.
+
+```bash
+git add docs/design/vision.md docs/design/vision/ concepts/ && git commit && git push
+
+review-gate open vision \
+    --title "Vision and concept selection" \
+    --summary "<what the two concepts are and how they differ>" \
+    --artifact docs/design/vision.md --artifact docs/design/vision/ \
+    --reference concepts/ \
+    --question "Which concept, and what made you pick it?"
+```
+
+Then ask them directly — `AskUserQuestion`, with the github.com URL that
+`review-gate` printed — and **block on the answer**. When they answer:
+
+```bash
+review-gate sign vision --approve --by <name> --note "<what they said>"
+```
+
+Record the *reason* they gave, not just the choice; it is worth more, and it
+is what a later session re-reads when a number has to move. Write what they
+agreed into `requirements/00-vision.sdoc` as `VIS-*` entries in their words,
+commit the ledger, and move to `hw-planning`.
+
+If they ask for changes, change the parameters, re-render, re-open the review
+and ask again. That loop is the stage working.

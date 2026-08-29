@@ -77,11 +77,16 @@ blocks:
 ```
 
 A rail carries its own loads **plus everything drawn by the rails derived from
-it**, referred through their regulators. Converter efficiency is deliberately
-not modelled — this is a headroom check, not an energy model, and inventing a
-curve at an unknown operating point would be worse than a conservative number.
-If you need the input-side number for a thermal or battery-life claim, work it
-out explicitly and record it in an ADR.
+it, referred through the voltage ratio**. A child rail's amps are not the
+parent's amps: 67 A at 48 V is 8.0 A off a 400 V input, so the roll-up
+multiplies by `V_child / V_parent` and says so in the output.
+
+Converter **efficiency** is deliberately not modelled — this is a headroom
+check, not an energy model, and inventing a curve at an unknown operating point
+would be worse than a conservative number. The referred current is therefore
+the ideal one and is optimistic by exactly the converter's loss. If you need
+the input-side number for a thermal or battery-life claim, work it out
+explicitly and record it in an ADR.
 
 `--check` exits 1 when a rail's max draw exceeds what its source can deliver,
 and names the contributors largest first. Wire it into the same place you run
@@ -142,9 +147,10 @@ Do not silence a warning by deleting the block. Say what you found.
 
 ## Exit condition
 
-The block diagram is done when the human has looked at the image and agreed to
-it, and:
+Four things have to be true, and the first one is not a formality:
 
+* **a human has looked at the image and agreed to it**, recorded in
+  `docs/review/reviews.yaml`;
 * every block has a part number, or an explicit "TBD" with the decision named
   as a chunk in `plan.yaml`;
 * every rail has a declared limit, and `--check` passes;
@@ -152,6 +158,31 @@ it, and:
 * each requirement that constrains the architecture — a power budget, an
   interface, a part choice — has a `File` relation to
   `hw/block-diagram.yaml`, so `req-trace` can see it.
+
+This is the cheapest artefact in the project that can be wrong in a way a
+human can see. A page of boxes takes an hour to write and a minute to read,
+and a reviewer will catch a missing rail or a bus on the wrong controller far
+faster here than in a schematic. Not showing it to them wastes the entire
+reason it exists:
+
+```bash
+block-diagram
+git add hw/block-diagram.yaml hw/block-diagram.drawio docs/design/block-diagram.svg
+git commit && git push
+
+review-gate open architecture \
+    --title "Block diagram, power tree and buses" \
+    --summary "<the power budget headline: which rail is tightest and at what %>" \
+    --artifact docs/design/block-diagram.svg \
+    --reference hw/block-diagram.yaml --reference hw/block-diagram.drawio \
+    --question "Is a rail or a part missing?" \
+    --question "Is any bus on the wrong controller?"
+```
+
+Put the budget table in the summary as text. A rail at 95% of its limit is the
+most useful fact in an architecture review and it is invisible in the picture.
+Ask directly with the link, block on the answer, and `review-gate sign` it —
+see `hw-review`.
 
 Then, and only then, start schematic capture. Konnect builds the schematic; the
 block diagram is what tells it what to build.
@@ -163,3 +194,9 @@ the same session** — a block diagram that disagrees with the schematic is wors
 than none, because it is the document reviewers read first. If the change
 invalidates a decision recorded in an ADR, update the ADR too; `hw-documentation`
 covers how.
+
+A re-render also makes the architecture review **stale**, and `review-gate
+check` will say so. That is the mechanism doing its job: the human agreed to a
+different diagram, and everything downstream is now resting on that agreement.
+Re-open the review, say what changed and why, and ask again. It is a short
+conversation.

@@ -12,8 +12,15 @@ apart is most of the discipline.
 docs/
 ├── reference/    external — what other people published    (fetched, never edited)
 ├── design/       internal — how and why WE built it        (written as we go)
+├── review/       agreement — what the human signed off     (see hw-review)
 └── user/         outbound — how to use the thing           (written near the end)
 ```
+
+A fourth constraint runs across all of them: **the human is reading this in a
+browser on github.com**, because the agent is working in a cloud VM. Markdown,
+PNG, SVG and PDF render there; `.drawio`, `.kicad_*`, `.step` and `.html` do
+not. Write to what renders, and keep the source beside it for anyone who wants
+the real application.
 
 ## 1. Reference — external material
 
@@ -37,6 +44,13 @@ Every file is recorded in `docs/reference/manifest.yaml`:
 
 Record `revision` and `retrieved`, always. A datasheet that silently revised
 under you is a real failure mode, and the revision is how you notice.
+
+**Fetch the PDF, then extract locally.** `WebFetch` cannot read most datasheets
+— it returns text saying the specifications are "embedded within the compressed
+PDF content stream". `curl` the file into `docs/reference/`, then pull the text
+out with `pypdf` or `pdftotext -layout`, both installed. See `hw-sourcing` for
+the recipe and for why datasheet research must not be fanned out across
+parallel agents.
 
 **When you cannot fetch it.** On an environment with Full network access most
 vendor sites are reachable, so fetch first and cite the file. Some material is

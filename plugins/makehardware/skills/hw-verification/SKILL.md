@@ -1,6 +1,6 @@
 ---
 name: hw-verification
-description: Close out hardware requirements against evidence and report honest coverage. Use at the end of a design sprint, before claiming a design is done, or whenever asked "does this meet the requirements" or "what is left".
+description: Close out hardware requirements against evidence and report honest coverage, and run the pre-route and pre-fabrication checks that catch a defect before it is expensive. Use at the end of a design sprint, before claiming a design is done, before placing or routing a PCB, before generating fabrication output, or whenever asked "does this meet the requirements" or "what is left".
 ---
 
 # Verification
@@ -53,8 +53,51 @@ The gate is structural. These are not, and they are where real problems hide:
   design can satisfy every requirement and still miss the point; that is worth
   saying out loud.
 
+## Checks that must happen before the board is routed
+
+These are verification too — they are the cheapest place to catch a defect,
+and every one of them has been diagnosed as something else first, at a cost of
+hours. **`references/pcb-layout.md` next to this file has the full workflow
+and the commands.** The four that matter most:
+
+1. **Net class widths against pad sizes.** A 1.20 mm track cannot enter a
+   0.25 mm QFN pad and a router will not neck down. This presents as "180 of
+   234 connections unroutable" with no stated reason, and gets blamed on
+   density. Route at pad width, restore the carrying width afterwards.
+2. **Net class clearances against pad pitch.** A 0.30 mm clearance against a
+   VSON-10's 0.255 mm pad gap is violated *inside the footprint*, before a
+   track exists.
+3. **DRC on the placed, unrouted board.** It found 721 errors on one board,
+   three of them real defects, long before there was anything to route.
+   Placement errors are cheap; routed-board errors are not.
+4. **`_ThermalVias` footprint variants.** The via array punches through to the
+   other side and lands on whatever is opposite — 47 shorting pairs on one
+   board, and it would have reached fabrication. Check the opposite side under
+   every exposed pad.
+
+Also: where a keep-out in a layout script mirrors a footprint dimension, read
+it from the footprint rather than writing the number down. A keep-out at
+6.60 mm guarding pads at 8.50 mm protects bare laminate and leaves the pads
+exposed.
+
+And know which half of the toolchain you are in: **Konnect's schematic tools
+are file-based; its PCB tools need a live KiCad.** When `check_kicad_ui`
+reports `ipc_responsive: false`, scripted layout goes through KiCad's own
+`pcbnew` Python API — the same object model, so still not text manipulation.
+
+If the layout is going to be autorouted, read the freerouting section of the
+reference first. Its CLI stop conditions do not work and it writes its output
+only on a clean exit, so an unbounded run that you kill produces nothing at
+all.
+
 ## Reporting
 
 Publish the traceability output as an Artifact for anything the human will
 share or act on — the coverage number, the table by level, and an explicit
 list of what is not yet closed. Lead with the gaps, not the percentage.
+
+And put it where the human can actually see it. They are reviewing from
+github.com while you work in a cloud VM, so the verification report belongs in
+`docs/design/`, committed, with the ERC and DRC counts as numbers in the text.
+Before claiming the design is done, open the review — see `hw-review`. A
+verification report nobody has read is not a verification.

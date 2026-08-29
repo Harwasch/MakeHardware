@@ -19,6 +19,10 @@ of these occur:
 * you had to guess because information was missing
 * a tool behaved differently than the skill said it would
 * the human sounds frustrated, or repeats themselves
+* **a review came back with changes** — what you built was not what they
+  wanted, and the reason is the most useful sentence in the log
+* **you got a long way without asking anyone** — if a stage finished with no
+  review requested, that is a finding about the workflow, not just about you
 
 One entry, three lines, no ceremony:
 

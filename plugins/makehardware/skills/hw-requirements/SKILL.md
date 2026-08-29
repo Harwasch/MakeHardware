@@ -61,16 +61,43 @@ at nothing both fail the build:
 ```
 
 What StrictDoc will not judge is whether the decomposition is any good. That
-is `req_trace.py`, which finds orphans, undecomposed mid-level requirements,
+is `req-trace`, which finds orphans, undecomposed mid-level requirements,
 leaves with no evidence, requirements with no design artefact linked, and
 status/evidence mismatches:
 
 ```bash
-/opt/hw-py/bin/python scripts/req_trace.py            # report
-/opt/hw-py/bin/python scripts/req_trace.py --gate     # exit 1 on any gap
+req-trace              # report
+req-trace --gate       # exit 1 on any gap
+req-trace --map        # the requirements map: SVG + draw.io
 ```
 
 Run the gate before claiming a stage is complete.
+
+## Draw the tree, because that is what a human can review
+
+A requirement set is a graph. Its two real failure modes — something hanging
+loose, and a number that traces to nothing anybody asked for — are shape
+questions, and reading a list of UIDs is how a gap survives a review.
+
+```bash
+req-trace --map        # docs/design/requirements-map.{svg,drawio}
+```
+
+The SVG renders inline on github.com: one column per decomposition level,
+an arrow from each requirement to the one that refines it, the status on every
+node, and the gate's findings marked in red on the nodes that have them. The
+`.drawio` is the same graph, editable.
+
+The StrictDoc HTML export is the complete, navigable version:
+
+```bash
+/opt/hw-py/bin/strictdoc export requirements \
+    --output-dir docs/design/requirements-html --formats=html
+```
+
+GitHub will not render it, so it is a download — link it, say so, and do not
+mistake generating it for having shown it to anyone. That export was produced
+on every validation run of one project and never once mentioned.
 
 ## Validate the set, not just each requirement
 
@@ -87,3 +114,29 @@ Before starting design, check the things a per-requirement check cannot see:
 
 Report what you find to the human and get the numbers changed before design
 starts, not after.
+
+## Leaving the stage
+
+The numbers in here are what every later stage is built on, and they are much
+cheaper to argue about now. So the stage is not finished when the tree
+validates — it is finished when a human has looked at it and agreed to the
+numbers, recorded in the repo.
+
+```bash
+req-trace --map
+git add requirements/ docs/design/requirements-map.* && git commit && git push
+
+review-gate open requirements \
+    --title "Requirements tree" \
+    --summary "<the numbers that moved, the roll-ups, what you are unsure of>" \
+    --artifact docs/design/requirements-map.svg \
+    --reference requirements/ --reference docs/design/requirements-html/ \
+    --question "Are these the right numbers?" \
+    --question "Is anything here that nobody asked for, or missing that you assumed?"
+```
+
+Ask directly with the link, block on the answer, and record it with
+`review-gate sign` — see `hw-review`. Lead the request with the arithmetic
+you had to do to make the budgets roll up, and with any requirement you could
+not find a parent for. Those are the two places a human catches something you
+cannot.

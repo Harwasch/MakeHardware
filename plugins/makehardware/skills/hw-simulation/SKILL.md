@@ -60,10 +60,44 @@ arithmetic disagree, the deck is wrong — find out which before moving on.
 Sweep corners before calling anything done: component tolerance, temperature,
 and supply extremes. A design that only works at nominal is not a design.
 
+## Before concluding that an approach cannot work, list the levers you did not vary
+
+A negative result from one configuration is a result **about that
+configuration**. Corner sweeping covers tolerance, temperature and supply; it
+does not cover the geometry and topology choices, which are usually the real
+levers and are usually the ones held fixed without anyone noticing.
+
+A coil analysis tested a single-layer etched spiral, found it 70 W short, and
+wrote up *"PCB coils cannot reach the efficiency the thermal path requires"*.
+Parallel layers — the obvious lever — were never modelled. Six layers turn a
+190 W failure into a 73 W pass. The headline finding of the project was wrong
+for two days.
+
+So whenever a simulation says an approach fails, write the sentence out
+before you write the conclusion:
+
+> Held fixed: single layer, 35 µm copper, 2 mm trace pitch, 120 kHz.
+> Not varied: layer count, copper weight, pitch, frequency, core material.
+
+Then either vary the one most likely to move the number, or state the
+conclusion at the scope you actually tested — "a single-layer 35 µm spiral
+falls 70 W short", not "PCB coils cannot do this". The two sentences send a
+project in completely different directions.
+
+This is also why requirements are written against physics rather than against
+a named conductor. A requirement phrased in terms of k·Q and dissipation
+survives this correction; one that names "PCB coil" has to be rewritten, and
+everything below it with it.
+
 ## Turning a run into evidence
 
-A simulation closes a requirement only when it is reproducible. Commit the
-deck, record the result, and link them:
+A simulation closes a requirement only when it is reproducible, **and it is
+evidence only once a human can read it**. Numbers go into a markdown table in
+`docs/design/`, committed, with the failing corner first — a `.raw` file is
+not a result and a plot with no number beside it is decoration. See
+`hw-review` for the shape of a simulation review.
+
+Commit the deck, record the result, and link them:
 
 * commit the `.cir` / `.asc` under `sim/`
 * put the number and the run into the requirement's `EVIDENCE` field

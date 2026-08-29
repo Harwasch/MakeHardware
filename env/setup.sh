@@ -128,6 +128,12 @@ _apt() { flock /var/lock/mh-apt.lock apt-get "$@"; }
 # and keyring by hand instead, which has no Python dependency at all.
 # ==========================================================================
 phase_base() {
+    # poppler-utils is not optional. The house rule is "never take a number
+    # from memory when a datasheet exists", and WebFetch cannot read most
+    # datasheet PDFs — it comes back saying the specifications are "embedded
+    # within the compressed PDF content stream". pdftotext/pdftoppm are the
+    # fallback, and the package is not in this image by default.
+    #
     # cmake/protobuf are only needed to compile Konnect, which we no longer do
     # by default — see phase 4.
     local build_deps=()
@@ -142,6 +148,7 @@ phase_base() {
         ngspice \
         gmsh calculix-ccx \
         graphviz \
+        poppler-utils \
         "${build_deps[@]}" \
         >"${LOGDIR}/base.log" 2>&1
 }
@@ -157,28 +164,93 @@ phase_base() {
 # same IPC API Konnect drives. It is here as the escape hatch: PyPI is in the
 # proxy's no_proxy list, so it is the one KiCad automation path in this
 # environment that depends on nothing GitHub-side.
+#
+# Two failure modes are designed around here, both of which cost real time:
+#
+#   1. ONE `uv pip install` FOR EVERYTHING IS ONE FUSE FOR EVERYTHING. A
+#      metadata timeout on pandas took down the whole phase and left the venv
+#      empty, and hw-doctor then reported strictdoc, pyyaml, build123d and
+#      both MCP servers as five separate failures from one network hiccup.
+#      The groups below are ordered by how much depends on them: the
+#      requirements and planning gates come first and in their own
+#      transaction, so a flaky plotting dependency cannot take them out.
+#
+#   2. build123d-mcp AND ltspice-mcp CANNOT SHARE A VENV. build123d-mcp
+#      requires mcp>=2,<3; ltspice-mcp pins mcp[cli]>=1.27,<2. Whichever
+#      resolves last wins and the other dies at import, so one of the two MCP
+#      servers fails no matter what — which reads as a broken install rather
+#      than a dependency conflict. They are separate processes and share
+#      nothing but the interpreter, so each gets its own venv and its console
+#      script is symlinked back onto PATH.
 # ==========================================================================
+VENV_B123D=/opt/hw-py-b123d       # build123d-mcp: needs mcp 2.x
+VENV_SPICE=/opt/hw-py-spice       # ltspice-mcp:   needs mcp 1.x
+
+_uvpip() {  # _uvpip <venv> <label> <package...>
+    local venv=$1 label=$2; shift 2
+    if VIRTUAL_ENV="${venv}" uv pip install "$@" >>"${LOGDIR}/python.log" 2>&1; then
+        return 0
+    fi
+    echo "!! python group '${label}' failed: $*" >>"${LOGDIR}/python.log"
+    return 1
+}
+
 phase_python() {
     export UV_PYTHON_INSTALL_DIR=/opt/uv-python
-    uv venv --python 3.12 "${VENV}" >"${LOGDIR}/python.log" 2>&1 || return 1
-    VIRTUAL_ENV="${VENV}" uv pip install \
-        build123d build123d-mcp \
-        ltspice-mcp \
-        kicad-python \
-        strictdoc \
-        numpy scipy pandas matplotlib \
-        gmsh meshio pyyaml \
-        >>"${LOGDIR}/python.log" 2>&1 || return 1
+    : > "${LOGDIR}/python.log"
+    uv venv --python 3.12 "${VENV}" >>"${LOGDIR}/python.log" 2>&1 || return 1
 
-    # Expose the console scripts without requiring the venv on PATH.
-    for b in build123d-mcp ltspice-mcp strictdoc; do
+    local degraded=0
+
+    # Essential. The requirements gate, the planning gate, the review gate and
+    # every script in the plugin's scripts/ directory need exactly these. If
+    # this group fails the phase has failed; nothing else is worth reporting.
+    _uvpip "${VENV}" essential strictdoc pyyaml || return 1
+
+    # Datasheet extraction. Small, and the "never take a number from memory"
+    # rule depends on it, so it goes early and on its own.
+    _uvpip "${VENV}" pdf pypdf || degraded=1
+
+    # CAD and numerics. build123d pulls cadquery-ocp, which is a ~400 MB
+    # wheel — by far the most likely thing here to time out, and the reason it
+    # is not in the same transaction as anything else.
+    _uvpip "${VENV}" cad build123d || degraded=1
+    _uvpip "${VENV}" numerics numpy scipy matplotlib || degraded=1
+    _uvpip "${VENV}" mesh gmsh meshio || degraded=1
+
+    # kicad-python is the scripted-PCB escape hatch when no KiCad is running.
+    _uvpip "${VENV}" kicad kicad-python || degraded=1
+
+    # The two MCP servers, each isolated (see the header).
+    for pair in "${VENV_B123D}:build123d-mcp" "${VENV_SPICE}:ltspice-mcp"; do
+        local venv=${pair%%:*} pkg=${pair#*:}
+        if uv venv --python 3.12 "${venv}" >>"${LOGDIR}/python.log" 2>&1 \
+           && _uvpip "${venv}" "${pkg}" "${pkg}"; then
+            [ -x "${venv}/bin/${pkg}" ] && ln -sf "${venv}/bin/${pkg}" "${VENV}/bin/${pkg}"
+        else
+            degraded=1
+        fi
+    done
+
+    # Expose the console scripts without requiring a venv on PATH.
+    for b in strictdoc; do
         [ -x "${VENV}/bin/${b}" ] && ln -sf "${VENV}/bin/${b}" "/usr/local/bin/${b}"
     done
+    for pair in "${VENV_B123D}:build123d-mcp" "${VENV_SPICE}:ltspice-mcp"; do
+        local venv=${pair%%:*} pkg=${pair#*:}
+        [ -x "${venv}/bin/${pkg}" ] && ln -sf "${venv}/bin/${pkg}" "/usr/local/bin/${pkg}"
+    done
+
     "${VENV}/bin/python" -c "
 from build123d import Box
 b = Box(10, 20, 30)
 assert abs(b.volume - 6000.0) < 1e-6, b.volume
-" >>"${LOGDIR}/python.log" 2>&1
+" >>"${LOGDIR}/python.log" 2>&1 || degraded=1
+
+    # 2 is DEGRADED in run(): the essential group landed, so the session is
+    # usable and hw-doctor will name what is missing.
+    [ "${degraded}" = 1 ] && return 2
+    return 0
 }
 
 # ==========================================================================
