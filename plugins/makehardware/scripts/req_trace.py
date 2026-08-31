@@ -225,7 +225,7 @@ AXIS    = {"light": "#c3c2b7", "dark": "#383835"}
 FONT = ("ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,"
         "'Helvetica Neue',Arial,sans-serif")
 
-NODE_W, NODE_H = 264, 90
+NODE_W, NODE_H = 264, 104
 COL_GAP, ROW_GAP = 104, 18
 MAP_PAD, MAP_HEADER = 24, 96
 COLUMN_TITLES = {0: "VISION — what was asked for",
@@ -242,6 +242,33 @@ def _clip(text: str, n: int) -> str:
     if " " in cut:
         cut = cut[:cut.rindex(" ")]
     return cut + "…"
+
+
+def _wrap(text: str, width: int, lines: int) -> list[str]:
+    """Greedy word wrap to at most `lines` rows, the last one elided if needed.
+
+    SVG text does not wrap, so a long requirement title had to be cut at one
+    line and the rest was simply unreadable. Two lines carries almost every
+    title in full; the few that still overflow keep a `<title>` tooltip with
+    the whole string.
+    """
+    words, rows, cur = str(text).split(), [], ""
+    for w in words:
+        trial = f"{cur} {w}".strip()
+        if len(trial) <= width or not cur:
+            cur = trial
+        else:
+            rows.append(cur)
+            cur = w
+            if len(rows) == lines:
+                break
+    if cur and len(rows) < lines:
+        rows.append(cur)
+    if len(rows) == lines:
+        used = sum(len(r) + 1 for r in rows) - 1
+        if used < len(str(text).rstrip()):
+            rows[-1] = _clip(rows[-1] + " …", width)
+    return rows or [""]
 
 
 def _esc(s) -> str:
@@ -413,6 +440,13 @@ def render_map_svg(model: dict) -> str:
 
     for n in nodes.values():
         x, y = n["x"], n["y"]
+        # Whatever a two-line wrap still cannot show, the tooltip does: hover
+        # any node for its full statement.
+        tip = f'{n["uid"]} — {n["title"]}'
+        if n["gaps"]:
+            tip += " · " + ", ".join(GAP_LABEL.get(g, g) for g in n["gaps"])
+        add(f'<g><title>{_esc(tip)}</title>')
+
         # A gap gets an explicit red border; everything else takes the themed
         # axis colour from the stylesheet so the card reads in both themes.
         if n["gaps"]:
@@ -427,25 +461,26 @@ def render_map_svg(model: dict) -> str:
         add(f'<text x="{x + NODE_W - 10}" y="{y + 20}" class="ts" '
             f'text-anchor="end" fill="{n["colour"]}">'
             f'{n["glyph"]} {_esc(n["status"])}</text>')
-        add(f'<text x="{x + 14}" y="{y + 39}" class="t ink2">'
-            f'{_esc(_clip(n["title"], 38))}</text>')
+        for k, line in enumerate(_wrap(n["title"], 38, 2)):
+            add(f'<text x="{x + 14}" y="{y + 39 + k * 15}" class="t ink2">'
+                f'{_esc(line)}</text>')
 
         # Two short lines rather than one long one: what closes this
         # requirement, then whether the things that close it exist yet.
         head = [b for b in (n["verification"],
                             f'budget {n["budget"]}' if n["budget"] else "") if b]
-        add(f'<text x="{x + 14}" y="{y + 56}" class="ts mut">'
+        add(f'<text x="{x + 14}" y="{y + 70}" class="ts mut">'
             f'{_esc(_clip(" · ".join(head), 42))}</text>')
         if n["judged"]:
             tx = x + 14
             for text, ok in (("evidence", n["has_evidence"]),
                              ("artefact linked", n["has_file"])):
-                add(f'<text x="{tx}" y="{y + 70}" class="ts" '
+                add(f'<text x="{tx}" y="{y + 84}" class="ts" '
                     f'fill="{MUTED if ok else GAP_COLOUR}">'
                     f'{"✓" if ok else "✕"} {_esc(text)}</text>')
                 tx += 18 + len(text) * 5.3
         elif n["children"]:
-            add(f'<text x="{x + 14}" y="{y + 70}" class="ts mut">'
+            add(f'<text x="{x + 14}" y="{y + 84}" class="ts mut">'
                 f'refined by {n["children"]} requirement'
                 f'{"s" if n["children"] != 1 else ""}</text>')
 
@@ -455,8 +490,9 @@ def render_map_svg(model: dict) -> str:
                                              ("unverified", "unlinked"))]
         if rest:
             names = ", ".join(GAP_LABEL.get(g, g) for g in rest)
-            add(f'<text x="{x + 14}" y="{y + 84}" class="ts" fill="{GAP_COLOUR}">'
+            add(f'<text x="{x + 14}" y="{y + 98}" class="ts" fill="{GAP_COLOUR}">'
                 f'{_esc(_clip(names, 44))}</text>')
+        add("</g>")
 
     ly = H - 30
     lx = MAP_PAD
@@ -530,7 +566,7 @@ def render_map_drawio(model: dict) -> str:
         value = (f'<b>{html.escape(n["uid"])}</b>  '
                  f'<font color="{n["colour"]}">{n["glyph"]} '
                  f'{html.escape(n["status"])}</font>'
-                 f'<br/>{html.escape(_clip(n["title"], 44))}'
+                 f'<br/>{html.escape(n["title"])}'
                  f'<br/><font color="{MUTED}" style="font-size:9px">'
                  f'{html.escape(" · ".join(badges))}</font>')
         if n["gaps"]:

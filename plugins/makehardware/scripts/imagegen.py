@@ -78,6 +78,32 @@ def _request(url: str, *, headers: dict, payload: dict | None = None,
         )
 
 
+def _request_bytes(url: str, *, headers: dict, payload: dict) -> bytes:
+    """POST and take the response body as the image, not as JSON."""
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+                                 headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+            body = resp.read()
+            ctype = resp.headers.get("Content-Type", "")
+        if ctype.startswith("application/json"):
+            # The model is still loading, or it is an error dressed as 200.
+            raise SystemExit(f"{url} returned JSON, not an image:\n"
+                             f"{body.decode(errors='replace')[:400]}")
+        return body
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors="replace")[:600]
+        extra = ("\nA 503 here usually means the model is cold — it loads on "
+                 "first use. Wait and retry." if e.code == 503 else "")
+        raise SystemExit(f"{url} returned HTTP {e.code}\n{body}{extra}")
+    except urllib.error.URLError as e:
+        raise SystemExit(
+            f"could not reach {url}: {e.reason}\n"
+            "If this is a proxy denial, the host needs to be reachable under "
+            "the environment's network policy."
+        )
+
+
 def _fetch_bytes(url: str) -> bytes:
     with urllib.request.urlopen(url, timeout=TIMEOUT) as resp:
         return resp.read()
@@ -110,6 +136,9 @@ class Provider:
     notes: str = ""
     verified: bool = False
     aliases: list[str] = field(default_factory=list)
+    # Some endpoints answer with the image itself rather than JSON describing
+    # where to fetch it. Those skip `extract` entirely.
+    raw_response: bool = False
 
     def key(self) -> str | None:
         for name in self.env_keys:
@@ -205,7 +234,41 @@ def _openai_extract(resp, _key) -> bytes:
     raise SystemExit(f"openai response had neither b64_json nor url: {item}")
 
 
+# --- Hugging Face Inference -------------------------------------------------
+# The lowest-friction key for this shop: an HF account already exists, the
+# token is free, and it needs no connector and no Space invocation. The
+# endpoint answers with the image bytes directly.
+def _hf_build(prompt, model, init_image, size) -> Call:
+    model = model or "black-forest-labs/FLUX.1-schnell"
+    payload: dict = {"inputs": prompt}
+    if init_image:
+        # Image-to-image on this endpoint takes the source alongside the
+        # prompt; the model has to be an img2img one for it to mean anything.
+        payload["parameters"] = {"image": _b64_image(init_image)}
+    if size:
+        try:
+            w, h = (int(v) for v in str(size).lower().split("x"))
+            payload.setdefault("parameters", {}).update({"width": w, "height": h})
+        except ValueError:
+            pass
+    return Call(url=f"https://api-inference.huggingface.co/models/{model}",
+                headers={"Content-Type": "application/json"}, payload=payload)
+
+
 PROVIDERS: list[Provider] = [
+    Provider(
+        # HF_KEY is not one of Hugging Face's own names for this, but it is
+        # what people reach for by symmetry with FAL_KEY, so accept it.
+        name="hf", env_keys=["HF_TOKEN", "HF_KEY", "HUGGINGFACE_API_KEY",
+                             "HUGGING_FACE_HUB_TOKEN"],
+        supports_init_image=True, default_model="black-forest-labs/FLUX.1-schnell",
+        build=_hf_build, extract=lambda resp, key: resp, verified=False,
+        raw_response=True, aliases=["huggingface"],
+        notes="POST https://api-inference.huggingface.co/models/<model>, "
+              "Authorization: Bearer <token>, returns the image bytes. Token "
+              "from huggingface.co/settings/tokens — a read token is enough. "
+              "A cold model 503s on the first call; retry.",
+    ),
     Provider(
         name="fal", env_keys=["FAL_KEY", "FAL_AI_API_KEY"],
         supports_init_image=True, default_model="fal-ai/flux/dev",
@@ -317,8 +380,11 @@ def main() -> int:
 
     key = provider.key()
     headers = {k: v.replace("{key}", key) for k, v in call.headers.items()}
-    response = _request(call.url, headers=headers, payload=call.payload)
-    image = provider.extract(response, key)
+    if provider.raw_response:
+        image = _request_bytes(call.url, headers=headers, payload=call.payload)
+    else:
+        response = _request(call.url, headers=headers, payload=call.payload)
+        image = provider.extract(response, key)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "wb") as fh:

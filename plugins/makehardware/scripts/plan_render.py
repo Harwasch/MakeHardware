@@ -112,18 +112,33 @@ def validate(plan: dict) -> list[str]:
     for node in graph:
         visit(node, [])
 
+    return errors
+
+
+def check_claims(plan: dict) -> list[str]:
+    """Claims that do not hold, as distinct from a plan that cannot be drawn.
+
+    These are kept apart from validate() for a practical reason: a cycle or a
+    dangling dependency makes scheduling impossible, so there is nothing to
+    render. A `done` chunk whose outputs are missing schedules perfectly well —
+    and the chart is the thing that makes the problem visible. Refusing to draw
+    it leaves the human with neither the chart nor a way to see why.
+    """
+    problems: list[str] = []
+    chunks = plan["chunks"]
+    by_id = {c["id"]: c for c in chunks if c.get("id")}
+
     # A done chunk resting on unfinished work is a bookkeeping error, and it is
     # the one that quietly makes a status report wrong.
-    by_id = {c["id"]: c for c in chunks if c.get("id")}
     for c in chunks:
         if c.get("status") == "done":
             for dep in c.get("depends_on") or []:
                 if by_id.get(dep, {}).get("status") not in ("done", None):
-                    errors.append(f"{c['id']} is done but depends on {dep}, "
-                                  f"which is {by_id[dep].get('status')}")
+                    problems.append(f"{c['id']} is done but depends on {dep}, "
+                                    f"which is {by_id[dep].get('status')}")
 
-    errors.extend(check_done_against_reality(plan))
-    return errors
+    problems.extend(check_done_against_reality(plan))
+    return problems
 
 
 def missing_outputs(chunk: dict) -> list[str]:
@@ -662,13 +677,27 @@ def main() -> int:
     args = ap.parse_args()
 
     plan = load(args.plan)
+
+    # Structural problems stop everything: without a schedule there is no chart.
     errors = validate(plan)
     if errors:
-        sys.stderr.write("Plan is not valid:\n")
+        sys.stderr.write("Plan cannot be scheduled:\n")
         for e in errors:
             sys.stderr.write(f"  - {e}\n")
         return 1
+
+    # Unmet claims are reported and still rendered, because the chart is how
+    # you see them.
+    claims = check_claims(plan)
+    if claims:
+        sys.stderr.write("Claims that do not hold:\n")
+        for c in claims:
+            sys.stderr.write(f"  - {c}\n")
+        sys.stderr.write("\n")
+
     if args.check:
+        if claims:
+            return 1
         print(f"{args.plan}: valid ({len(plan['chunks'])} chunks)")
         return 0
 
@@ -705,7 +734,8 @@ def main() -> int:
     else:
         print(f"note: {args.readme} has no {BEGIN} / {END} markers — chart not embedded")
     summary(plan, placed, total, crit)
-    return 0
+    # Rendered, but the plan still claims something that is not true.
+    return 1 if claims else 0
 
 
 if __name__ == "__main__":

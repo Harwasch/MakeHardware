@@ -95,6 +95,17 @@ survives a week of progress and breaks when the scope changes.
 
 Commit the packet and the ledger.
 
+### 2b. Check the page before you send it
+
+```bash
+review-artifact --check     # exits 1, and names anything it cannot show
+```
+
+An export that failed leaves no file, and a render that is too big cannot be
+embedded. Both are reported on the page rather than silently dropped — but a
+page with "not shown here" boxes on it is not a review, and the human is the
+most expensive place to discover that. Fix the export, then publish.
+
 ### 3. Ask them, with the link, and block
 
 Use whatever tool this session has for putting a direct question to the human

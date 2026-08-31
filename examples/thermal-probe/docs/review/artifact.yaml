@@ -1,0 +1,131 @@
+# Per-project shape for the review page. Every field is optional — without this
+# file the standard phases are built from whatever the repo contains.
+title: Thermal Probe
+subtitle: >-
+  A handheld logger for walk-in freezers. A week on one charge, readable
+  through a glove.
+
+phases:
+  - id: cad
+    title: CAD
+    eyebrow: Stage 5 · mechanical
+    after: architecture
+    images:
+      - docs/design/cad/enclosure-render.png
+      - docs/design/cad/enclosure-section.svg
+    captions:
+      docs/design/cad/enclosure-render.png: >-
+        Exploded view, rendered from the parametric model. Lid, board and cell
+        at their modelled positions.
+      docs/design/cad/enclosure-section.svg: >-
+        Section through the cell pocket — wall thicknesses and the two
+        clearances the display depends on.
+
+  - id: schematic
+    title: Schematic
+    eyebrow: Stage 5 · electrical
+    after: cad
+    images:
+      - docs/design/schematic/sheet-2-sockets.svg
+      - docs/design/schematic/sheet-1-main.svg
+    captions:
+      docs/design/schematic/sheet-2-sockets.svg: >-
+        Real kicad-cli output, not a drawing of one. This fixture container
+        has no probe schematic to plot, so both sheets here are KiCad's own
+        pic_programmer demo put through `kicad-cli sch export svg` — which is
+        the point: it is what the exporter actually emits, page size in
+        millimetres and all.
+      docs/design/schematic/sheet-1-main.svg: >-
+        The main sheet of the same export, and the reason SVG has a
+        budget: 3.0 MB and 61,681 elements, because KiCad's plotter writes one
+        path per line segment — every stroke of every character included.
+        Sheets that heavy are linked rather than inlined.
+    docs: [docs/design/adr-0002-power.md]
+    links:
+      - path: hw/kicad-demo/pic_programmer.kicad_sch
+        label: KiCad schematic (source)
+        why: Opens in KiCad — the editable original
+      - path: docs/design/schematic/sheet-1-main.svg
+        label: Sheet 1, main
+        why: Renders on GitHub at full size
+
+  - id: simulation
+    title: Simulation
+    eyebrow: Stage 6
+    after: schematic
+    images: [docs/design/standby-corners.svg]
+    captions:
+      docs/design/standby-corners.svg: >-
+        Standby current at four corners against the 40 uA cap in ELE-001.
+        The failing corner is outside the specified temperature range.
+    docs: [docs/design/standby-results.md]
+
+  - id: fea
+    title: Thermal FEA
+    eyebrow: Stage 6
+    after: simulation
+    images: [docs/design/thermal-map.svg]
+    captions:
+      docs/design/thermal-map.svg: >-
+        Steady-state rise over ambient. The hot spot is the LDO, which is
+        the part ADR-0002 accepted the efficiency penalty on.
+
+  - id: mfg
+    title: Manufacturing
+    eyebrow: Stage 7
+    after: fea
+    links_title: Release checklist
+    links_note: >-
+      Everything a fab, an assembler and a purchaser need in order to quote and
+      build. This is a completeness check, not a reading list — the documents
+      themselves are one click away, and the rows still to produce are the
+      answer to "can we release?".
+    links:
+      - group: Fabrication
+        path: docs/design/pcb-fab.zip
+        label: Gerbers and drill files
+        why: RS-274X plus the drill schedule. Not generated until layout is frozen
+      - group: Fabrication
+        path: docs/design/mfg/fab-drawing.svg
+        label: Fabrication drawing
+        why: Outline, hole schedule and tolerances. Travels with the gerbers
+      - group: Fabrication
+        path: docs/design/stackup.svg
+        label: Stackup drawing
+        why: What the fab quotes against
+      - group: Fabrication
+        path: docs/design/mfg/fab-notes.md
+        label: Fabrication notes
+        why: Material, finish, class, panelisation — the written half of the spec
+      - group: Fabrication
+        path: docs/design/pcb-layers.pdf
+        label: Layer plots
+        why: Incoming inspection and any fab query
+      - group: Assembly
+        path: docs/design/mfg/assembly-drawing.svg
+        label: Assembly drawing
+        why: Placement, orientation and polarity for the assembler
+      - group: Assembly
+        path: docs/design/pcb-pos.csv
+        label: Pick and place
+        why: Centroid file. Needs the layout
+      - group: Assembly
+        path: docs/design/bom-summary.csv
+        label: BOM
+        why: Purchasing and the assembly house
+      - group: Assembly
+        path: docs/design/mfg/assembly-process.md
+        label: Assembly and test process
+        why: The traveller — paste, placement, reflow, then the test sequence
+      - group: Assembly
+        path: docs/design/mfg/test-fixture.md
+        label: Test fixture definition
+        why: Bed of nails for the first four test steps. Needs the layout
+      - group: Commercial
+        path: docs/design/mfg/quotes.csv
+        label: Quotes
+        why: Supplier, quantity, tooling, lead time and the date each was given
+      - group: Commercial
+        path: docs/design/mfg/supplier-decision.md
+        label: Supplier decision
+        why: Which quote was taken and why. Not made yet

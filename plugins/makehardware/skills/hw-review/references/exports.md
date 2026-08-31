@@ -8,6 +8,70 @@ Keep the exports under `docs/design/` (or `docs/review/`) rather than `build/`
 — `build/` is gitignored, and an artefact that is not committed is an artefact
 nobody sees.
 
+## Export at review size, not at native size
+
+Two different consumers, two different limits, and the second one bites:
+
+* **GitHub** will render whatever you commit, at any size.
+* **The review page** (`review-artifact`) has three budgets, and the whole
+  page has to stay inside the 16 MB artifact cap:
+
+  | | Limit | What blows it |
+  |---|---|---|
+  | raster, as a data URI | 220 kB | `pcb render --width 3000`, `dpi=300` |
+  | one SVG | 1.5 MB / 30,000 elements | any dense plotted schematic |
+  | the page, in total | 9 MB inlined | a tab with six sheets on it |
+
+  Anything over is reported on the page instead of shown, which is honest but
+  is not a review.
+
+**A plotted schematic is far bigger than you expect.** KiCad's SVG exporter
+writes one `<path>` per *line segment*, including every stroke of every
+character of text. Measured on KiCad's own `pic_programmer` demo:
+
+```
+root sheet   3.0 MB    61,681 elements     linked, not inlined
+sub-sheet    1.0 MB    21,265 elements     inlines fine
+```
+
+So one ordinary A4 sheet can be a megabyte, and a four-sheet design will not
+fit. Put the two or three sheets that carry the decision on the page, commit
+the PDF for the whole set, and say in the request which sheets you chose.
+
+So export twice when it matters: full size for the record, and a review-sized
+copy for the page.
+
+```bash
+kicad-cli pcb render hw/probe.kicad_pcb --output docs/design/pcb-top.png \
+    --side top --quality high --width 1400 --height 1000     # ~150-200 kB
+```
+
+For matplotlib, `savefig(..., dpi=110)` on a 7×5 in figure lands around 150 kB.
+
+**A plotter's colours cannot be themed, and that is fine.** KiCad fills the
+page with `#F5F4EF` and draws in black, written inline on every `<g>`, so no
+stylesheet on the page can reach it. The review page detects a full-page light
+fill and mats the sheet, the way it mats an opaque raster — a schematic then
+reads as a sheet of paper on a dark page rather than a hole in it. Do not try
+to recolour a plot for the page: it would misrepresent what you exported.
+
+**Export rasters with a transparent background** where the tool allows it —
+`savefig(..., transparent=True)`, which `vision-board` already does. A render
+exported against white is a bright slab on a dark page; the review page mats
+those deliberately so they read as a mounted photograph, but transparent is
+better. And **never bake a title or a label into a raster**: a bitmap cannot
+follow the reader's theme, so dark text in it stays dark on a dark page. Labels
+belong in the caption or in an SVG overlay.
+
+**Prefer SVG wherever the thing is line art** — a schematic, a plot, a diagram,
+a dimensioned drawing. It inlines as markup, stays crisp at any zoom, themes
+with the page, and has no byte budget at all. Reserve rasters for what is
+genuinely photographic: a shaded 3D render, a photo of a board.
+
+Run `review-artifact --check` before publishing. It exits 1 and names every
+artefact that could not be embedded, which is much cheaper than finding out
+from the human.
+
 ---
 
 ## KiCad schematic
@@ -32,12 +96,15 @@ kicad-cli sch export bom hw/probe.kicad_sch --output docs/design/bom.csv
 the review summary as a number — "ERC: 0 errors, 3 warnings, all
 unconnected-pin on the debug header" — not as an attachment nobody opens.
 
-**Prefer the per-sheet SVGs over the PDF for anything under about four
-sheets.** Pass the SVG directory as an `--artifact` and `review-gate` embeds
-each sheet inline in the review packet, so the human scrolls one page instead
-of opening GitHub's PDF viewer — which is serviceable on a desktop and
-unpleasant on a phone. Commit the PDF too, for printing and for anyone who
-wants the whole thing in one file.
+**Prefer the per-sheet SVGs over the PDF, for the two or three sheets that
+carry the decision.** Pass them as `--artifact` and `review-gate` embeds each
+inline in the review packet, so the human scrolls one page instead of opening
+GitHub's PDF viewer — serviceable on a desktop, unpleasant on a phone. Commit
+the PDF too, for printing and for the sheets that did not make the page.
+
+`sch export` offers PDF, SVG, DXF and PS — there is no PNG, in KiCad 10 either
+— so a sheet too dense for the page has no smaller raster to fall back on.
+Choose fewer sheets rather than hoping.
 
 ## KiCad board
 
@@ -120,10 +187,23 @@ block-diagram                       # writes the .drawio and the .svg
 block-diagram --summary             # the power budget, as text
 ```
 
-The SVG renders on GitHub; the `.drawio` is the editable one. Put the power
-budget table in the review summary — a rail at 95% of its limit is the single
-most useful thing in an architecture review and it is invisible in the
-picture.
+The SVG renders on GitHub; the `.drawio` is the editable one. **Always emit
+both.** The review page finds the `.drawio` that goes with a rendered diagram —
+including across directories, which this pair needs, since the `.drawio` lands
+in `hw/` and the SVG in `docs/design/` — and puts *Open in draw.io* under the
+picture. That link hands diagrams.net the raw URL, so the human is one click
+from an editable diagram with nothing to install and nothing to download. It
+fetches anonymously, so it works on a public repository; on a private one they
+download the file from GitHub and drop it on the canvas instead, and the link
+to the file is there for exactly that.
+
+The rule generalises: **a diagram you generate should have a `.drawio` beside
+it.** A picture someone cannot change is a picture they can only complain
+about.
+
+Put the power budget table in the review summary — a rail at 95% of its limit
+is the single most useful thing in an architecture review and it is invisible
+in the picture.
 
 ## Simulation
 
@@ -142,11 +222,36 @@ reproducible, and state which simulator produced the number.
 
 ## Fabrication output
 
-Before anything is ordered, the human reviews: the gerber render (not the
-gerbers), the drill count and sizes, the stackup, the assembly drawing, and
-the BOM with stock and lead times as of the date you checked. Ordering parts
-is expensive and irreversible; it is exactly the point where an extra
-question is cheap.
+Ordering parts is expensive and irreversible, so this is exactly the point
+where an extra question is cheap. But the review here is **not** a gallery: a
+fabrication drawing shrunk to page width tells nobody anything they can act
+on, and nobody reads an assembly traveller inside a review page.
+
+What the human needs at this stage is a **checklist** — the set of documents a
+run requires, which of them exist, and one click to each. Give the phase a
+`links:` list in `docs/review/artifact.yaml`, grouped with `group:`, and the
+page renders it with a present/missing tally at the top:
+
+```yaml
+  - id: mfg
+    links_title: Release checklist
+    links:
+      - {group: Fabrication, path: docs/design/pcb-fab.zip,
+         label: Gerbers and drill files,
+         why: "RS-274X plus the drill schedule"}
+      - {group: Assembly, path: docs/design/mfg/assembly-process.md,
+         label: Assembly and test process,
+         why: "The traveller — paste, placement, reflow, then the test sequence"}
+```
+
+**List the documents that do not exist yet too.** A row saying *Not produced*
+is the entire value of a checklist; a list of only what you have is a list
+that cannot tell anyone what is missing.
+
+Cover, at least: gerbers and drill, the fabrication drawing, the stackup, the
+written fab notes, the assembly drawing, the pick-and-place, the BOM, the
+assembly and test process, the test fixture, the quotes with their dates, and
+which supplier was chosen and why.
 
 ---
 

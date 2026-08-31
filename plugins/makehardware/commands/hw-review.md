@@ -34,9 +34,32 @@ Follow the `hw-review` skill. The short form:
    **Look at what you produced before you send it.** Half of what the review
    would catch, you will catch here.
 
-3. **Commit and push.** A link to an uncommitted file is a 404.
+3. **Rebuild the review page and look at it.**
 
-4. **Open the review**, tracking what they are agreeing to and referencing
+   ```bash
+   review-artifact --init     # once per project: writes docs/review/artifact.yaml
+   review-artifact            # rebuild docs/review/artifact.html from the repo
+   review-artifact --check    # exits 1 and names anything it cannot show
+   ```
+
+   `--check` is not optional. An export that failed leaves no file and an
+   oversized render cannot be embedded; both are reported on the page rather
+   than dropped, but a page with "not shown here" boxes on it is not a review
+   and the human is the most expensive place to find that out.
+
+   Then publish it with the **Artifact tool**. One project has **one** page:
+
+   ```bash
+   review-artifact --url https://claude.ai/code/artifact/<id>   # first time only
+   ```
+
+   records it in the ledger, and every later run prints that URL back so you
+   pass it as `url` and update in place. Publish without it and the human ends
+   up with two review pages showing different things.
+
+4. **Commit and push.** A link to an uncommitted file is a 404.
+
+5. **Open the review**, tracking what they are agreeing to and referencing
    what merely churns:
 
    ```bash
@@ -46,17 +69,17 @@ Follow the `hw-review` skill. The short form:
        --question "..." --question "..."
    ```
 
-5. **Ask them directly, with the link.** Use `AskUserQuestion` — not a
+6. **Ask them directly, with the link.** Use `AskUserQuestion` — not a
    paragraph at the end of a message. Put the github.com URL of the review
    packet in the question, lead with the decision you need, name the thing
    you are least sure about, and offer real alternatives with their
    consequences rather than yes/no.
 
-6. **Block on the answer.** Do not start the next stage. Work on something
+7. **Block on the answer.** Do not start the next stage. Work on something
    genuinely independent if there is any, and do not answer the question
    yourself.
 
-7. **Record it in their words** and commit:
+8. **Record it in their words** and commit:
 
    ```bash
    review-gate sign <id> --approve --by <name> --note "<what they said>"
@@ -65,7 +88,7 @@ Follow the `hw-review` skill. The short form:
 
    On changes: make them, re-run step 2, and ask again.
 
-8. **Confirm the gate is clear** before marking anything done:
+9. **Confirm the gate is clear** before marking anything done:
 
    ```bash
    review-gate check --gate

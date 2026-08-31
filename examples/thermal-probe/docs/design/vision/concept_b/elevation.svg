@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="471" height="402" viewBox="0 0 471 402" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Bench instrument: 92 by 118 by 34 millimetres">
+<style>.o{fill:none;stroke:#0b0b0b;stroke-width:1.6}.f{fill:none;stroke:#52514e;stroke-width:1}.d{stroke:#898781;stroke-width:0.7}.t{font-size:10px;fill:#898781}.lbl{font-size:10.5px;fill:#52514e;font-weight:600;letter-spacing:0.06em}</style>
+<rect x="54" y="54" width="202.4" height="259.6" rx="13.2" class="o"/>
+<rect x="76.0" y="84.8" width="158.4" height="74.8" rx="2" class="f"/>
+<rect x="80.4" y="186.0" width="30.8" height="30.8" rx="8" class="f"/>
+<rect x="128.8" y="186.0" width="30.8" height="30.8" rx="8" class="f"/>
+<rect x="142.0" y="296.0" width="26.4" height="11.0" rx="3" class="f"/>
+<rect x="302.4" y="54" width="74.8" height="259.6" rx="13.2" class="o"/>
+<line x1="54" y1="333.6" x2="256.4" y2="333.6" class="d"/><line x1="54" y1="329.6" x2="54" y2="337.6" class="d"/><line x1="256.4" y1="329.6" x2="256.4" y2="337.6" class="d"/>
+<text x="155.2" y="348.6" class="t" text-anchor="middle">92 mm</text>
+<line x1="38" y1="54" x2="38" y2="313.6" class="d"/><line x1="34" y1="54" x2="42" y2="54" class="d"/><line x1="34" y1="313.6" x2="42" y2="313.6" class="d"/>
+<text x="30" y="183.8" class="t" text-anchor="middle" transform="rotate(-90 30 183.8)">118 mm</text>
+<line x1="302.4" y1="333.6" x2="377.2" y2="333.6" class="d"/>
+<text x="339.8" y="348.6" class="t" text-anchor="middle">34</text>
+<text x="54" y="38" class="lbl">FRONT</text>
+<text x="302.4" y="38" class="lbl">SIDE</text>
+</svg>

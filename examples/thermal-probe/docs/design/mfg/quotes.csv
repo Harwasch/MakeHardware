@@ -1,0 +1,11 @@
+Scope,Supplier,Qty,Unit GBP,Tooling GBP,Lead time,Quoted,Valid until,Basis
+"PCB fab, 2 layer ENIG",JLCPCB,25,4.12,0,8 working days,2026-08-26,2026-09-25,Quoted online
+"PCB fab, 2 layer ENIG",Eurocircuits,25,11.80,0,5 working days,2026-08-26,2026-09-26,Quoted online
+"PCB fab, 2 layer ENIG",JLCPCB,100,1.94,0,8 working days,2026-08-26,2026-09-25,Quoted online
+"Assembly, top side only",JLCPCB,25,3.60,6.40,+3 working days,2026-08-26,2026-09-25,Quoted online
+"Assembly, top side only",Aisler,25,9.10,0,+7 working days,2026-08-27,2026-09-10,Quoted online
+"Enclosure, SLS nylon",Protolabs,25,14.70,0,7 working days,2026-08-27,2026-09-26,Quoted online
+"Enclosure, injection moulded",Protolabs,100,2.85,4820.00,25 working days,2026-08-28,2026-10-12,Quoted, engineer reviewed
+"Enclosure, injection moulded",Xometry,100,3.10,3950.00,30 working days,2026-08-28,2026-09-28,Quoted online
+"Probe lead, moulded 4-pin 1 m",Unsourced,25,,,,,,Estimated at 6.00 from a similar part
+"Test fixture, bed of nails",Unsourced,1,,,,,,Estimated at 400 from the last project

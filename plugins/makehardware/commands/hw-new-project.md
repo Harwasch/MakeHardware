@@ -66,11 +66,25 @@ Then:
    project name with empty `rails`, `blocks` and `buses`. The example widget is
    there to show the shape of the file, not to be edited into a real design.
 
-5. Run `hw-doctor` and `imagegen --list` and report what the
+5. Scaffold the review page's config, which is what decides the human ever
+   sees the design stages:
+
+   ```bash
+   review-artifact --init      # writes docs/review/artifact.yaml
+   ```
+
+   Vision, plan, requirements and architecture are built from the repo and
+   need nothing. Every design stage — schematic, layout, enclosure,
+   simulation, the release checklist — appears **only if it is listed there**,
+   so the file arrives with all of them written out and the ones whose
+   artefacts do not exist yet commented. Turning one on later is uncommenting
+   three lines; noticing it was never there at all is much harder.
+
+6. Run `hw-doctor` and `imagegen --list` and report what the
    environment can actually do, so the human knows up front if KiCad or a
    simulator is missing.
 
-6. Confirm the repository has a **remote on github.com** — `git remote -v`.
+7. Confirm the repository has a **remote on github.com** — `git remote -v`.
    The whole review mechanism links the human at
    `https://github.com/<owner>/<repo>/blob/<branch>/...`, and without a remote
    `review-gate` can only print paths. If there is no remote, say so now

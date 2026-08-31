@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="660" height="320" viewBox="0 0 660 320" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Standby current at four corners against the 40 microamp limit"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><text x="20" y="28" class="h ink">Standby current by corner</text>
+<text x="20" y="46" class="ts mut">ngspice · sim/standby/standby.cir · run 2026-08-27 · cross-checked against the closed-form leakage sum</text>
+<line x1="168.0" y1="88" x2="168.0" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="168.0" y="82" class="ts mut" text-anchor="middle">0</text>
+<line x1="232.6" y1="88" x2="232.6" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="232.6" y="82" class="ts mut" text-anchor="middle">10</text>
+<line x1="297.1" y1="88" x2="297.1" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="297.1" y="82" class="ts mut" text-anchor="middle">20</text>
+<line x1="361.7" y1="88" x2="361.7" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="361.7" y="82" class="ts mut" text-anchor="middle">30</text>
+<line x1="426.3" y1="88" x2="426.3" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="426.3" y="82" class="ts mut" text-anchor="middle">40</text>
+<line x1="490.9" y1="88" x2="490.9" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="490.9" y="82" class="ts mut" text-anchor="middle">50</text>
+<line x1="555.4" y1="88" x2="555.4" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="555.4" y="82" class="ts mut" text-anchor="middle">60</text>
+<line x1="620.0" y1="88" x2="620.0" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="620.0" y="82" class="ts mut" text-anchor="middle">70</text>
+<text x="168" y="60" class="lbl mut">STANDBY CURRENT, MICROAMPS</text>
+<line x1="426.3" y1="88" x2="426.3" y2="272" stroke="#52514e" stroke-width="1.6" stroke-dasharray="5 3"/>
+<text x="432.3" y="288" class="ts ink2">ELE-001 limit — 40 µA</text>
+<text x="154" y="113.0" class="t ink2" text-anchor="end">25 °C, 3.7 V nom</text>
+<rect x="168" y="96" width="80.1" height="26" rx="4" fill="#0ca30c"/>
+<text x="257.1" y="113.0" class="num" fill="#52514e" font-weight="400">12.4 µA</text>
+<text x="154" y="157.0" class="t ink2" text-anchor="end">−30 °C, 4.2 V max</text>
+<rect x="168" y="140" width="58.8" height="26" rx="4" fill="#0ca30c"/>
+<text x="235.8" y="157.0" class="num" fill="#52514e" font-weight="400">9.1 µA</text>
+<text x="154" y="201.0" class="t ink2" text-anchor="end">+40 °C, 3.5 V min</text>
+<rect x="168" y="184" width="205.3" height="26" rx="4" fill="#0ca30c"/>
+<text x="382.3" y="201.0" class="num" fill="#52514e" font-weight="400">31.8 µA</text>
+<text x="154" y="245.0" class="t ink2" text-anchor="end">+60 °C, 4.2 V max</text>
+<rect x="168" y="228" width="375.8" height="26" rx="4" fill="#d03b3b"/>
+<text x="552.8" y="245.0" class="num" fill="#d03b3b" font-weight="600">58.2 µA   ✕ FAIL</text>
+<text x="20" y="300" class="ts mut">The +60 °C corner is outside the SYS-002 range of −30 to +40 °C and is shown for information.</text></svg>

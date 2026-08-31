@@ -176,6 +176,20 @@ def find(data: dict, rid: str) -> dict | None:
     return next((r for r in data["reviews"] if r.get("id") == rid), None)
 
 
+def log(review: dict, action: str, **fields) -> None:
+    """Append to the review's history.
+
+    Status alone says where a review is now; it cannot say what was asked, what
+    came back, or what moved in between. That record is the useful half — it is
+    what a reader needs to answer "why is this number 7 days" two months later,
+    and it is the half that used to be overwritten on every round.
+    """
+    entry = {"on": _today(), "action": action,
+             "commit": _git("rev-parse", "--short", "HEAD") or None}
+    entry.update({k: v for k, v in fields.items() if v})
+    review.setdefault("history", []).append(entry)
+
+
 # ---------------------------------------------------------------------------
 # Artefacts
 # ---------------------------------------------------------------------------
@@ -426,7 +440,11 @@ def cmd_open(args) -> int:
         review["summary"] = args.summary
     if args.question:
         review["questions"] = list(args.question)
+    previous = {a["path"]: a.get("sha256") for a in review.get("artifacts") or []}
     review["artifacts"] = snapshot(present)
+    changed = sorted(p for p in present
+                     if p in previous and previous[p] != digest(p))
+    added = sorted(p for p in present if p not in previous)
     refs = expand(args.reference or [])
     if refs:
         review["references"] = refs
@@ -439,6 +457,10 @@ def cmd_open(args) -> int:
     review.pop("reviewer", None)
     review.pop("note", None)
     review["packet"] = review.get("packet") or packet_path(rid)
+    log(review, "requested",
+        questions=list(args.question or []),
+        summary=(args.summary or "").strip() or None,
+        changed=changed, added=added)
 
     write_packet(review)
     save(data, args.ledger)
@@ -539,6 +561,8 @@ def cmd_sign(args) -> int:
     review["decided_commit"] = _git("rev-parse", "--short", "HEAD") or None
     if args.by:
         review["reviewer"] = args.by
+    log(review, review["status"], by=args.by,
+        note=(args.changes or args.note or "").strip() or None)
 
     write_packet(review)
     save(data, args.ledger)

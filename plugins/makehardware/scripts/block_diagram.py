@@ -304,6 +304,12 @@ def _rail_tree(rails: list[dict]) -> list[tuple[dict, int]]:
     return out
 
 
+def _corridor_of(bus: dict, col: dict[str, int], nodes_ok: bool = False) -> int:
+    """Which column corridor a multi-member bus will hang its spine in."""
+    cols = [col[n] for n in bus_nodes(bus) if n in col]
+    return min(cols) if cols else 0
+
+
 def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> dict:
     blocks = spec["blocks"]
     rails = spec.get("rails") or []
@@ -344,9 +350,9 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
     # the MCU beside what feeds it and the peripherals out beyond it.
     adj: dict[str, set[str]] = {b["id"]: set() for b in blocks}
     for bus in buses:
-        nodes = [n for n in bus_nodes(bus) if n in adj]
-        for i, a in enumerate(nodes):
-            for b in nodes[i + 1:]:
+        nodes_ = [n for n in bus_nodes(bus) if n in adj]
+        for i, a in enumerate(nodes_):
+            for b in nodes_[i + 1:]:
                 adj[a].add(b)
                 adj[b].add(a)
 
@@ -371,16 +377,65 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
     for b in blocks:
         columns.setdefault(col[b["id"]], []).append(b["id"])
 
-    # Corridors carry the bus stubs. Only buses route vertically, so one lane
-    # per bus is always enough and no line ever crosses a block.
-    corr = min(max(20 + 11 * len(buses), 64), 200)
+    # Order within each column so connected blocks sit level with each other.
+    #
+    # Without this the rows are whatever order the spec happens to list, and
+    # every link that is not horizontal has to cross something. Sweeping the
+    # median of each node's neighbours back and forth is the standard fix and
+    # costs nothing at this size: a handful of passes settles it, and blocks
+    # that talk to each other end up side by side, which is also how a person
+    # would draw it.
+    order: dict[int, list[str]] = {c: list(ids) for c, ids in columns.items()}
+    cols_sorted = sorted(order)
+
+    def median_of(bid: str, other: int) -> float:
+        peers = [order[other].index(n) for n in adj[bid] if col.get(n) == other]
+        if not peers:
+            return -1.0
+        peers.sort()
+        return peers[len(peers) // 2]
+
+    for _sweep in range(4):
+        for direction in (1, -1):
+            seq = cols_sorted if direction == 1 else cols_sorted[::-1]
+            for c in seq:
+                ref = c - direction
+                if ref not in order:
+                    continue
+                keyed = [(median_of(b, ref), i, b)
+                         for i, b in enumerate(order[c])]
+                # A node with no neighbour in the reference column keeps its
+                # place rather than being flung to the top.
+                fallback = {b: i for i, b in enumerate(order[c])}
+                keyed.sort(key=lambda t: (t[0] if t[0] >= 0 else fallback[t[2]],
+                                          t[1]))
+                order[c] = [b for _m, _i, b in keyed]
+
+    # Corridors carry the bus spines, which run vertically between columns
+    # rather than horizontally underneath everything. A spine below the blocks
+    # means every member drops a stub past every row under it, and those stubs
+    # cross each other and the blocks; in the corridor a spine crosses nothing.
+    # Every bus can need a lane in the corridor it starts from, and so can
+    # every link between adjacent columns, so size for the worst column.
+    per_col: dict[int, int] = {}
+    for bus in buses:
+        cs = [col[n] for n in bus_nodes(bus) if n in col]
+        if cs:
+            per_col[min(cs)] = per_col.get(min(cs), 0) + 1
+    bus_lanes = max(per_col.values(), default=1)
+    corr = min(max(76 + 20 * bus_lanes, 130), 280)
     pitch = BOX_W + corr
 
     nodes: dict[str, dict] = {}
-    for c, ids in sorted(columns.items()):
+    tallest = max((len(v) for v in order.values()), default=1)
+    for c in cols_sorted:
+        ids = order[c]
+        # Centre each column on the tallest one, so the panel does not read as
+        # a filled grid with ragged holes in it.
+        top = panel_b_y + (tallest - len(ids)) * ROW_PITCH / 2
         for row_i, bid in enumerate(ids):
             x = PAD + c * pitch
-            yy = panel_b_y + row_i * ROW_PITCH
+            yy = top + row_i * ROW_PITCH
             if bid in keep:                   # a hand-tidied position wins
                 x, yy = keep[bid]
             b = by_id[bid]
@@ -394,34 +449,109 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
     blocks_b = max((n["y"] + n["h"] for n in nodes.values()), default=panel_b_y)
 
     # ---- buses -----------------------------------------------------------
-    spines = []
-    for j, bus in enumerate(buses):
+    # Two problems have to be solved together, and solving only one of them
+    # leaves the picture looking exactly as broken as before:
+    #
+    #   * Every connection used to leave a block at its vertical centre. A
+    #     block with four of them — an MCU always has four — drew four lines
+    #     out of one point, on top of each other.
+    #   * Every vertical run used to sit at the same x. Two links between the
+    #     same pair of columns therefore shared a corridor lane and overlapped
+    #     for their whole length.
+    #
+    # So: fan the connections out along each block's edge, and give every
+    # vertical run its own lane in its corridor.
+    conns: dict[str, list[dict]] = {bid: [] for bid in nodes}
+    plan: list[dict] = []
+    for bus in buses:
         members = [n for n in bus_nodes(bus) if n in nodes]
-        lane = 12 + j * 11
-        stubs = []
-        for k, bid in enumerate(members):
-            n = nodes[bid]
-            cx = n["x"] + n["w"] + min(lane, corr - 8)
-            # Stagger the exit height so two buses off one block stay apart.
-            ey = n["y"] + n["h"] / 2 + (j % 3 - 1) * 12
-            stubs.append({"id": bid, "x": float(cx), "exit_y": float(ey),
-                          "edge_x": n["x"] + n["w"],
-                          "controller": bid == bus.get("controller")})
-        spines.append({
-            "id": bus["id"], "kind": bus.get("kind", "other"),
-            "colour": BUS_COLOURS.get(bus.get("kind", ""), BUS_DEFAULT),
-            "nodes": members, "notes": bus.get("notes"),
-            "controller": bus.get("controller"), "stubs": stubs,
-            "y": float(blocks_b + 40 + j * SPINE_PITCH),
-        })
+        if len(members) < 2:
+            continue
+        colour = BUS_COLOURS.get(bus.get("kind", ""), BUS_DEFAULT)
+        controller = bus.get("controller")
+        if len(members) == 2:
+            a_id, b_id = members
+            if nodes[a_id]["x"] > nodes[b_id]["x"]:
+                a_id, b_id = b_id, a_id
+            item = {"type": "link", "id": bus["id"], "kind": bus.get("kind", "other"),
+                    "colour": colour, "a": a_id, "b": b_id,
+                    "notes": bus.get("notes"), "controller": controller}
+            conns[a_id].append({"item": item, "side": "right",
+                                "toward": nodes[b_id]["y"]})
+            conns[b_id].append({"item": item, "side": "left",
+                                "toward": nodes[a_id]["y"]})
+        else:
+            anchor = min(nodes[m]["col"] for m in members)
+            item = {"type": "spine", "id": bus["id"], "kind": bus.get("kind", "other"),
+                    "colour": colour, "notes": bus.get("notes"),
+                    "controller": controller, "members": members,
+                    "anchor": anchor}
+            for m in members:
+                side = "right" if nodes[m]["col"] <= anchor else "left"
+                conns[m].append({"item": item, "side": side,
+                                 "toward": nodes[m]["y"]})
+        plan.append(item)
 
-    label_w = 220                       # room for the bus label after the spine
+    # Fan out along each edge, ordered by where the other end sits, so lines
+    # leaving one block do not have to cross each other to get there.
+    port: dict[tuple[str, int], float] = {}
+    for bid, cs in conns.items():
+        n = nodes[bid]
+        for side in ("left", "right"):
+            side_cs = [c for c in cs if c["side"] == side]
+            side_cs.sort(key=lambda c: c["toward"])
+            for i, c in enumerate(side_cs):
+                y = n["y"] + n["h"] * (i + 1) / (len(side_cs) + 1)
+                port[(bid, id(c["item"]))] = y
+
+    # One lane allocator per corridor, shared by spines and link verticals.
+    lane_of: dict[int, int] = {}
+
+    def next_lane(anchor: int) -> float:
+        i = lane_of.get(anchor, 0)
+        lane_of[anchor] = i + 1
+        # 40 px clear of the block edge, 19 px between lanes: at 24/15 the
+        # first spine sat almost on the block it came from and the next lane
+        # was close enough to read as the same line.
+        return PAD + anchor * pitch + BOX_W + 40 + i * 19
+
+    links, spines = [], []
+    for item in plan:
+        if item["type"] == "spine":
+            sx = next_lane(item["anchor"])
+            stubs = []
+            for m in item["members"]:
+                y = port[(m, id(item))]
+                side = "right" if nodes[m]["col"] <= item["anchor"] else "left"
+                stubs.append({"id": m, "y": y,
+                              "left_x": nodes[m]["x"],
+                              "right_x": nodes[m]["x"] + nodes[m]["w"],
+                              "side": side, "controller": m == item["controller"]})
+            ys = [st["y"] for st in stubs]
+            spines.append({**item, "stubs": stubs, "x": float(sx),
+                           "top": float(min(ys)), "bottom": float(max(ys))})
+        else:
+            a, b = nodes[item["a"]], nodes[item["b"]]
+            y1, y2 = port[(item["a"], id(item))], port[(item["b"], id(item))]
+            # A straight run needs no corridor lane and cannot collide.
+            mx = None if abs(y1 - y2) < 0.5 else next_lane(a["col"])
+            links.append({**item, "y1": float(y1), "y2": float(y2),
+                          "x1": float(a["x"] + a["w"]), "x2": float(b["x"]),
+                          "mx": None if mx is None else float(mx)})
+
+    # A legend strip under the blocks names every bus, so the diagram itself
+    # carries only the lines and the reader still gets the kind and the notes.
+    legend = [{"id": b["id"], "kind": b.get("kind", "other"),
+               "colour": BUS_COLOURS.get(b.get("kind", ""), BUS_DEFAULT),
+               "notes": b.get("notes")} for b in buses]
+    legend_y = blocks_b + 34
+
     right = max([n["x"] + n["w"] for n in nodes.values()] +
-                [s["x"] for sp in spines for s in sp["stubs"]] +
-                [PAD + 520], default=PAD + 520)
-    width = int(right + label_w + PAD)
-    height = int((spines[-1]["y"] if spines else blocks_b) + 74)
+                [sp["x"] for sp in spines] + [PAD + 520], default=PAD + 520)
+    width = int(right + 210 + PAD)
+    height = int(legend_y + 22 * len(legend) + 52)
     return {"spec": spec, "nodes": nodes, "rails": rail_rows, "spines": spines,
+            "links": links, "legend": legend, "legend_y": legend_y,
             "panel_b_y": panel_b_y, "rail_colour": rail_colour,
             "width": max(width, 720), "height": height}
 
@@ -448,7 +578,7 @@ def render_svg(model: dict, budget_rows: list[dict]) -> str:
       f'viewBox="0 0 {W} {H}" font-family="{FONT}" role="img" '
       f'aria-label="Electrical block diagram: {_esc(spec.get("project", "project"))}, '
       f'{len(nodes)} blocks, {len(model["rails"])} rails, '
-      f'{len(model["spines"])} buses">')
+      f'{len(model.get("legend", []))} buses">')
 
     a("<style>")
     a(f".s{{fill:{SURFACE['light']}}} .bx{{fill:{BLOCK['light']};stroke:{AXIS['light']}}} "
@@ -472,7 +602,7 @@ def render_svg(model: dict, budget_rows: list[dict]) -> str:
         title += f"  ·  rev {spec['revision']}"
     a(f'<text x="{PAD}" y="27" class="h ink">{_esc(title)}</text>')
     sub = (f"{len(nodes)} blocks · {len(model['rails'])} rails · "
-           f"{len(model['spines'])} buses")
+           f"{len(model.get('legend', []))} buses")
     if over:
         sub += " · OVER BUDGET: " + ", ".join(r["id"] for r in over)
     a(f'<text x="{PAD}" y="46" class="t ink2">{_esc(sub)}</text>')
@@ -555,33 +685,66 @@ def render_svg(model: dict, budget_rows: list[dict]) -> str:
             bx -= 4
 
     # ---- data buses ------------------------------------------------------
-    # Every vertical run sits in the corridor to the right of its block, so a
-    # bus never crosses a block. Spines cross each other's corridors, which is
-    # a crossing a reader can follow.
+    # A two-block bus is one line between two blocks. Only a bus with three or
+    # more members gets a spine, and that spine runs vertically in the corridor
+    # between columns — never in a band underneath everything, which is what
+    # forced every member to drop a stub past every row below it and made the
+    # lines cross each other and the blocks.
+    for lk in model.get("links", []):
+        c = lk["colour"]
+        x1, y1, x2, y2 = lk["x1"], lk["y1"], lk["x2"], lk["y2"]
+        if lk["mx"] is None:
+            d = f"M{x1},{y1} H{x2 - 4}"
+            lx, ly, anchor = (x1 + x2) / 2, y1 - 7, "middle"
+        else:
+            mx = lk["mx"]
+            d = f"M{x1},{y1} H{mx} V{y2} H{x2 - 4}"
+            lx, ly, anchor = mx + 5, (y1 + y2) / 2 + 3, "start"
+        a(f'<path d="{d}" fill="none" stroke="{c}" stroke-width="1.8" '
+          f'stroke-linejoin="round"/>')
+        a(f'<circle cx="{x1}" cy="{y1}" r="2.6" fill="{c}"/>')
+        if lk.get("controller") == lk["a"] or not lk.get("controller"):
+            a(f'<path d="M-5,-4 L-5,4 L2,0 z" transform="translate({x2 - 2},{y2})" '
+              f'fill="{c}"/>')
+        else:
+            a(f'<circle cx="{x2 - 3}" cy="{y2}" r="3" fill="{c}"/>')
+        a(f'<text x="{lx:.0f}" y="{ly:.0f}" class="ts" fill="{c}" '
+          f'text-anchor="{anchor}">{_esc(lk["id"])}</text>')
+
     for sp in model["spines"]:
         c, stubs = sp["colour"], sp["stubs"]
         if not stubs:
             continue
-        xs = [s["x"] for s in stubs]
-        a(f'<line x1="{min(xs)}" y1="{sp["y"]}" x2="{max(xs)}" y2="{sp["y"]}" '
-          f'stroke="{c}" stroke-width="2.2" stroke-linecap="round"/>')
-        for s in stubs:
-            a(f'<path d="M{s["edge_x"]},{s["exit_y"]} H{s["x"]} V{sp["y"]}" '
-              f'fill="none" stroke="{c}" stroke-width="1.6"/>')
-            if s["controller"]:
-                a(f'<path d="M-4.5,-5 L4.5,-5 L0,3.5 z" '
-                  f'transform="translate({s["x"]},{sp["y"] - 4})" fill="{c}"/>')
+        sx = sp["x"]
+        a(f'<line x1="{sx}" y1="{sp["top"]}" x2="{sx}" y2="{sp["bottom"]}" '
+          f'stroke="{c}" stroke-width="2.4" stroke-linecap="round"/>')
+        a(f'<text x="{sx + 5}" y="{sp["top"] - 9}" class="ts" fill="{c}">'
+          f'{_esc(sp["id"])}</text>')
+        for st in stubs:
+            edge_x = st["right_x"] if st["side"] == "right" else st["left_x"]
+            a(f'<line x1="{edge_x}" y1="{st["y"]}" x2="{sx}" y2="{st["y"]}" '
+              f'stroke="{c}" stroke-width="1.6"/>')
+            a(f'<circle cx="{edge_x}" cy="{st["y"]}" r="2.6" fill="{c}"/>')
+            if st["controller"]:
+                a(f'<rect x="{sx - 4}" y="{st["y"] - 4}" width="8" height="8" '
+                  f'rx="1.5" fill="{c}"/>')
             else:
-                a(f'<circle cx="{s["x"]}" cy="{sp["y"]}" r="3.2" fill="{c}"/>')
-            a(f'<circle cx="{s["edge_x"]}" cy="{s["exit_y"]}" r="2.4" fill="{c}"/>')
-        label = f'{sp["id"]} · {sp["kind"].upper()}'
-        if sp["notes"]:
-            label += f' · {sp["notes"]}'
-        a(f'<text x="{max(xs) + 10}" y="{sp["y"] + 4}" class="ts" fill="{c}">'
-          f'{_esc(label)}</text>')
+                a(f'<circle cx="{sx}" cy="{st["y"]}" r="3.2" fill="{c}"/>')
+
+    # ---- bus legend ------------------------------------------------------
+    ly = model["legend_y"]
+    a(f'<text x="{PAD}" y="{ly - 8}" class="tb ink2">DATA BUSES</text>')
+    for i, bl in enumerate(model.get("legend", [])):
+        yy = ly + 12 + i * 22
+        a(f'<line x1="{PAD}" y1="{yy}" x2="{PAD + 22}" y2="{yy}" '
+          f'stroke="{bl["colour"]}" stroke-width="2.4" stroke-linecap="round"/>')
+        txt = f'{bl["id"]} · {bl["kind"].upper()}'
+        if bl["notes"]:
+            txt += f' — {bl["notes"]}'
+        a(f'<text x="{PAD + 30}" y="{yy + 4}" class="ts ink2">{_esc(txt)}</text>')
 
     a(f'<text x="{PAD}" y="{H - 16}" class="ts mut">'
-      f'▼ bus controller · ● bus member · pill on a block = the rail it runs from '
+      f'■ bus controller · ● bus member · pill on a block = the rail it runs from '
       f'· every colour is also labelled</text>')
     a("</svg>")
     return "\n".join(o)
@@ -684,28 +847,46 @@ def render_drawio(model: dict) -> str:
                n["x"], n["y"], n["w"], n["h"])
 
     # ---- buses -----------------------------------------------------------
+    # Two-block buses are a real edge between the two blocks, so dragging
+    # either one in draw.io keeps the connection attached.
+    for lk in model.get("links", []):
+        na, nb = nodes[lk["a"]], nodes[lk["b"]]
+        edge(f'link-{lk["id"]}', lk["id"],
+             _style(edgeStyle="orthogonalEdgeStyle", rounded=1, html=1,
+                    strokeColor=lk["colour"], strokeWidth=1.8,
+                    endArrow="block", endSize=6, fontSize=9,
+                    fontColor=lk["colour"], exitX=1,
+                    exitY=round((lk["y1"] - na["y"]) / na["h"], 3), entryX=0,
+                    entryY=round((lk["y2"] - nb["y"]) / nb["h"], 3)),
+             lk["a"], lk["b"])
+
     for sp in model["spines"]:
         if not sp["stubs"]:
             continue
         spid = f'spine-{sp["id"]}'
-        xs = [s["x"] for s in sp["stubs"]]
         lbl = f'{sp["id"]} · {sp["kind"].upper()}'
         if sp["notes"]:
             lbl += f' · {sp["notes"]}'
+        # A tall thin bar in the corridor: the spine as a draggable object.
         vertex(spid, lbl,
                _style(rounded=1, whiteSpace="wrap", html=1,
                       fillColor=sp["colour"], strokeColor="none",
-                      fontColor="#ffffff", fontSize=10, arcSize=40,
-                      verticalAlign="middle", align="left", spacingLeft=8),
-               min(xs), sp["y"] - 8, max(max(xs) - min(xs), 150), 16)
-        for s in sp["stubs"]:
-            edge(f'{spid}-{s["id"]}', "",
+                      fontColor="#ffffff", fontSize=9, arcSize=40,
+                      verticalAlign="top", align="center",
+                      horizontal=0, spacingTop=6),
+               sp["x"] - 7, sp["top"] - 10,
+               14, max(sp["bottom"] - sp["top"] + 20, 60))
+        for st in sp["stubs"]:
+            nm = nodes[st["id"]]
+            edge(f'{spid}-{st["id"]}', "",
                  _style(edgeStyle="orthogonalEdgeStyle", rounded=0, html=1,
                         strokeColor=sp["colour"], strokeWidth=1.6,
-                        endArrow="block" if s["controller"] else "oval",
+                        endArrow="block" if st["controller"] else "oval",
                         endFill=1, endSize=6,
-                        exitX=1, exitY=0.5, entryX=0, entryY=0.5),
-                 s["id"], spid)
+                        exitX=1 if st["side"] == "right" else 0,
+                        exitY=round((st["y"] - nm["y"]) / nm["h"], 3),
+                        entryX=0.5, entryY=0.5),
+                 st["id"], spid)
 
     name = _esc(title)
     body = "\n".join(cells)

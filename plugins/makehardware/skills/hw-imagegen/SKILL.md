@@ -35,18 +35,73 @@ image-capable MCP server before anything else.
   Always `view_parameters` on a space before `invoke` — the schemas differ.
 
   If `invoke` returns *"disabled because gradio=none is set"*, Space invocation
-  is switched off on the connector rather than unavailable. Tell the human to
-  change that in their claude.ai connector settings; do not try to route
-  around it.
+  is switched off on the connector rather than unavailable. `discover` and
+  `view_parameters` keep working, which makes it look like a transient failure;
+  it is not, and no amount of retrying or picking a different Space changes it.
+  Two things have to happen, in this order:
+
+  1. **The connector has to stop sending `gradio=none`.** That parameter is on
+     the Hugging Face MCP endpoint the connector was added with, and which
+     Spaces are exposed is chosen at
+     [huggingface.co/settings/mcp](https://huggingface.co/settings/mcp). Adding
+     Spaces there does not by itself clear a `gradio=none` that is pinned on
+     the connector's URL — check the URL in claude.ai → Settings → Connectors.
+  2. **Start a new session.** A running session negotiated its tool list at
+     startup, so reconnecting a connector mid-session changes nothing you can
+     see: the tool list, and `gradio=none` with it, are fixed until the next
+     session. If `discover` still lists exactly what it listed before the
+     reconnect, that is the tell.
+
+  Say both of these to the human rather than only the first, and do not try to
+  route around it.
 
 * **Any other MCP server** exposing image generation works the same way. This
   ladder is about capability, not about a particular vendor.
 
 ### Rung 2 — a keyed API through `imagegen`
 
+**This is the rung to reach for when rung 1 is blocked**, and it usually is:
+Space invocation is off by default on the connector, and a running session
+cannot see a connector change anyway. Rung 2 needs no connector at all.
+
 ```bash
 imagegen --list          # which providers have a key, and what each supports
 ```
+
+Four providers, easiest key first:
+
+| Provider | Key | Why |
+|---|---|---|
+| `hf` | `HF_TOKEN` or `HF_KEY` | **Start here.** A free read token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). No connector, no Space invocation, no billing. |
+| `fal` | `FAL_KEY` | Paid, fast, and the best image-to-image of the four. |
+| `bfl` | `BFL_API_KEY` | Paid. FLUX Kontext, for restyling a render while keeping its proportions. |
+| `openai` | `OPENAI_API_KEY` | Paid, text-to-image only here. |
+
+Put the key in `.env` at the project root (gitignored) or in the environment.
+On a **Custom** network policy the host also has to be reachable — see
+`env/allowed-domains.txt`; on **Full** there is nothing to do.
+
+### Adding a key to a session that is already running
+
+You cannot, and it is worth knowing why before you ask someone to try.
+
+A cloud session's environment variables are read when its **container starts**.
+Adding one in the environment's settings afterwards changes what the *next*
+session gets, not this one — the same is true of connector settings, so
+reconnecting a connector mid-session does not change the tool list either. So
+the sequence is: add the key in the environment's **Environment variables**
+field, then **start a new session**. Both `HF_KEY` and `FAL_KEY` can go in at
+once; `imagegen` picks whichever is present and `--provider` chooses between
+them.
+
+**Never ask the human to paste a key into the chat.** The transcript is stored,
+so a key that arrives that way has to be treated as disclosed and rotated, and
+you will have cost them a credential to save one session's wait. If they offer
+anyway, say that, write it to `.env` rather than anywhere tracked, and tell
+them plainly to rotate it afterwards.
+
+A cold Hugging Face model returns 503 on the first call while it loads. That is
+normal; wait and retry rather than switching provider.
 
 If one is configured:
 

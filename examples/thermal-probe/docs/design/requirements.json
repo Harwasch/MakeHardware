@@ -1,0 +1,219 @@
+{
+  "requirements": [
+    {
+      "uid": "VIS-001",
+      "title": "A week in a freezer on one charge",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Inspection",
+      "evidence": "",
+      "budget": "",
+      "parents": [],
+      "files": []
+    },
+    {
+      "uid": "VIS-002",
+      "title": "Readable and operable wearing freezer gloves",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Inspection",
+      "evidence": "",
+      "budget": "",
+      "parents": [],
+      "files": []
+    },
+    {
+      "uid": "VIS-003",
+      "title": "Survives being dropped on a concrete floor",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Test",
+      "evidence": "",
+      "budget": "",
+      "parents": [],
+      "files": []
+    },
+    {
+      "uid": "SYS-001",
+      "title": "Battery life >= 7 d logging at 1 min intervals",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Analysis",
+      "evidence": "",
+      "budget": "7 d",
+      "parents": [
+        "VIS-001"
+      ],
+      "files": []
+    },
+    {
+      "uid": "SYS-002",
+      "title": "Operating range -30 to +40 degC",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Test",
+      "evidence": "",
+      "budget": "",
+      "parents": [
+        "VIS-001"
+      ],
+      "files": []
+    },
+    {
+      "uid": "SYS-003",
+      "title": "Display legible at 500 mm in 50 lx",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Inspection",
+      "evidence": "",
+      "budget": "",
+      "parents": [
+        "VIS-002"
+      ],
+      "files": []
+    },
+    {
+      "uid": "SYS-004",
+      "title": "Survives 1.2 m drop onto concrete, 6 faces",
+      "doc": "Thermal Probe",
+      "status": "Agreed",
+      "verification": "Test",
+      "evidence": "",
+      "budget": "1.2 m",
+      "parents": [
+        "VIS-003"
+      ],
+      "files": []
+    },
+    {
+      "uid": "ELE-001",
+      "title": "Standby current <= 40 uA on the always-on rail",
+      "doc": "Thermal Probe",
+      "status": "Implemented",
+      "verification": "Simulation",
+      "evidence": "",
+      "budget": "40 uA",
+      "parents": [
+        "SYS-001"
+      ],
+      "files": [
+        "hw/block-diagram.yaml"
+      ]
+    },
+    {
+      "uid": "ELE-002",
+      "title": "Logging-cycle charge <= 180 uAh per sample",
+      "doc": "Thermal Probe",
+      "status": "Draft",
+      "verification": "Simulation",
+      "evidence": "",
+      "budget": "180 uAh",
+      "parents": [
+        "SYS-001"
+      ],
+      "files": []
+    },
+    {
+      "uid": "ELE-003",
+      "title": "ADC error <= 0.2 degC over -30 to +40 degC",
+      "doc": "Thermal Probe",
+      "status": "Draft",
+      "verification": "Test",
+      "evidence": "",
+      "budget": "0.2 degC",
+      "parents": [
+        "SYS-002"
+      ],
+      "files": []
+    },
+    {
+      "uid": "MEC-001",
+      "title": "Envelope <= 38 x 164 x 22 mm",
+      "doc": "Thermal Probe",
+      "status": "Verified",
+      "verification": "Inspection",
+      "evidence": "docs/design/vision.md, measured on the agreed model",
+      "budget": "",
+      "parents": [
+        "SYS-004"
+      ],
+      "files": [
+        "cad/enclosure.py"
+      ]
+    },
+    {
+      "uid": "MEC-002",
+      "title": "Enclosure withstands 1.2 m drop, 6 faces",
+      "doc": "Thermal Probe",
+      "status": "Draft",
+      "verification": "Test",
+      "evidence": "",
+      "budget": "",
+      "parents": [
+        "SYS-004"
+      ],
+      "files": []
+    },
+    {
+      "uid": "MEC-003",
+      "title": "Display window transmits >= 88% at 550 nm",
+      "doc": "Thermal Probe",
+      "status": "Draft",
+      "verification": "Inspection",
+      "evidence": "",
+      "budget": "88%",
+      "parents": [
+        "SYS-003"
+      ],
+      "files": []
+    },
+    {
+      "uid": "FW-001",
+      "title": "Sleep between samples, wake on RTC only",
+      "doc": "Thermal Probe",
+      "status": "Draft",
+      "verification": "Test",
+      "evidence": "",
+      "budget": "",
+      "parents": [
+        "SYS-001"
+      ],
+      "files": []
+    }
+  ],
+  "summary": {
+    "total": 14,
+    "verified": 1,
+    "with_evidence": 1,
+    "coverage_pct": 7.1,
+    "by_level": {
+      "VIS": 3,
+      "SYS": 4,
+      "ELE": 3,
+      "MEC": 3,
+      "FW": 1,
+      "MFG": 0
+    }
+  },
+  "findings": {
+    "orphan": [],
+    "childless": [],
+    "unverified": [
+      "ELE-001 (Standby current <= 40 uA on the always-on rail) has no EVIDENCE for its Simulation verification",
+      "ELE-002 (Logging-cycle charge <= 180 uAh per sample) has no EVIDENCE for its Simulation verification",
+      "ELE-003 (ADC error <= 0.2 degC over -30 to +40 degC) has no EVIDENCE for its Test verification",
+      "MEC-002 (Enclosure withstands 1.2 m drop, 6 faces) has no EVIDENCE for its Test verification",
+      "MEC-003 (Display window transmits >= 88% at 550 nm) has no EVIDENCE for its Inspection verification",
+      "FW-001 (Sleep between samples, wake on RTC only) has no EVIDENCE for its Test verification"
+    ],
+    "unlinked": [
+      "ELE-002 (Logging-cycle charge <= 180 uAh per sample) has no File relation to a design artefact",
+      "ELE-003 (ADC error <= 0.2 degC over -30 to +40 degC) has no File relation to a design artefact",
+      "MEC-002 (Enclosure withstands 1.2 m drop, 6 faces) has no File relation to a design artefact",
+      "MEC-003 (Display window transmits >= 88% at 550 nm) has no File relation to a design artefact",
+      "FW-001 (Sleep between samples, wake on RTC only) has no File relation to a design artefact"
+    ],
+    "stale": [],
+    "unknown_level": []
+  }
+}

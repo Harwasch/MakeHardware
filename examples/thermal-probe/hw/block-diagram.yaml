@@ -1,0 +1,132 @@
+project: Thermal Probe
+revision: C
+
+rails:
+  - id: VBUS
+    voltage: 5.0
+    source: J1
+    max_current_a: 0.50
+    notes: USB-C sink, 5 V @ 500 mA default. Charging only; not a run rail.
+
+  - id: VBAT
+    voltage: 3.7
+    source: BT1
+    max_current_a: 1.20
+    notes: >-
+      900 mAh LiPo, 3.0-4.2 V. Limit is the cell's 1C discharge rating, not a
+      regulator. Peak is set by the display backlight inrush.
+
+  - id: V3P3
+    voltage: 3.3
+    from: VBAT
+    source: U2
+    max_current_a: 0.25
+    notes: MCP1700 LDO, 250 mA. Always-on rail; the 40 uA standby budget lives here.
+
+  - id: VREF
+    voltage: 2.5
+    from: V3P3
+    source: U4
+    max_current_a: 0.010
+    notes: REF3025 reference for the thermistor divider. Gated off in standby.
+
+blocks:
+  - id: J1
+    name: USB-C receptacle
+    kind: connector
+    part: TYPE-C-31-M-12
+
+  - id: BT1
+    name: LiPo cell, 900 mAh
+    kind: power
+    part: LP503035
+
+  - id: U1
+    name: Battery charger
+    kind: regulator
+    part: MCP73831T-2ACI/OT
+    powered_by:
+      - rail: VBUS
+        typ_current_a: 0.100
+        max_current_a: 0.450
+
+  - id: U2
+    name: 3.3 V LDO
+    kind: regulator
+    part: MCP1700T-3302E/TT
+    powered_by:
+      - rail: VBAT
+        typ_current_a: 0.0000016
+        max_current_a: 0.000004
+
+  - id: U3
+    name: MCU
+    kind: mcu
+    part: STM32L071KBU6
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.00420
+        max_current_a: 0.00810
+
+  - id: U4
+    name: Voltage reference
+    kind: analog
+    part: REF3025AIDBZR
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.0000420
+        max_current_a: 0.0000650
+
+  - id: U5
+    name: Log flash, 16 Mbit
+    kind: memory
+    part: W25Q16JVUXIQ
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.000001
+        max_current_a: 0.00400
+
+  - id: DS1
+    name: Segment LCD module
+    kind: interface
+    part: VIM-878-DP-RC-S-LV
+    powered_by:
+      - rail: V3P3
+        typ_current_a: 0.000012
+        max_current_a: 0.000025
+
+  - id: RT1
+    name: Probe thermistor, NTC 10k
+    kind: sensor
+    part: NTCLE100E3103JB0
+    powered_by:
+      - rail: VREF
+        typ_current_a: 0.000250
+        max_current_a: 0.000250
+
+  - id: SW1
+    name: Wake button
+    kind: interface
+    part: TL3305AF160QG
+
+buses:
+  - id: SPI1
+    kind: spi
+    controller: U3
+    members: [U5, DS1]
+    notes: 8 MHz, two chip selects. Flash and LCD share the bus.
+
+  - id: ADC1
+    kind: analog
+    between: [RT1, U3]
+    notes: Ratiometric against VREF, 12-bit, 16x oversampled
+
+  - id: SWD1
+    kind: swd
+    between: [U3, J1]
+    notes: Debug on the USB-C sideband pins via a test fixture
+
+  - id: GPIO1
+    kind: gpio
+    between: [SW1, U3]
+    notes: Wake interrupt, pulled up internally

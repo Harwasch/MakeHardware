@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="608" height="442" viewBox="0 0 608 442" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Assembly drawing, top side"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}.board{fill:#fcfcfb}@media (prefers-color-scheme:dark){.board{fill:#191917}}</style><defs><marker id="aa" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,3.5 L7,1 L7,6 z" fill="#898781"/></marker></defs><text x="20" y="28" class="h ink">Assembly drawing — top side</text>
+<text x="20" y="46" class="ts mut">62 x 34 mm · 10 placements · pin 1 and polarity marked · not to scale</text>
+<rect x="56" y="74" width="496.0" height="272.0" class="board" stroke="#0b0b0b" stroke-width="1.2" rx="6"/>
+<line x1="56.0" y1="74" x2="56.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<line x1="136.0" y1="74" x2="136.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<line x1="216.0" y1="74" x2="216.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<line x1="296.0" y1="74" x2="296.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<line x1="376.0" y1="74" x2="376.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<line x1="456.0" y1="74" x2="456.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<line x1="536.0" y1="74" x2="536.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
+<g><title>U1 — STM32L0, 0°</title><rect x="128.0" y="130.0" width="80.0" height="48.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="133.0" cy="173.0" r="2.6" fill="#d03b3b"/>
+<text x="168.0" y="157.5" class="num ink" text-anchor="middle">U1</text></g>
+<g><title>U2 — MCP1700, 0°</title><rect x="272.0" y="126.0" width="40.0" height="40.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="277.0" cy="161.0" r="2.6" fill="#d03b3b"/>
+<text x="292.0" y="149.5" class="num ink" text-anchor="middle">U2</text></g>
+<g><title>U3 — REF3025, 0°</title><rect x="272.0" y="234.0" width="35.2" height="24.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="277.0" cy="253.0" r="2.6" fill="#d03b3b"/>
+<text x="289.6" y="249.5" class="num ink" text-anchor="middle">U3</text></g>
+<g><title>U4 — MAX31865, 0°</title><rect x="408.0" y="134.0" width="48.0" height="32.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="413.0" cy="161.0" r="2.6" fill="#d03b3b"/>
+<text x="432.0" y="153.5" class="num ink" text-anchor="middle">U4</text></g>
+<g><title>J1 — USB-C, 90°</title><rect x="80.0" y="250.0" width="60.0" height="72.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<text x="110.0" y="289.5" class="num ink" text-anchor="middle">J1</text></g>
+<g><title>J2 — Probe 4-pin, 90°</title><rect x="496.0" y="170.0" width="80.0" height="40.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="501.0" cy="205.0" r="2.6" fill="#d03b3b"/>
+<text x="536.0" y="193.5" class="num ink" text-anchor="middle">J2</text></g>
+<g><title>DS1 — LCD 128x64, 0°</title><rect x="376.0" y="250.0" width="128.0" height="72.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="381.0" cy="317.0" r="2.6" fill="#d03b3b"/>
+<text x="440.0" y="289.5" class="num ink" text-anchor="middle">DS1</text></g>
+<g><title>BT1 — 18650 clip, 0°</title><rect x="176.0" y="234.0" width="136.0" height="88.0" fill="none" stroke="#52514e" stroke-width="1"/>
+<circle cx="181.0" cy="317.0" r="2.6" fill="#d03b3b"/>
+<text x="244.0" y="281.5" class="num ink" text-anchor="middle">BT1</text></g>
+<g><title>C6 — 100 nF, 0°</title><rect x="232.0" y="178.0" width="16.0" height="9.6" fill="none" stroke="#52514e" stroke-width="1"/>
+<text x="240.0" y="186.3" class="num ink" text-anchor="middle">C6</text></g>
+<g><title>C7 — 100 nF, 0°</title><rect x="328.0" y="178.0" width="16.0" height="9.6" fill="none" stroke="#52514e" stroke-width="1"/>
+<text x="336.0" y="186.3" class="num ink" text-anchor="middle">C7</text></g>
+<line x1="56" y1="368.0" x2="552.0" y2="368.0" stroke="#898781" stroke-width="0.8" marker-start="url(#aa)" marker-end="url(#aa)"/>
+<text x="304.0" y="362.0" class="num mut" text-anchor="middle">62.0 mm</text>
+<circle cx="26" cy="394.0" r="2.6" fill="#d03b3b"/><text x="36" y="398.0" class="ts ink2">Red dot marks pin 1 / anode / positive. Seven of the ten placements are polarised.</text></svg>
