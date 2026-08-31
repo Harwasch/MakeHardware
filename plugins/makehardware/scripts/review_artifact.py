@@ -83,9 +83,47 @@ ARTIFACT_YAML_DOC = """\
 # hide: [simulation]                   # standard phases to leave out
 """
 
-# Images small enough to inline as a data URI without wrecking the page. SVG is
-# inlined as markup instead and has no limit worth enforcing.
+# Images small enough to inline as a data URI without wrecking the page.
 RASTER_BUDGET = 220 * 1024
+
+# SVG is inlined as markup, so it costs no base64 overhead and stays crisp —
+# but it is not free, and a plotter hands you something far bigger than any
+# hand-written diagram. KiCad's SVG exporter emits one <path> per *line
+# segment*, including every stroke of every character of text, so a real sheet
+# is enormous: `kicad-cli sch export svg` on KiCad's own pic_programmer demo
+# gives 3.0 MB / 61,681 nodes for the root sheet and 1.0 MB / 21,265 for the
+# sub-sheet. That is not a pathological case; that is one ordinary A4 sheet.
+#
+# Measured in headless Chromium on this container, inlined and laid out:
+#
+#     1.0 MB / 21k nodes   1.04 s
+#     3.0 MB / 62k nodes   2.27 s
+#
+# So render time is not what should decide this. A 1 MB schematic sheet *is*
+# worth inlining — showing the schematic is the entire point of the schematic
+# tab, and refusing at 500 kB (as this first did) makes the tab useless for
+# every real KiCad project. What actually bites is the 16 MB artifact cap, and
+# it bites in aggregate: any one sheet fits, six of them do not.
+#
+# Hence two limits. A per-file one that only catches the genuinely pathological
+# and keeps the slowest tab near a couple of seconds, and a running total for
+# the page as a whole. Exceeding either is reported the same way an oversized
+# raster is — visibly, with the fix named — never silently dropped.
+SVG_BUDGET = 1_500 * 1024
+SVG_NODE_BUDGET = 30_000
+PAGE_INLINE_BUDGET = 9 * 1024 * 1024
+
+# Bytes inlined so far this run. Reset by main(); see spend().
+_inlined = 0
+
+
+def spend(n: int) -> bool:
+    """Book `n` bytes against the page budget. False when there is no room."""
+    global _inlined
+    if _inlined + n > PAGE_INLINE_BUDGET:
+        return False
+    _inlined += n
+    return True
 
 STATE_LABEL = {
     "approved":          ("Approved", "ok"),
@@ -220,7 +258,58 @@ def _prefix_each(css: str, prefix: str) -> str:
     return "".join(out)
 
 
-def inline_svg(path: str) -> tuple[str | None, float]:
+def paints_own_sheet(head: str, body: str) -> bool:
+    """True when the SVG fills its whole viewport with a light colour.
+
+    The theming story for an inlined SVG is: strokes and fills that the page's
+    CSS can reach follow the reader's theme, and everything else does not.
+    Plotters put everything in the second category — KiCad writes
+    `style="fill:#F5F4EF"` on a `<g>` and a full-page `<rect>` inside it, then
+    draws the whole schematic in `#000000`, all inline, all unreachable.
+
+    Recolouring it would be a lie about the artefact, and leaving it alone
+    gives a blinding rectangle on a dark page. So detect it and mat it, the
+    same treatment an opaque raster gets: the sheet reads as a sheet.
+    """
+    box = re.search(r'viewBox="\s*[\d.eE+-]+[ ,]+[\d.eE+-]+[ ,]+'
+                    r'([\d.eE+-]+)[ ,]+([\d.eE+-]+)', head)
+    if not box:
+        return False
+    try:
+        vw, vh = float(box.group(1)), float(box.group(2))
+    except ValueError:
+        return False
+    if vw <= 0 or vh <= 0:
+        return False
+
+    for m in re.finditer(r"<rect\b([^>]*)>", body):
+        attrs = m.group(1)
+        w = re.search(r'\bwidth="([\d.eE+-]+)"', attrs)
+        h = re.search(r'\bheight="([\d.eE+-]+)"', attrs)
+        if not w or not h:
+            continue
+        try:
+            if float(w.group(1)) < vw * 0.9 or float(h.group(1)) < vh * 0.9:
+                continue
+        except ValueError:
+            continue
+        # The fill is usually not on the rect: it is inherited from the <g>
+        # the plotter opened just above it. Take the nearest one before here.
+        own = re.search(r'\bfill="(#[0-9A-Fa-f]{6})"', attrs)
+        if own:
+            colour = own.group(1)
+        else:
+            before = re.findall(r'fill:\s*(#[0-9A-Fa-f]{6})', body[:m.start()])
+            if not before:
+                continue
+            colour = before[-1]
+        r, g, b = (int(colour[i:i + 2], 16) for i in (1, 3, 5))
+        if (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.55:
+            return True
+    return False
+
+
+def inline_svg(path: str) -> tuple[str | None, float, bool]:
     """SVG goes in as markup: crisp at any zoom, themes with the page, no cap.
 
     Everything here exists because a real exporter's SVG is not a tidy one:
@@ -234,16 +323,24 @@ def inline_svg(path: str) -> tuple[str | None, float]:
       restyle theirs. Every rule is therefore scoped to the wrapper.
     * **width is a physical length.** See `_svg_length`.
     * **`<script>` has no business here** and is stripped.
+
+    Returns `(markup, intrinsic_width, paints_own_sheet)`. The third is for
+    exporters that fill the whole page with a light colour and then draw in
+    black — which is every KiCad plot, and it is done with inline
+    `style="fill:#F5F4EF"` on a full-page `<rect>`, so no amount of CSS
+    scoping will theme it. Those get matted exactly like an opaque raster:
+    honest about what the artefact is, instead of a black-on-black schematic
+    or a bright slab with no border.
     """
     text = read_text(path)
     if not text:
-        return None, 0.0
+        return None, 0.0, False
     text = re.sub(r"<\?xml[^>]*\?>", "", text)
     text = re.sub(r"<!DOCTYPE[^>]*>", "", text, flags=re.I)
     text = re.sub(r"<script\b.*?</script>", "", text, flags=re.S | re.I)
     tag = re.search(r"<svg\b[^>]*>", text)
     if not tag:
-        return None, 0.0
+        return None, 0.0, False
 
     ns = "g" + hashlib.sha1(path.encode()).hexdigest()[:7]
     for m in set(re.findall(r'\bid="([^"]+)"', text)):
@@ -258,18 +355,25 @@ def inline_svg(path: str) -> tuple[str | None, float]:
     text = re.sub(r"<style[^>]*>(.*?)</style>", scope, text, flags=re.S)
 
     head = tag.group(0)
-    box = re.search(r'viewBox="\s*[\d.eE+-]+[ ,]+[\d.eE+-]+[ ,]+([\d.eE+-]+)',
-                    head)
-    intrinsic = float(box.group(1)) if box else 0.0
+    # The `width` attribute is the intrinsic size; the viewBox only fixes the
+    # user-unit coordinate system and the aspect ratio. Reading them the other
+    # way round is wrong whenever the two use different units — and a plotter
+    # is exactly that case. KiCad writes `width="297.0022mm"` beside
+    # `viewBox="0 0 297.0022 210.0072"`, so preferring the viewBox laid an A4
+    # schematic out 297 px wide: a thumbnail of a drawing nobody could read.
+    w = re.search(r'\swidth="([^"]+)"', head)
+    intrinsic = _svg_length(w.group(1)) if w else 0.0
     if not intrinsic:
-        w = re.search(r'\swidth="([^"]+)"', head)
-        intrinsic = _svg_length(w.group(1)) if w else 720.0
+        box = re.search(
+            r'viewBox="\s*[\d.eE+-]+[ ,]+[\d.eE+-]+[ ,]+([\d.eE+-]+)', head)
+        intrinsic = float(box.group(1)) if box else 720.0
     new_head = re.sub(r'\s(width|height)="[^"]*"', "", head)
     if "preserveAspectRatio" not in new_head:
         new_head = new_head[:-1] + ' preserveAspectRatio="xMidYMid meet">'
     body = text.replace(head, new_head, 1).strip()
     # The wrapper is what the scoped selectors hang off.
-    return f'<span id="{ns}" class="svgwrap">{body}</span>', intrinsic
+    return (f'<span id="{ns}" class="svgwrap">{body}</span>', intrinsic,
+            paints_own_sheet(head, body))
 
 
 def png_width(blob: bytes) -> float:
@@ -309,6 +413,10 @@ def inline_raster(path: str) -> tuple[str | None, str | None, float, bool]:
                 os.path.splitext(path)[1].lower())
     if not mime:
         return None, None, 0.0, True
+    if not spend(size * 4 // 3):                 # base64 costs a third more
+        return None, (f"{path} would take this page past its "
+                      f"{PAGE_INLINE_BUDGET // (1024 * 1024)} MB inline "
+                      f"budget. It is linked instead."), 0.0, True
     with open(path, "rb") as fh:
         blob = fh.read()
     return (f"data:{mime};base64,{base64.b64encode(blob).decode()}", None,
@@ -321,13 +429,13 @@ def markdown_to_html(text: str, strip_h1: bool = True) -> str:
     is generated by this repo's own tools."""
     out: list[str] = []
     lines = text.splitlines()
-    i, in_list, in_table = 0, False, False
+    i, in_list, in_table = 0, "", False
 
     def close():
         nonlocal in_list, in_table
         if in_list:
-            out.append("</ul>")
-            in_list = False
+            out.append(f"</{in_list}>")
+            in_list = ""
         if in_table:
             out.append("</tbody></table></div>")
             in_table = False
@@ -355,13 +463,35 @@ def markdown_to_html(text: str, strip_h1: bool = True) -> str:
                 out.append(f"<h{min(lvl + 1, 6)}>{spans(m.group(2))}</h{min(lvl + 1, 6)}>")
             i += 1
             continue
-        if ln.lstrip().startswith(("* ", "- ")):
-            if not in_list:
+        # Bullets and numbered steps. Ordered lists are not a nicety here:
+        # an assembly traveller or a test sequence is a numbered list, and
+        # rendering "1. Solder paste ... 2. Place ..." as one run-on paragraph
+        # loses the one thing that made it a procedure.
+        bullet = ln.lstrip().startswith(("* ", "- "))
+        num = re.match(r"\s*\d+[.)]\s+", ln)
+        if bullet or num:
+            tag = "ul" if bullet else "ol"
+            if in_list != tag:
                 close()
-                out.append("<ul>")
-                in_list = True
-            out.append(f"<li>{spans(ln.lstrip()[2:])}</li>")
+                out.append(f"<{tag}>")
+                in_list = tag
+            # An item runs until a blank line, the next item or the next block
+            # — the toolbox hard-wraps its markdown at ~76 columns, so most
+            # items are two or three lines and treating each wrapped line as a
+            # new paragraph shattered every list on the page.
+            item = [ln.lstrip()[2:].strip() if bullet
+                    else ln[num.end():].strip()]
             i += 1
+            while i < len(lines):
+                nxt = lines[i]
+                if not nxt.strip() or nxt.lstrip().startswith(("* ", "- ")) \
+                        or re.match(r"\s*\d+[.)]\s+", nxt) \
+                        or nxt.lstrip()[:1] in ("#", "|", ">") \
+                        or nxt.lstrip().startswith("```"):
+                    break
+                item.append(nxt.strip())
+                i += 1
+            out.append(f"<li>{spans(' '.join(item))}</li>")
             continue
         if ln.strip().startswith("|") and i + 1 < len(lines) and \
                 re.match(r"^\s*\|[\s:|-]+\|\s*$", lines[i + 1]):
@@ -420,6 +550,38 @@ VIEWER = {".pdf": "GitHub's PDF viewer", ".stl": "GitHub's 3D viewer",
           ".drawio": "draw.io", ".csv": "GitHub's table view"}
 
 
+def svg_too_heavy(full: str) -> str | None:
+    """Why this SVG must not be inlined, or None if it is fine to inline.
+
+    A hand-written diagram is a few kB. A plotted one is not: KiCad emits one
+    <path> per stroked segment, so a dense schematic sheet arrives as megabytes
+    of markup and tens of thousands of nodes. Inlining it would push the page
+    toward the artifact cap and hand the browser a DOM it cannot lay out
+    smoothly, so it is reported instead — with the fix, because "too big" on
+    its own tells the agent nothing it can act on.
+    """
+    size = os.path.getsize(full)
+    rel = os.path.basename(full)
+    advice = ("It still renders on GitHub, so it is linked rather than shown. "
+              "Plot fewer sheets, or a simplified one, for the review — and "
+              "export a PDF alongside them for the record.")
+
+    if size > SVG_BUDGET:
+        return (f"{rel} is {size // 1024} kB, past the {SVG_BUDGET // 1024} kB "
+                f"limit for one figure. {advice}")
+    with open(full, "r", errors="replace") as fh:
+        nodes = fh.read().count("<")
+    if nodes > SVG_NODE_BUDGET:
+        return (f"{rel} holds {nodes:,} elements, past the "
+                f"{SVG_NODE_BUDGET:,} limit for one figure — enough to make "
+                f"its tab visibly slow to open. {advice}")
+    if not spend(size):
+        return (f"{rel} would take this page past its "
+                f"{PAGE_INLINE_BUDGET // (1024 * 1024)} MB inline budget, "
+                f"which exists so the whole page stays inside the 16 MB "
+                f"artifact cap. {advice}")
+    return None
+
 def figure(root: str, path: str, caption: str = "") -> dict | None:
     """A figure, or an honest note about why there isn't one.
 
@@ -438,9 +600,14 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
                 "caption": caption, "path": path}
 
     if ext == ".svg":
-        svg, width = inline_svg(full)
+        heavy = svg_too_heavy(full)
+        if heavy:
+            return {"warn": heavy, "link": True, "caption": caption,
+                    "path": path}
+        svg, width, sheet = inline_svg(full)
         if svg:
-            return {"svg": svg, "caption": caption, "path": path, "w": width}
+            return {"svg": svg, "caption": caption, "path": path, "w": width,
+                    "mat": sheet}
         return {"warn": f"{path} is not readable as SVG.",
                 "caption": caption, "path": path}
 
@@ -462,6 +629,26 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
     return {"warn": f"{path} is a {ext or 'file'} — nothing on this page can "
                     f"show it. Export an SVG or a PNG.",
             "caption": caption, "path": path}
+
+
+def add_sources(root: str, p: "Phase", specs: list[tuple[str, str, str]]) -> None:
+    """Offer the editable originals behind a phase's pictures.
+
+    The page shows an SVG because that is what renders in a browser. The file
+    the human actually wants when they disagree with the picture is the one
+    they can open and change — the `.drawio`, the `.kicad_sch`, the `.step` —
+    and until this existed the page rendered `block-diagram.svg` without ever
+    mentioning that `block-diagram.drawio` sat beside it in the repo.
+
+    Only files that exist are listed: a project with no `.drawio` should not be
+    shown a dead link to one.
+    """
+    links = [{"label": label, "path": path, "why": why,
+              "url": blob_url(path), "missing": False}
+             for path, label, why in specs
+             if os.path.exists(os.path.join(root, path))]
+    if links:
+        p.add("links", links)
 
 
 def phase_vision(root: str) -> Phase | None:
@@ -531,8 +718,15 @@ def phase_plan(root: str) -> Phase | None:
     if plan_render:
         claims = plan_render.check_claims(plan)
         p.notes = claims
+    add_sources(root, p, [
+        ('docs/plan.drawio', 'Plan chart (draw.io)',
+         'Opens in draw.io or diagrams.net — move a bar to re-plan'),
+        ('docs/plan.svg', 'Plan chart (SVG)',
+         'Renders on GitHub'),
+        ('plan.yaml', 'Plan source',
+         'What both charts are generated from'),
+    ])
     return p
-
 
 def phase_requirements(root: str) -> Phase | None:
     reqs, summary, findings = None, None, None
@@ -591,8 +785,13 @@ def phase_requirements(root: str) -> Phase | None:
                      "rows": rows, "detail_col": 1})
     for kind, items in (findings or {}).items():
         p.notes.extend(items)
+    add_sources(root, p, [
+        ('docs/design/requirements-map.drawio', 'Requirements map (draw.io)',
+         'Opens in draw.io or diagrams.net'),
+        ('docs/design/requirements-map.svg', 'Requirements map (SVG)',
+         'Renders on GitHub'),
+    ])
     return p
-
 
 def phase_architecture(root: str) -> Phase | None:
     spec = read_yaml(os.path.join(root, "hw/block-diagram.yaml"))
@@ -639,8 +838,15 @@ def phase_architecture(root: str) -> Phase | None:
                          "rows": brows, "detail_col": None})
         _errors, warnings = block_diagram.validate(spec)
         p.notes = warnings
+    add_sources(root, p, [
+        ('hw/block-diagram.drawio', 'Block diagram (draw.io)',
+         'Opens in draw.io or diagrams.net — drag the file onto the canvas'),
+        ('hw/block-diagram.svg', 'Block diagram (SVG)',
+         'Renders on GitHub'),
+        ('hw/block-diagram.yaml', 'Block diagram source',
+         'The spec both files are generated from'),
+    ])
     return p
-
 
 def _humanise(path: str) -> str:
     """`sheet-1-power.svg` -> `Sheet 1 power`. Better than shouting the filename."""
@@ -940,7 +1146,11 @@ td.t-ok{color:var(--ok)}
 .prose h2{font-size:19px;margin:26px 0 8px;font-weight:600}
 .prose h3{font-size:16px;margin:20px 0 6px;font-weight:600}
 .prose p{margin:0 0 11px;max-width:70ch}
-.prose ul{max-width:70ch}
+.prose ul,.prose ol{max-width:70ch;padding-left:22px;margin:0 0 12px}
+.prose li{margin:0 0 5px}
+.prose ol{counter-reset:step;list-style:none;padding-left:30px}
+.prose ol>li{counter-increment:step;position:relative}
+.prose ol>li::before{content:counter(step);position:absolute;left:-30px;top:1px;width:20px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600}
 .empty{color:var(--muted);font-size:14.5px;max-width:62ch}
 footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
   color:var(--muted);font-size:12.5px}
@@ -1213,7 +1423,8 @@ def render_phase(p: Phase) -> str:
                 a("<figure>")
                 if f.get("svg"):
                     cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
-                    a(f'<div class="sheet"{cap_w}>{f["svg"]}</div>')
+                    mat = " mat" if f.get("mat") else ""
+                    a(f'<div class="sheet{mat}"{cap_w}>{f["svg"]}</div>')
                 elif f.get("uri"):
                     cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
                     mat = " mat" if f.get("mat") else ""
@@ -1360,6 +1571,9 @@ def main() -> int:
                     help="report artefacts that cannot be shown; write nothing. "
                          "Exit 1 if any. Run this before publishing.")
     args = ap.parse_args()
+
+    global _inlined
+    _inlined = 0                    # --check and the write are separate runs
 
     root = os.path.abspath(args.project)
     cfg = read_yaml(os.path.join(root, "docs/review/artifact.yaml")) or {}

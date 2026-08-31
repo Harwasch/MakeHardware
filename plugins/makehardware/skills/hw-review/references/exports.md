@@ -13,12 +13,30 @@ nobody sees.
 Two different consumers, two different limits, and the second one bites:
 
 * **GitHub** will render whatever you commit, at any size.
-* **The review page** (`review-artifact`) inlines SVG as markup with no limit,
-  but embeds a raster as a data URI under a **220 kB** budget, and the whole
-  page has to stay well inside the 16 MB artifact cap. A `kicad-cli pcb render`
-  at `--width 3000` or a matplotlib figure at `dpi=300` is several megabytes
-  and will not be embedded — it is reported on the page instead, which is
-  honest but is not a review.
+* **The review page** (`review-artifact`) has three budgets, and the whole
+  page has to stay inside the 16 MB artifact cap:
+
+  | | Limit | What blows it |
+  |---|---|---|
+  | raster, as a data URI | 220 kB | `pcb render --width 3000`, `dpi=300` |
+  | one SVG | 1.5 MB / 30,000 elements | any dense plotted schematic |
+  | the page, in total | 9 MB inlined | a tab with six sheets on it |
+
+  Anything over is reported on the page instead of shown, which is honest but
+  is not a review.
+
+**A plotted schematic is far bigger than you expect.** KiCad's SVG exporter
+writes one `<path>` per *line segment*, including every stroke of every
+character of text. Measured on KiCad's own `pic_programmer` demo:
+
+```
+root sheet   3.0 MB    61,681 elements     linked, not inlined
+sub-sheet    1.0 MB    21,265 elements     inlines fine
+```
+
+So one ordinary A4 sheet can be a megabyte, and a four-sheet design will not
+fit. Put the two or three sheets that carry the decision on the page, commit
+the PDF for the whole set, and say in the request which sheets you chose.
 
 So export twice when it matters: full size for the record, and a review-sized
 copy for the page.
@@ -29,6 +47,13 @@ kicad-cli pcb render hw/probe.kicad_pcb --output docs/design/pcb-top.png \
 ```
 
 For matplotlib, `savefig(..., dpi=110)` on a 7×5 in figure lands around 150 kB.
+
+**A plotter's colours cannot be themed, and that is fine.** KiCad fills the
+page with `#F5F4EF` and draws in black, written inline on every `<g>`, so no
+stylesheet on the page can reach it. The review page detects a full-page light
+fill and mats the sheet, the way it mats an opaque raster — a schematic then
+reads as a sheet of paper on a dark page rather than a hole in it. Do not try
+to recolour a plot for the page: it would misrepresent what you exported.
 
 **Export rasters with a transparent background** where the tool allows it —
 `savefig(..., transparent=True)`, which `vision-board` already does. A render
@@ -71,12 +96,15 @@ kicad-cli sch export bom hw/probe.kicad_sch --output docs/design/bom.csv
 the review summary as a number — "ERC: 0 errors, 3 warnings, all
 unconnected-pin on the debug header" — not as an attachment nobody opens.
 
-**Prefer the per-sheet SVGs over the PDF for anything under about four
-sheets.** Pass the SVG directory as an `--artifact` and `review-gate` embeds
-each sheet inline in the review packet, so the human scrolls one page instead
-of opening GitHub's PDF viewer — which is serviceable on a desktop and
-unpleasant on a phone. Commit the PDF too, for printing and for anyone who
-wants the whole thing in one file.
+**Prefer the per-sheet SVGs over the PDF, for the two or three sheets that
+carry the decision.** Pass them as `--artifact` and `review-gate` embeds each
+inline in the review packet, so the human scrolls one page instead of opening
+GitHub's PDF viewer — serviceable on a desktop, unpleasant on a phone. Commit
+the PDF too, for printing and for the sheets that did not make the page.
+
+`sch export` offers PDF, SVG, DXF and PS — there is no PNG, in KiCad 10 either
+— so a sheet too dense for the page has no smaller raster to fall back on.
+Choose fewer sheets rather than hoping.
 
 ## KiCad board
 

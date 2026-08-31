@@ -10,17 +10,34 @@
 # So this builds inputs with the hazards deliberately present and asserts the
 # generator handles each one:
 #
-#   1. kicad-cli writes page size in MILLIMETRES (`width="297mm"`). Reading the
-#      number and dropping the unit renders an A4 schematic 297 px wide.
-#   2. kicad-cli and matplotlib both ship a <style> block. Inlined, its
-#      selectors are global: their `.t` restyles this page, and this page's
-#      restyles theirs. Both directions have to be scoped away.
-#   3. Exporters emit ids (`#glyph0-1`, gradients, markers). Two files on one
-#      page collide and the last definition wins for both.
+# Several of these were guesses until kicad-cli was installed and pointed at
+# KiCad's own demo projects. The corrected shapes are what 7.0.11 emits and
+# what the 10.0 source (common/plotters/SVG_plotter.cpp) still emits:
+#
+#   1. Page size is in MILLIMETRES, in BOTH places and meaning different
+#      things: `width="297.0022mm"` is the intrinsic size, while
+#      `viewBox="0 0 297.0022 210.0072"` is the user-unit system. Preferring
+#      the viewBox — which this did — laid an A4 schematic out 297 px wide.
+#   2. matplotlib ships a <style> block. Inlined, its selectors are global:
+#      its `.t` restyles this page and this page's restyles it. Both
+#      directions have to be scoped away. (KiCad ships none: it writes inline
+#      `style="fill:#840000"` on every <g> instead, which no scoping can
+#      reach — see 7.)
+#   3. Exporters emit ids. KiCad 7 emitted none, but KiCad 10 names every
+#      layer group — `<g id="Wire">`, `id="Notes">` — so two sheets on one
+#      page collide on ids that are near-certain to repeat. matplotlib and
+#      cairo emit `#glyph0-1`, gradients and markers.
 #   4. A build123d or pcbnew render is megabytes. It must not be embedded, and
 #      must not vanish either.
 #   5. A PDF is the normal schematic export and cannot be inlined at all.
 #   6. An export that failed leaves no file. That must be reported, loudly.
+#   7. KiCad paints a full-page `fill:#F5F4EF` rect and draws in black, all
+#      inline. On a dark page that is either a blinding slab or invisible ink,
+#      and recolouring it would misrepresent the artefact — so it is matted.
+#   8. A plotted sheet is HUGE. KiCad writes one <path> per line segment,
+#      including every stroke of every character: 3.0 MB / 61,681 elements for
+#      one A4 sheet of the pic_programmer demo. Inlining without a budget
+#      walks the page into the 16 MB artifact cap.
 #
 #   tests/real-tool-output.sh
 set -uo pipefail
@@ -47,12 +64,20 @@ chunks:
      depends_on: [], estimate_sessions: 1, outputs: []}
 EOF
 
-# ---- 1-3: an SVG shaped like kicad-cli's, twice, with colliding names -----
+# ---- 1-3: two exporter-shaped SVGs on one page, with colliding names ------
+# Note the viewBox: KiCad's is in the SAME units as the width, so a generator
+# that trusts the viewBox gets 297 instead of 1122. The fixture used to write
+# a px-shaped viewBox here, which is why that bug survived the test suite.
 for n in 1 2; do
 cat > "docs/design/sheet-${n}.svg" <<EOF
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="297mm" height="210mm" viewBox="0 0 1122.5 793.7" version="1.1">
+ <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="297.0022mm" height="210.0072mm"
+     viewBox="0.0000 0.0000 297.0022 210.0072" version="1.1">
 <style>
   .t { fill: #ff00ff; font-size: 40px }
   .h { fill: #ff00ff }
@@ -64,10 +89,16 @@ cat > "docs/design/sheet-${n}.svg" <<EOF
   <g id="glyph0-1"><path d="M2,2 L8,8"/></g>
 </defs>
 <script>window.alert('exporters should not ship this, but some do')</script>
-<rect width="1122.5" height="793.7" fill="#ffffff"/>
+<g style="fill:#F5F4EF; fill-opacity:1.0000; stroke:#F5F4EF;">
+<rect x="0.000000" y="0.000000" width="297.002200" height="210.007200" rx="0.000000" />
+</g>
+<g id="Wire" inkscape:label="Wire" inkscape:groupmode="layer">
 <use xlink:href="#glyph0-1" x="40" y="40"/>
 <line x1="60" y1="60" x2="300" y2="60" marker-end="url(#arrow)" stroke="#000"/>
+</g>
+<g id="Notes" inkscape:label="Notes" inkscape:groupmode="layer">
 <text class="t" x="60" y="120">SHEET ${n} MARKER</text>
+</g>
 </svg>
 EOF
 done
@@ -94,6 +125,21 @@ open("docs/design/board-render.png", "wb").write(png)
 print(f"  (built a {len(png)//1024} kB render)")
 PYEOF
 
+# ---- 8: a plotted sheet at real KiCad density ----------------------------
+# One <path> per line segment is what the plotter actually does, so this is
+# not an exaggerated fixture: it is 40k two-point paths, which a real A4 sheet
+# comfortably exceeds.
+"${PY}" - <<'PYEOF2'
+seg = ['<path d="M%.4f %.4f\nL%.4f %.4f\n" />'
+       % (i % 297, i % 210, (i + 1) % 297, (i + 3) % 210) for i in range(40000)]
+open("docs/design/dense-sheet.svg", "w").write(
+    '<?xml version="1.0" standalone="no"?>\n'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="297.0022mm" '
+    'height="210.0072mm" viewBox="0.0000 0.0000 297.0022 210.0072">'
+    '<g style="fill:#000000; stroke:#000000;">' + "".join(seg) + '</g></svg>')
+PYEOF2
+printf '  (built a %s kB dense sheet)\n' "$(( $(wc -c < docs/design/dense-sheet.svg) / 1024 ))"
+
 # ---- 5: a PDF, the normal schematic export -------------------------------
 printf '%%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n' \
     > docs/design/schematic.pdf
@@ -110,6 +156,7 @@ phases:
       - docs/design/schematic.pdf
       - docs/design/board-render.png
       - docs/design/never-exported.svg
+      - docs/design/dense-sheet.svg
 EOF
 
 git add -A >/dev/null 2>&1
@@ -132,9 +179,9 @@ P=docs/review/artifact.html
 [ -s "${P}" ] && pass "page written despite unusable artefacts" \
               || { fail "no page written"; echo "${fails} failure(s)"; exit 1; }
 
-# 1. millimetres
+# 1. millimetres, from the width attribute rather than the viewBox
 if grep -qE 'max-width:1[01][0-9][0-9]px' "${P}"; then
-    pass "297mm page read as ~1122 px, not 297"
+    pass "297.0022mm page read as ~1122 px, not 297"
 else
     fail "mm units mis-parsed: $(grep -oE 'max-width:[0-9]+px' "${P}" | head -2 | tr '\n' ' ')"
 fi
@@ -175,21 +222,39 @@ ids=$(grep -oE 'id="g[0-9a-f]{7}-arrow"' "${P}" | sort -u | wc -l)
 has "${P}" 'xlink:href="#g' && pass "xlink:href rewritten to the namespaced id" \
     || fail "xlink:href left pointing at the un-namespaced id"
 
+# KiCad 10 names its layer groups, so `id="Wire"` appears in every sheet of
+# every project. Two sheets on one page is the common case, not the corner one.
+wires=$(grep -oE 'id="g[0-9a-f]{7}-Wire"' "${P}" | sort -u | wc -l)
+[ "${wires}" -eq 2 ] \
+    && pass "KiCad 10 layer ids namespaced apart (${wires} distinct #Wire)" \
+    || fail "KiCad 10 layer id collision: ${wires} distinct #Wire, expected 2"
+
+# 7. the light sheet is matted rather than left to glare or recoloured
+mats=$(grep -c 'class="sheet mat"' "${P}")
+[ "${mats}" -ge 2 ] && pass "light-background sheets matted (${mats})" \
+    || fail "a #F5F4EF full-page sheet was not matted (${mats} matted)"
+
 # scripts must not survive into the page
 grep -q "exporters should not ship this" "${P}" \
     && fail "a <script> from the SVG was inlined" \
     || pass "script stripped from the inlined SVG"
 
 # 4/5/6. unusable artefacts are reported, never dropped
-for want in "board-render.png" "schematic.pdf" "never-exported.svg"; do
+for want in "board-render.png" "schematic.pdf" "never-exported.svg" \
+            "dense-sheet.svg"; do
     has "${P}" "${want}" && pass "reported on the page: ${want}" \
                          || fail "silently dropped: ${want}"
 done
 has "${P}" "Open on GitHub" && pass "the PDF links out to where it does render" \
     || fail "no GitHub link offered for the PDF"
 
+# 8. the dense sheet must be reported, not pasted in
+grep -q 'M0.0000 0.0000' "${P}" \
+    && fail "a 40,000-element sheet was inlined — the page will crawl" \
+    || pass "dense plotted sheet reported, not inlined"
+
 sz=$(( $(wc -c < "${P}") / 1024 ))
-[ "${sz}" -lt 500 ] && pass "page stayed small (${sz} kB) — the 1.5 MB raster was not embedded" \
+[ "${sz}" -lt 500 ] && pass "page stayed small (${sz} kB) — neither the 1.5 MB raster nor the dense sheet was embedded" \
                     || fail "page ballooned to ${sz} kB"
 
 echo

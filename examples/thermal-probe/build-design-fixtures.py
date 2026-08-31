@@ -2,11 +2,13 @@
 """Design-stage artefacts for the example project.
 
 In a real project these come out of the tools: `vision-board` and build123d for
-the CAD views, `kicad-cli sch export svg` for the schematic, the SPICE and
+the CAD views, the SPICE and
 CalculiX post-processing for the plots. None of those run in this container, so
-these are written here in the same shapes and the same palette — the point is to
-exercise the review page's handling of a 3D render, a schematic sheet, a chart
-and a contour plot, which is what the artefact pipeline actually has to carry.
+these are written here in the same shapes and the same palette. The
+schematic tab is the exception: it carries genuine `kicad-cli sch export svg`
+output, exported by build-fixture.sh — the point is to
+exercise the review page's handling of a 3D render, a chart, a contour plot
+and a set of manufacturing drawings, which is what the artefact pipeline actually has to carry.
 
     python3 build-design-fixtures.py
 """
@@ -156,102 +158,6 @@ def cad_section() -> str:
 
 # ---------------------------------------------------------------------------
 # 2. Schematic sheet — the shape kicad-cli sch export svg produces
-# ---------------------------------------------------------------------------
-def schematic_sheet() -> str:
-    o = []
-    W, H = 900, 470
-
-    def wire(pts, label=""):
-        d = " ".join(("M" if i == 0 else "L") + f"{x},{y}"
-                     for i, (x, y) in enumerate(pts))
-        o.append(f'<path d="{d}" fill="none" stroke="{INK}" stroke-width="1.4"/>')
-        if label:
-            x, y = pts[0]
-            o.append(f'<text x="{x + 4}" y="{y - 5}" class="num ink2">{label}</text>')
-
-    def junction(x, y):
-        o.append(f'<circle cx="{x}" cy="{y}" r="2.6" fill="{INK}"/>')
-
-    def ic(x, y, w, h, ref, part, pins):
-        o.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="none" '
-                 f'stroke="{INK}" stroke-width="1.4"/>')
-        o.append(f'<text x="{x + w / 2}" y="{y - 16}" class="tb ink" '
-                 f'text-anchor="middle">{ref}</text>')
-        o.append(f'<text x="{x + w / 2}" y="{y - 4}" class="num ink2" '
-                 f'text-anchor="middle">{part}</text>')
-        for side, py, name in pins:
-            px = x - 16 if side == "L" else x + w + 16
-            o.append(f'<line x1="{x if side == "L" else x + w}" y1="{py}" '
-                     f'x2="{px}" y2="{py}" stroke="{INK}" stroke-width="1.4"/>')
-            o.append(f'<text x="{x + 6 if side == "L" else x + w - 6}" y="{py + 4}" '
-                     f'class="ts ink2" text-anchor="{"start" if side == "L" else "end"}">'
-                     f"{name}</text>")
-
-    def cap(x, y, ref, val):
-        o.append(f'<line x1="{x}" y1="{y}" x2="{x}" y2="{y + 10}" stroke="{INK}" stroke-width="1.4"/>')
-        o.append(f'<line x1="{x - 9}" y1="{y + 10}" x2="{x + 9}" y2="{y + 10}" stroke="{INK}" stroke-width="1.8"/>')
-        o.append(f'<line x1="{x - 9}" y1="{y + 15}" x2="{x + 9}" y2="{y + 15}" stroke="{INK}" stroke-width="1.8"/>')
-        o.append(f'<line x1="{x}" y1="{y + 15}" x2="{x}" y2="{y + 25}" stroke="{INK}" stroke-width="1.4"/>')
-        o.append(f'<text x="{x + 13}" y="{y + 9}" class="num ink2">{ref}</text>')
-        o.append(f'<text x="{x + 13}" y="{y + 21}" class="num mut">{val}</text>')
-
-    def gnd(x, y):
-        o.append(f'<line x1="{x}" y1="{y}" x2="{x}" y2="{y + 8}" stroke="{INK}" stroke-width="1.4"/>')
-        for i, w in enumerate((11, 7, 3)):
-            o.append(f'<line x1="{x - w}" y1="{y + 8 + i * 4}" x2="{x + w}" '
-                     f'y2="{y + 8 + i * 4}" stroke="{INK}" stroke-width="1.4"/>')
-
-    def netlabel(x, y, name):
-        o.append(f'<text x="{x}" y="{y - 6}" class="num ink">{name}</text>')
-        o.append(f'<line x1="{x - 4}" y1="{y}" x2="{x + 44}" y2="{y}" '
-                 f'stroke="{INK}" stroke-width="1.4"/>')
-
-    o.append(f'<rect x="10" y="10" width="{W - 20}" height="{H - 20}" fill="none" '
-             f'stroke="{RULE}" stroke-width="1"/>')
-    o.append(f'<text x="26" y="38" class="h ink">Power input and regulation</text>')
-    o.append(f'<text x="26" y="56" class="ts mut">'
-             f'Thermal Probe · sheet 1 of 2 · rev C · ERC 0 errors, 2 warnings</text>')
-
-    # J1 -> U1 charger -> BT1
-    netlabel(40, 120, "VBUS")
-    ic(150, 96, 96, 76, "U1", "MCP73831", [("L", 120, "VDD"), ("L", 152, "PROG"),
-                                           ("R", 120, "VBAT"), ("R", 152, "STAT")])
-    wire([(84, 120), (134, 120)])
-    wire([(262, 120), (330, 120)])
-    netlabel(330, 120, "VBAT")
-    junction(330, 120)
-    wire([(330, 120), (330, 190)])
-    cap(330, 190, "C1", "4.7u")
-    gnd(330, 215)
-
-    # U2 LDO -> V3P3
-    ic(470, 96, 96, 76, "U2", "MCP1700-3302", [("L", 120, "VIN"), ("L", 152, "GND"),
-                                               ("R", 120, "VOUT")])
-    wire([(374, 120), (454, 120)])
-    wire([(582, 120), (660, 120)])
-    netlabel(660, 120, "V3P3")
-    junction(660, 120)
-    wire([(660, 120), (660, 190)])
-    cap(660, 190, "C2", "1u")
-    gnd(660, 215)
-    wire([(454, 152), (440, 152), (440, 200)])
-    gnd(440, 200)
-
-    # annotation the reviewer is meant to catch
-    o.append(f'<rect x="150" y="290" width="600" height="52" fill="none" '
-             f'stroke="{STOP}" stroke-width="1" stroke-dasharray="4 3"/>')
-    o.append(f'<text x="164" y="310" class="tb" fill="{STOP}">'
-             f'ERC warning ×2</text>')
-    o.append(f'<text x="164" y="328" class="ts ink2">'
-             f'U1 STAT and U2 GND-sense are unconnected. Intentional — the LED '
-             f'was dropped at the vision review — but they need no-connect flags.</text>')
-
-    o.append(f'<text x="26" y="{H - 22}" class="ts mut">'
-             f'generated by kicad-cli sch export svg — the .kicad_sch is the '
-             f'source</text>')
-    return svg(W, H, "\n".join(o), "Schematic sheet 1: power input and regulation")
-
-
 # ---------------------------------------------------------------------------
 # 3. Simulation chart — magnitude against a limit, one series
 # ---------------------------------------------------------------------------
@@ -426,6 +332,129 @@ def stackup() -> str:
 
 
 # ---------------------------------------------------------------------------
+# 6. Manufacturing — the drawings a fab and an assembler actually work from
+# ---------------------------------------------------------------------------
+# Board outline and placements as the layout declares them. Real projects get
+# these from `kicad-cli pcb export pdf --layers Edge.Cuts,F.Fab` and from the
+# position file; the shapes here are the same shapes so the review page carries
+# the same load.
+BOARD_W, BOARD_H = 62.0, 34.0                       # mm, from MEC-001
+
+PLACEMENTS = [
+    # ref, x, y, w, h, rot, part, polarised
+    ("U1",  9.0,  7.0, 10.0,  6.0,   0, "STM32L0",     True),
+    ("U2", 27.0,  6.5,  5.0,  5.0,   0, "MCP1700",     True),
+    ("U3", 27.0, 20.0,  4.4,  3.0,   0, "REF3025",     True),
+    ("U4", 44.0,  7.5,  6.0,  4.0,   0, "MAX31865",    True),
+    ("J1",  3.0, 22.0,  9.0,  7.5,  90, "USB-C",       False),
+    ("J2", 55.0, 12.0,  5.0, 10.0,  90, "Probe 4-pin", True),
+    ("DS1", 40.0, 22.0, 16.0,  9.0,  0, "LCD 128x64",  True),
+    ("BT1", 15.0, 20.0, 17.0, 11.0,  0, "18650 clip",  True),
+    ("C6", 22.0, 13.0,  2.0,  1.2,   0, "100 nF",      False),
+    ("C7", 34.0, 13.0,  2.0,  1.2,   0, "100 nF",      False),
+]
+
+
+def assembly_drawing() -> str:
+    """Placement, orientation and polarity — what the assembler needs."""
+    s, ox, oy = 8.0, 56, 74                          # px per mm
+    W = int(ox * 2 + BOARD_W * s)
+    H = int(oy + BOARD_H * s + 96)
+    o = ['<text x="20" y="28" class="h ink">Assembly drawing — top side</text>',
+         f'<text x="20" y="46" class="ts mut">{BOARD_W:.0f} x {BOARD_H:.0f} mm '
+         f'· 10 placements · pin 1 and polarity marked · not to scale</text>']
+    # The board face is a class, not a literal, so it follows the reader's
+    # theme. Painted white it was a slab with white ref-designators on it.
+    o.append(f'<rect x="{ox}" y="{oy}" width="{BOARD_W * s:.1f}" '
+             f'height="{BOARD_H * s:.1f}" class="board" stroke="{INK}" '
+             f'stroke-width="1.2" rx="6"/>')
+    for gx in range(0, int(BOARD_W) + 1, 10):
+        o.append(f'<line x1="{ox + gx * s:.1f}" y1="{oy}" x2="{ox + gx * s:.1f}" '
+                 f'y2="{oy + BOARD_H * s:.1f}" stroke="{RULE}" '
+                 f'stroke-width="0.4" stroke-dasharray="2 4"/>')
+    for ref, x, y, w, h, rot, part, pol in PLACEMENTS:
+        if rot == 90:
+            w, h = h, w
+        px, py = ox + x * s, oy + y * s
+        o.append(f'<g><title>{ref} — {part}, {rot}°</title>'
+                 f'<rect x="{px:.1f}" y="{py:.1f}" width="{w * s:.1f}" '
+                 f'height="{h * s:.1f}" fill="none" stroke="{INK2}" '
+                 f'stroke-width="1"/>')
+        if pol:                                      # pin-1 dot, bottom-left
+            o.append(f'<circle cx="{px + 5:.1f}" cy="{py + h * s - 5:.1f}" '
+                     f'r="2.6" fill="{STOP}"/>')
+        o.append(f'<text x="{px + w * s / 2:.1f}" y="{py + h * s / 2 + 3.5:.1f}" '
+                 f'class="num ink" text-anchor="middle">{ref}</text></g>')
+    base = oy + BOARD_H * s
+    o.append(f'<line x1="{ox}" y1="{base + 22}" x2="{ox + BOARD_W * s:.1f}" '
+             f'y2="{base + 22}" stroke="{MUTED}" stroke-width="0.8" '
+             f'marker-start="url(#aa)" marker-end="url(#aa)"/>')
+    o.append(f'<text x="{ox + BOARD_W * s / 2:.1f}" y="{base + 16}" '
+             f'class="num mut" text-anchor="middle">{BOARD_W:.1f} mm</text>')
+    o.append(f'<circle cx="26" cy="{base + 48}" r="2.6" fill="{STOP}"/>'
+             f'<text x="36" y="{base + 52}" class="ts ink2">'
+             f'Red dot marks pin 1 / anode / positive. Seven of the ten '
+             f'placements are polarised.</text>')
+    defs = (f'<defs><marker id="aa" markerWidth="7" markerHeight="7" refX="3.5" '
+            f'refY="3.5" orient="auto"><path d="M0,3.5 L7,1 L7,6 z" '
+            f'fill="{MUTED}"/></marker></defs>')
+    css = (f".board{{fill:{SURFACE}}}"
+           f"@media (prefers-color-scheme:dark){{.board{{fill:#191917}}}}")
+    return svg(W, H, defs + "\n".join(o), "Assembly drawing, top side", css)
+
+
+def fab_drawing() -> str:
+    """Outline, holes and the tolerances the fab quotes against."""
+    s, ox, oy = 8.0, 62, 74
+    W = int(ox * 2 + BOARD_W * s)
+    H = int(oy + BOARD_H * s + 118)
+    holes = [(4.0, 4.0, 3.2, "M3 mount"), (58.0, 4.0, 3.2, "M3 mount"),
+             (4.0, 30.0, 3.2, "M3 mount"), (58.0, 30.0, 3.2, "M3 mount"),
+             (31.0, 30.5, 1.0, "test point")]
+    o = ['<text x="20" y="28" class="h ink">Fabrication drawing</text>',
+         '<text x="20" y="46" class="ts mut">Dimensions in mm. Outline '
+         'tolerance ±0.15. Drill sizes are finished.</text>']
+    o.append(f'<rect x="{ox}" y="{oy}" width="{BOARD_W * s:.1f}" '
+             f'height="{BOARD_H * s:.1f}" fill="none" stroke="{INK}" '
+             f'stroke-width="1.6" rx="6"/>')
+    for hx, hy, d, what in holes:
+        cx, cy = ox + hx * s, oy + hy * s
+        r = max(3.0, d * s / 2)
+        o.append(f'<g><title>{what} — ⌀{d:.1f} mm</title>'
+                 f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="none" '
+                 f'stroke="{INK2}" stroke-width="1"/>'
+                 f'<line x1="{cx - r - 4:.1f}" y1="{cy:.1f}" '
+                 f'x2="{cx + r + 4:.1f}" y2="{cy:.1f}" stroke="{MUTED}" '
+                 f'stroke-width="0.5"/>'
+                 f'<line x1="{cx:.1f}" y1="{cy - r - 4:.1f}" x2="{cx:.1f}" '
+                 f'y2="{cy + r + 4:.1f}" stroke="{MUTED}" '
+                 f'stroke-width="0.5"/></g>')
+    base = oy + BOARD_H * s
+    o.append(f'<line x1="{ox}" y1="{base + 22}" x2="{ox + BOARD_W * s:.1f}" '
+             f'y2="{base + 22}" stroke="{MUTED}" stroke-width="0.8" '
+             f'marker-start="url(#ab)" marker-end="url(#ab)"/>')
+    o.append(f'<text x="{ox + BOARD_W * s / 2:.1f}" y="{base + 16}" '
+             f'class="num mut" text-anchor="middle">{BOARD_W:.1f}</text>')
+    o.append(f'<line x1="{ox - 22}" y1="{oy}" x2="{ox - 22}" y2="{base:.1f}" '
+             f'stroke="{MUTED}" stroke-width="0.8" marker-start="url(#ab)" '
+             f'marker-end="url(#ab)"/>')
+    o.append(f'<text x="{ox - 28}" y="{(oy + base) / 2:.1f}" class="num mut" '
+             f'text-anchor="middle" transform="rotate(-90 {ox - 28} '
+             f'{(oy + base) / 2:.1f})">{BOARD_H:.1f}</text>')
+    rows = ["4 x \u23003.20 mm plated — M3 clearance, on a 54 x 26 mm pattern",
+            "1 x \u23001.00 mm plated — VREF test point",
+            "Min track / gap 0.15 mm  ·  min annular ring 0.13 mm",
+            "ENIG finish, IPC-A-600 class 2, electrical test 100%"]
+    for k, line in enumerate(rows):
+        o.append(f'<text x="20" y="{base + 50 + k * 16}" class="ts ink2">'
+                 f'{line}</text>')
+    defs = (f'<defs><marker id="ab" markerWidth="7" markerHeight="7" refX="3.5" '
+            f'refY="3.5" orient="auto"><path d="M0,3.5 L7,1 L7,6 z" '
+            f'fill="{MUTED}"/></marker></defs>')
+    return svg(W, H, defs + "\n".join(o), "Fabrication drawing")
+
+
+# ---------------------------------------------------------------------------
 def rasterise(svg_path: str, png_path: str, w: int, h: int) -> bool:
     """One fixture goes through as a PNG, to exercise the data-URI path.
 
@@ -460,13 +489,15 @@ def rasterise(svg_path: str, png_path: str, w: int, h: int) -> bool:
 def main() -> int:
     os.makedirs(OUT, exist_ok=True)
     os.makedirs(os.path.join(OUT, "schematic"), exist_ok=True)
+    os.makedirs(os.path.join(OUT, "mfg"), exist_ok=True)
     files = {
         "cad/enclosure-exploded.svg": cad_exploded(),
         "cad/enclosure-section.svg": cad_section(),
-        "schematic/sheet-1-power.svg": schematic_sheet(),
         "standby-corners.svg": standby_chart(),
         "thermal-map.svg": thermal_map(),
         "stackup.svg": stackup(),
+        "mfg/assembly-drawing.svg": assembly_drawing(),
+        "mfg/fab-drawing.svg": fab_drawing(),
     }
     os.makedirs(os.path.join(OUT, "cad"), exist_ok=True)
     for rel, text in files.items():

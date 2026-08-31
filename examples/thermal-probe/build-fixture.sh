@@ -26,6 +26,32 @@ echo "== 2. design-stage artefacts (CAD, schematic, plots) =="
 "${PY}" build-design-fixtures.py || exit 1
 
 echo
+echo "== 2b. schematic sheets, from the real exporter =="
+# The schematic tab carries genuine kicad-cli output rather than a drawing of
+# some, because what the exporter emits is nothing like what you would write by
+# hand: page size in millimetres, one <path> per line segment, a hardcoded
+# light sheet, and layer-named ids that collide between sheets. Those are the
+# hazards the review page has to survive, so the fixture should contain them.
+#
+# The committed SVGs are the record; this step only refreshes them where the
+# tool is available. KiCad's own pic_programmer demo stands in for a schematic
+# this container has no way to draw.
+if command -v kicad-cli >/dev/null 2>&1 && [ -f hw/kicad-demo/pic_programmer.kicad_sch ]; then
+    tmp=$(mktemp -d)
+    if kicad-cli sch export svg hw/kicad-demo/pic_programmer.kicad_sch \
+            --output "${tmp}" >/dev/null 2>&1; then
+        cp "${tmp}/pic_programmer.svg"              docs/design/schematic/sheet-1-main.svg
+        cp "${tmp}/pic_programmer-pic_sockets.svg"  docs/design/schematic/sheet-2-sockets.svg
+        echo "  re-exported 2 sheets with $(kicad-cli version 2>/dev/null || echo kicad-cli)"
+    else
+        echo "  kicad-cli export failed — keeping the committed sheets"
+    fi
+    rm -rf "${tmp}"
+else
+    echo "  no kicad-cli — keeping the committed sheets"
+fi
+
+echo
 echo "== 3. block diagram and power budget =="
 # --relayout, or the previous run's hand-placed positions are read back and
 # the layout under test never changes.

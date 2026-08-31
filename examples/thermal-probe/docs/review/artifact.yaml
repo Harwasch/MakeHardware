@@ -25,12 +25,29 @@ phases:
     title: Schematic
     eyebrow: Stage 5 · electrical
     after: cad
-    images: [docs/design/schematic/sheet-1-power.svg]
+    images:
+      - docs/design/schematic/sheet-2-sockets.svg
+      - docs/design/schematic/sheet-1-main.svg
     captions:
-      docs/design/schematic/sheet-1-power.svg: >-
-        Sheet 1 of 2 — USB-C in, charger, cell and the 3.3 V regulator.
-        ERC is clean apart from two deliberate no-connects.
+      docs/design/schematic/sheet-2-sockets.svg: >-
+        Real kicad-cli output, not a drawing of one. This fixture container
+        has no probe schematic to plot, so both sheets here are KiCad's own
+        pic_programmer demo put through `kicad-cli sch export svg` — which is
+        the point: it is what the exporter actually emits, page size in
+        millimetres and all.
+      docs/design/schematic/sheet-1-main.svg: >-
+        The main sheet of the same export, and the reason SVG has a
+        budget: 3.0 MB and 61,681 elements, because KiCad's plotter writes one
+        path per line segment — every stroke of every character included.
+        Sheets that heavy are linked rather than inlined.
     docs: [docs/design/adr-0002-power.md]
+    links:
+      - path: hw/kicad-demo/pic_programmer.kicad_sch
+        label: KiCad schematic (source)
+        why: Opens in KiCad — the editable original
+      - path: docs/design/schematic/sheet-1-main.svg
+        label: Sheet 1, main
+        why: Renders on GitHub at full size
 
   - id: simulation
     title: Simulation
@@ -57,31 +74,63 @@ phases:
     title: Manufacturing
     eyebrow: Stage 7
     after: fea
-    docs: [docs/design/mfg-readiness.md]
-    images: [docs/design/stackup.svg]
+    images:
+      - docs/design/mfg/fab-drawing.svg
+      - docs/design/mfg/assembly-drawing.svg
+      - docs/design/stackup.svg
+    captions:
+      docs/design/mfg/fab-drawing.svg: >-
+        Outline, hole schedule and the tolerances every quote below is priced
+        against. Change one of these and the prices stop being valid.
+      docs/design/mfg/assembly-drawing.svg: >-
+        Top-side placement and orientation. Seven of the ten parts are
+        polarised; pin 1 is the red dot.
+      docs/design/stackup.svg: >-
+        Two-layer stackup as it will be quoted. Finished thickness and the
+        minimum feature sizes the fab has to confirm.
+    docs:
+      - docs/design/mfg/fab-notes.md
+      - docs/design/mfg/assembly-process.md
     tables:
+      - title: Quotes
+        csv: docs/design/mfg/quotes.csv
+        note: >-
+          Everything is in GBP and everything has a date, because a quote
+          without one is a guess. Two lines are unsourced and carry an
+          estimate instead of a price — those are the ones to look at.
       - title: BOM summary at volume breaks
         csv: docs/design/bom-summary.csv
         note: >-
           Unit cost in GBP. Every line says where its price came from; rows
           whose basis is an estimate are marked, and the total says how many.
     links:
+      - path: docs/design/mfg/fab-drawing.svg
+        label: Fabrication drawing
+        why: Goes to the fab with the gerbers
+      - path: docs/design/mfg/assembly-drawing.svg
+        label: Assembly drawing
+        why: Placement, orientation and polarity for the assembler
       - path: docs/design/stackup.svg
         label: Stackup drawing
         why: What the fab quotes against
+      - path: docs/design/mfg/quotes.csv
+        label: Quotes
+        why: Purchasing, and the source of every price on this tab
       - path: docs/design/bom-summary.csv
         label: BOM
         why: Purchasing and the assembly house
+      - path: docs/design/mfg/fab-notes.md
+        label: Fabrication notes
+        why: The written spec that travels with the gerbers
+      - path: docs/design/mfg/assembly-process.md
+        label: Assembly and test process
+        why: The traveller for the first article run
       - path: docs/design/pcb-fab.zip
         label: Gerbers and drill
         why: Fabrication — not generated until the layout is frozen
-      - path: docs/design/assembly-drawing.pdf
-        label: Assembly drawing
-        why: Placement, orientation and polarity for the assembler
+      - path: docs/design/pcb-pos.csv
+        label: Pick and place
+        why: Assembly — needs the layout
       - path: docs/design/pcb-layers.pdf
         label: Layer plots
         why: Incoming inspection and any fab query
-    captions:
-      docs/design/stackup.svg: >-
-        Two-layer stackup as it will be quoted. Finished thickness and the
-        minimum feature sizes the fab needs to confirm.
