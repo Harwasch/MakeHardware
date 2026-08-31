@@ -57,7 +57,30 @@ phases:
     title: Manufacturing
     eyebrow: Stage 7
     after: fea
+    docs: [docs/design/mfg-readiness.md]
     images: [docs/design/stackup.svg]
+    tables:
+      - title: BOM summary at volume breaks
+        csv: docs/design/bom-summary.csv
+        note: >-
+          Unit cost in GBP. Every line says where its price came from; rows
+          whose basis is an estimate are marked, and the total says how many.
+    links:
+      - path: docs/design/stackup.svg
+        label: Stackup drawing
+        why: What the fab quotes against
+      - path: docs/design/bom-summary.csv
+        label: BOM
+        why: Purchasing and the assembly house
+      - path: docs/design/pcb-fab.zip
+        label: Gerbers and drill
+        why: Fabrication — not generated until the layout is frozen
+      - path: docs/design/assembly-drawing.pdf
+        label: Assembly drawing
+        why: Placement, orientation and polarity for the assembler
+      - path: docs/design/pcb-layers.pdf
+        label: Layer plots
+        why: Incoming inspection and any fab query
     captions:
       docs/design/stackup.svg: >-
         Two-layer stackup as it will be quoted. Finished thickness and the

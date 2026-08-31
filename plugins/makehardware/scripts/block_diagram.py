@@ -415,10 +415,15 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
     # rather than horizontally underneath everything. A spine below the blocks
     # means every member drops a stub past every row under it, and those stubs
     # cross each other and the blocks; in the corridor a spine crosses nothing.
-    bus_lanes = max(1, max((sum(1 for bus in buses
-                                if _corridor_of(bus, col, nodes_ok=True) == c)
-                            for c in range(len(cols_sorted) + 1)), default=1))
-    corr = min(max(56 + 13 * bus_lanes, 96), 210)
+    # Every bus can need a lane in the corridor it starts from, and so can
+    # every link between adjacent columns, so size for the worst column.
+    per_col: dict[int, int] = {}
+    for bus in buses:
+        cs = [col[n] for n in bus_nodes(bus) if n in col]
+        if cs:
+            per_col[min(cs)] = per_col.get(min(cs), 0) + 1
+    bus_lanes = max(per_col.values(), default=1)
+    corr = min(max(60 + 16 * bus_lanes, 110), 260)
     pitch = BOX_W + corr
 
     nodes: dict[str, dict] = {}
@@ -444,42 +449,92 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
     blocks_b = max((n["y"] + n["h"] for n in nodes.values()), default=panel_b_y)
 
     # ---- buses -----------------------------------------------------------
-    # A two-block bus is a line between two blocks and is drawn as exactly
-    # that. Only a bus with three or more members needs a shared spine.
-    links, spines = [], []
-    lane_used: dict[int, int] = {}
-    for j, bus in enumerate(buses):
+    # Two problems have to be solved together, and solving only one of them
+    # leaves the picture looking exactly as broken as before:
+    #
+    #   * Every connection used to leave a block at its vertical centre. A
+    #     block with four of them — an MCU always has four — drew four lines
+    #     out of one point, on top of each other.
+    #   * Every vertical run used to sit at the same x. Two links between the
+    #     same pair of columns therefore shared a corridor lane and overlapped
+    #     for their whole length.
+    #
+    # So: fan the connections out along each block's edge, and give every
+    # vertical run its own lane in its corridor.
+    conns: dict[str, list[dict]] = {bid: [] for bid in nodes}
+    plan: list[dict] = []
+    for bus in buses:
         members = [n for n in bus_nodes(bus) if n in nodes]
         if len(members) < 2:
             continue
         colour = BUS_COLOURS.get(bus.get("kind", ""), BUS_DEFAULT)
         controller = bus.get("controller")
-
         if len(members) == 2:
             a_id, b_id = members
-            # Draw left-to-right so the arrowhead reads as direction of control.
             if nodes[a_id]["x"] > nodes[b_id]["x"]:
                 a_id, b_id = b_id, a_id
-            links.append({"id": bus["id"], "kind": bus.get("kind", "other"),
-                          "colour": colour, "a": a_id, "b": b_id,
-                          "notes": bus.get("notes"),
-                          "controller": controller})
-            continue
+            item = {"type": "link", "id": bus["id"], "kind": bus.get("kind", "other"),
+                    "colour": colour, "a": a_id, "b": b_id,
+                    "notes": bus.get("notes"), "controller": controller}
+            conns[a_id].append({"item": item, "side": "right",
+                                "toward": nodes[b_id]["y"]})
+            conns[b_id].append({"item": item, "side": "left",
+                                "toward": nodes[a_id]["y"]})
+        else:
+            anchor = min(nodes[m]["col"] for m in members)
+            item = {"type": "spine", "id": bus["id"], "kind": bus.get("kind", "other"),
+                    "colour": colour, "notes": bus.get("notes"),
+                    "controller": controller, "members": members,
+                    "anchor": anchor}
+            for m in members:
+                side = "right" if nodes[m]["col"] <= anchor else "left"
+                conns[m].append({"item": item, "side": side,
+                                 "toward": nodes[m]["y"]})
+        plan.append(item)
 
-        anchor = min(nodes[m]["col"] for m in members)
-        lane = lane_used.get(anchor, 0)
-        lane_used[anchor] = lane + 1
-        sx = PAD + anchor * pitch + BOX_W + 26 + lane * 13
-        ys = [nodes[m]["y"] + nodes[m]["h"] / 2 for m in members]
-        stubs = [{"id": m, "y": nodes[m]["y"] + nodes[m]["h"] / 2,
-                  "left_x": nodes[m]["x"], "right_x": nodes[m]["x"] + nodes[m]["w"],
-                  "side": "right" if nodes[m]["col"] <= anchor else "left",
-                  "controller": m == controller} for m in members]
-        spines.append({"id": bus["id"], "kind": bus.get("kind", "other"),
-                       "colour": colour, "notes": bus.get("notes"),
-                       "controller": controller, "stubs": stubs,
-                       "x": float(sx), "top": float(min(ys)),
-                       "bottom": float(max(ys))})
+    # Fan out along each edge, ordered by where the other end sits, so lines
+    # leaving one block do not have to cross each other to get there.
+    port: dict[tuple[str, int], float] = {}
+    for bid, cs in conns.items():
+        n = nodes[bid]
+        for side in ("left", "right"):
+            side_cs = [c for c in cs if c["side"] == side]
+            side_cs.sort(key=lambda c: c["toward"])
+            for i, c in enumerate(side_cs):
+                y = n["y"] + n["h"] * (i + 1) / (len(side_cs) + 1)
+                port[(bid, id(c["item"]))] = y
+
+    # One lane allocator per corridor, shared by spines and link verticals.
+    lane_of: dict[int, int] = {}
+
+    def next_lane(anchor: int) -> float:
+        i = lane_of.get(anchor, 0)
+        lane_of[anchor] = i + 1
+        return PAD + anchor * pitch + BOX_W + 24 + i * 15
+
+    links, spines = [], []
+    for item in plan:
+        if item["type"] == "spine":
+            sx = next_lane(item["anchor"])
+            stubs = []
+            for m in item["members"]:
+                y = port[(m, id(item))]
+                side = "right" if nodes[m]["col"] <= item["anchor"] else "left"
+                stubs.append({"id": m, "y": y,
+                              "left_x": nodes[m]["x"],
+                              "right_x": nodes[m]["x"] + nodes[m]["w"],
+                              "side": side, "controller": m == item["controller"]})
+            ys = [st["y"] for st in stubs]
+            spines.append({**item, "stubs": stubs, "x": float(sx),
+                           "top": float(min(ys)), "bottom": float(max(ys))})
+        else:
+            a, b = nodes[item["a"]], nodes[item["b"]]
+            y1, y2 = port[(item["a"], id(item))], port[(item["b"], id(item))]
+            # A straight run needs no corridor lane and cannot collide.
+            mx = None if abs(y1 - y2) < 0.5 else next_lane(a["col"])
+            links.append({**item, "y1": float(y1), "y2": float(y2),
+                          "x1": float(a["x"] + a["w"]), "x2": float(b["x"]),
+                          "mx": None if mx is None else float(mx)})
 
     # A legend strip under the blocks names every bus, so the diagram itself
     # carries only the lines and the reader still gets the kind and the notes.
@@ -633,25 +688,19 @@ def render_svg(model: dict, budget_rows: list[dict]) -> str:
     # forced every member to drop a stub past every row below it and made the
     # lines cross each other and the blocks.
     for lk in model.get("links", []):
-        na, nb = nodes[lk["a"]], nodes[lk["b"]]
         c = lk["colour"]
-        x1, y1 = na["x"] + na["w"], na["y"] + na["h"] / 2
-        x2, y2 = nb["x"], nb["y"] + nb["h"] / 2
-        if abs(y1 - y2) < 1:
+        x1, y1, x2, y2 = lk["x1"], lk["y1"], lk["x2"], lk["y2"]
+        if lk["mx"] is None:
             d = f"M{x1},{y1} H{x2 - 4}"
             lx, ly, anchor = (x1 + x2) / 2, y1 - 7, "middle"
         else:
-            mx = x1 + max(16, (x2 - x1) / 2)
+            mx = lk["mx"]
             d = f"M{x1},{y1} H{mx} V{y2} H{x2 - 4}"
-            # On the vertical run, which is at a different height for every
-            # link off the same block edge — labelling the midpoint instead
-            # stacks two labels on one another.
             lx, ly, anchor = mx + 5, (y1 + y2) / 2 + 3, "start"
         a(f'<path d="{d}" fill="none" stroke="{c}" stroke-width="1.8" '
           f'stroke-linejoin="round"/>')
         a(f'<circle cx="{x1}" cy="{y1}" r="2.6" fill="{c}"/>')
-        head = lk["b"] if lk.get("controller") == lk["a"] else lk["a"]
-        if head == lk["b"]:
+        if lk.get("controller") == lk["a"] or not lk.get("controller"):
             a(f'<path d="M-5,-4 L-5,4 L2,0 z" transform="translate({x2 - 2},{y2})" '
               f'fill="{c}"/>')
         else:
@@ -798,12 +847,14 @@ def render_drawio(model: dict) -> str:
     # Two-block buses are a real edge between the two blocks, so dragging
     # either one in draw.io keeps the connection attached.
     for lk in model.get("links", []):
+        na, nb = nodes[lk["a"]], nodes[lk["b"]]
         edge(f'link-{lk["id"]}', lk["id"],
              _style(edgeStyle="orthogonalEdgeStyle", rounded=1, html=1,
                     strokeColor=lk["colour"], strokeWidth=1.8,
                     endArrow="block", endSize=6, fontSize=9,
-                    fontColor=lk["colour"],
-                    exitX=1, exitY=0.5, entryX=0, entryY=0.5),
+                    fontColor=lk["colour"], exitX=1,
+                    exitY=round((lk["y1"] - na["y"]) / na["h"], 3), entryX=0,
+                    entryY=round((lk["y2"] - nb["y"]) / nb["h"], 3)),
              lk["a"], lk["b"])
 
     for sp in model["spines"]:
@@ -823,12 +874,14 @@ def render_drawio(model: dict) -> str:
                sp["x"] - 7, sp["top"] - 10,
                14, max(sp["bottom"] - sp["top"] + 20, 60))
         for st in sp["stubs"]:
+            nm = nodes[st["id"]]
             edge(f'{spid}-{st["id"]}', "",
                  _style(edgeStyle="orthogonalEdgeStyle", rounded=0, html=1,
                         strokeColor=sp["colour"], strokeWidth=1.6,
                         endArrow="block" if st["controller"] else "oval",
                         endFill=1, endSize=6,
-                        exitX=1 if st["side"] == "right" else 0, exitY=0.5,
+                        exitX=1 if st["side"] == "right" else 0,
+                        exitY=round((st["y"] - nm["y"]) / nm["h"], 3),
                         entryX=0.5, entryY=0.5),
                  st["id"], spid)
 

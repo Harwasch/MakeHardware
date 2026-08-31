@@ -381,9 +381,12 @@ LAYERS = [
 
 
 def stackup() -> str:
-    W, H = 620, 300
     ox, oy, sw = 150, 80, 260
     scale = 110.0
+    # Height follows the content: the row pitch grew when the labels moved to
+    # one line each, and a fixed canvas simply cropped the bottom layer off.
+    W = 620
+    H = int(oy + sum(max(5.0, th * scale) + 14 for _n, th, _c, _t in LAYERS) + 56)
     o = [f'<text x="20" y="28" class="h ink">Stackup — 2 layer, 1.6 mm</text>',
          f'<text x="20" y="46" class="ts mut">'
          f'finished 1.62 mm ±10% · ENIG · min track/gap 0.15 mm · '
@@ -395,11 +398,13 @@ def stackup() -> str:
                  f'fill="{col}" stroke="{INK}" stroke-width="0.7"/>')
         o.append(f'<text x="{ox - 12}" y="{y + h / 2 + 4:.1f}" class="num ink2" '
                  f'text-anchor="end">{name}</text>')
-        o.append(f'<text x="{ox + sw + 12}" y="{y + h / 2 + 1:.1f}" class="ts ink2">'
-                 f'{th:.3f} mm</text>')
-        o.append(f'<text x="{ox + sw + 12}" y="{y + h / 2 + 13:.1f}" class="ts mut">'
-                 f'{note}</text>')
-        y += h + 2
+        # One line, not two: the thin copper bands are 5 px tall and a stacked
+        # pair of labels on each collided with its neighbours.
+        o.append(f'<text x="{ox + sw + 14}" y="{y + h / 2 + 4:.1f}" class="ts ink2">'
+                 f'{th:.3f} mm  ·  {note}</text>')
+        o.append(f'<line x1="{ox + sw}" y1="{y + h / 2:.1f}" x2="{ox + sw + 10}" '
+                 f'y2="{y + h / 2:.1f}" stroke="{MUTED}" stroke-width="0.6"/>')
+        y += h + 14
     o.append(f'<line x1="{ox - 46}" y1="{oy}" x2="{ox - 46}" y2="{y - 2:.1f}" '
              f'stroke="{MUTED}" stroke-width="0.8"/>')
     o.append(f'<text x="{ox - 52}" y="{(oy + y) / 2:.1f}" class="num mut" '

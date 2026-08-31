@@ -8,6 +8,36 @@ Keep the exports under `docs/design/` (or `docs/review/`) rather than `build/`
 — `build/` is gitignored, and an artefact that is not committed is an artefact
 nobody sees.
 
+## Export at review size, not at native size
+
+Two different consumers, two different limits, and the second one bites:
+
+* **GitHub** will render whatever you commit, at any size.
+* **The review page** (`review-artifact`) inlines SVG as markup with no limit,
+  but embeds a raster as a data URI under a **220 kB** budget, and the whole
+  page has to stay well inside the 16 MB artifact cap. A `kicad-cli pcb render`
+  at `--width 3000` or a matplotlib figure at `dpi=300` is several megabytes
+  and will not be embedded — it is reported on the page instead, which is
+  honest but is not a review.
+
+So export twice when it matters: full size for the record, and a review-sized
+copy for the page.
+
+```bash
+kicad-cli pcb render hw/probe.kicad_pcb --output docs/design/pcb-top.png \
+    --side top --quality high --width 1400 --height 1000     # ~150-200 kB
+```
+
+For matplotlib, `savefig(..., dpi=110)` on a 7×5 in figure lands around 150 kB.
+**Prefer SVG wherever the thing is line art** — a schematic, a plot, a diagram,
+a dimensioned drawing. It inlines as markup, stays crisp at any zoom, themes
+with the page, and has no byte budget at all. Reserve rasters for what is
+genuinely photographic: a shaded 3D render, a photo of a board.
+
+Run `review-artifact --check` before publishing. It exits 1 and names every
+artefact that could not be embedded, which is much cheaper than finding out
+from the human.
+
 ---
 
 ## KiCad schematic

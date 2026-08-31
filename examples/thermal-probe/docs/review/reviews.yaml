@@ -26,14 +26,37 @@ reviews:
   - path: docs/design/vision/concept_b/elevation.svg
     sha256: a1e368103887f426
   requested: '2026-08-31'
-  requested_commit: cb4b78a
+  requested_commit: 742458c
   status: approved
   packet: docs/review/vision.md
+  history:
+  - 'on': '2026-08-31'
+    action: requested
+    commit: 742458c
+    questions:
+    - Which concept, and what made you pick it?
+    - Is 164 mm too long to hold comfortably in a glove?
+    summary: 'Two concepts that differ in a nameable way: a one-handed wand
+
+      with the probe on a lead, and a bench instrument that lives on a shelf. Both
+
+      envelopes are measured off real geometry.'
+    added:
+    - docs/design/vision.md
+    - docs/design/vision/concept_a/elevation.svg
+    - docs/design/vision/concept_b/elevation.svg
+  - 'on': '2026-08-31'
+    action: approved
+    commit: 742458c
+    by: harrison
+    note: 'The wand. A freezer walk is one-handed and you are already carrying
+
+      a clipboard — the bench version solves a problem we do not have.'
   note: 'The wand. A freezer walk is one-handed and you are already carrying
 
     a clipboard — the bench version solves a problem we do not have.'
   decided: '2026-08-31'
-  decided_commit: cb4b78a
+  decided_commit: 742458c
   reviewer: harrison
 - id: plan
   title: Project plan
@@ -54,14 +77,35 @@ reviews:
   - docs/plan.svg
   - plan.yaml
   requested: '2026-08-31'
-  requested_commit: cb4b78a
+  requested_commit: 742458c
   status: approved
   packet: docs/review/plan.md
+  history:
+  - 'on': '2026-08-31'
+    action: requested
+    commit: 742458c
+    questions:
+    - Is this all the work?
+    - Is the order right — do you know a lead time we do not?
+    summary: 'Eleven chunks, nine sessions on the critical path. Layout is
+
+      blocked on the enclosure envelope, which is the dependency I am least sure
+
+      about.'
+    added:
+    - docs/plan.md
+  - 'on': '2026-08-31'
+    action: approved
+    commit: 742458c
+    by: harrison
+    note: 'Add the drop test earlier if the enclosure is printed rather than
+
+      moulded. Otherwise the order is right.'
   note: 'Add the drop test earlier if the enclosure is printed rather than
 
     moulded. Otherwise the order is right.'
   decided: '2026-08-31'
-  decided_commit: cb4b78a
+  decided_commit: 742458c
   reviewer: harrison
 - id: requirements
   title: Requirements tree
@@ -82,12 +126,31 @@ reviews:
   - requirements/10-system.sdoc
   - requirements/hardware.sgra
   requested: '2026-08-31'
-  requested_commit: cb4b78a
+  requested_commit: 742458c
   status: approved
   packet: docs/review/requirements.md
+  history:
+  - 'on': '2026-08-31'
+    action: requested
+    commit: 742458c
+    questions:
+    - Is 7 days the right target, or is 5 with a smaller cell better?
+    - Is anything here that nobody asked for?
+    summary: 'Fifteen requirements. SYS-001 moved from 12 h to 7 d after the
+
+      logging interval was settled at one minute, which is the number worth arguing
+
+      about.'
+    added:
+    - docs/design/requirements-map.svg
+  - 'on': '2026-08-31'
+    action: approved
+    commit: 742458c
+    by: harrison
+    note: 7 days. A week means Friday-to-Friday and nobody has to think.
   note: 7 days. A week means Friday-to-Friday and nobody has to think.
   decided: '2026-08-31'
-  decided_commit: cb4b78a
+  decided_commit: 742458c
   reviewer: harrison
 - id: architecture
   title: Block diagram, power tree and buses
@@ -103,14 +166,29 @@ reviews:
   - Is charging at 450 mA off a 500 mA port too close?
   artifacts:
   - path: docs/design/block-diagram.svg
-    sha256: 7835c62602dd2ba6
+    sha256: 8c9bcd136b44621c
   references:
   - hw/block-diagram.drawio
   - hw/block-diagram.yaml
   requested: '2026-08-31'
-  requested_commit: cb4b78a
+  requested_commit: 742458c
   status: requested
   packet: docs/review/architecture.md
+  history:
+  - 'on': '2026-08-31'
+    action: requested
+    commit: 742458c
+    questions:
+    - Is a rail or a part missing?
+    - SPI1 shares flash and LCD on one bus — acceptable, or separate them?
+    - Is charging at 450 mA off a 500 mA port too close?
+    summary: 'Four rails. VBUS is the tight one at 90% of the USB-C default
+
+      500 mA while charging, which is fine because it is a charge-only rail — but it
+
+      is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.'
+    added:
+    - docs/design/block-diagram.svg
 - id: cad
   title: Enclosure, rev C
   stage: cad
@@ -130,12 +208,34 @@ reviews:
   references:
   - cad/enclosure.py
   requested: '2026-08-31'
-  requested_commit: cb4b78a
+  requested_commit: 742458c
   status: approved
   packet: docs/review/cad.md
+  history:
+  - 'on': '2026-08-31'
+    action: requested
+    commit: 742458c
+    questions:
+    - Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?
+    - Split line at 40% depth puts the seam on the grip. Acceptable?
+    summary: 'Envelope frozen from the agreed wand concept. The board outline is
+
+      published as an interface at 33.4 x 96 mm and the electrical side is now working
+
+      to it, so moving it is expensive from here.'
+    added:
+    - docs/design/cad/enclosure-render.png
+    - docs/design/cad/enclosure-section.svg
+  - 'on': '2026-08-31'
+    action: approved
+    commit: 742458c
+    by: harrison
+    note: 'Yes to both. Move the seam to 45% if the tooling allows it, but do not
+
+      hold the schematic for it.'
   note: 'Yes to both. Move the seam to 45% if the tooling allows it, but do not
 
     hold the schematic for it.'
   decided: '2026-08-31'
-  decided_commit: cb4b78a
+  decided_commit: 742458c
   reviewer: harrison

@@ -32,6 +32,9 @@ from __future__ import annotations
 
 import argparse
 import base64
+import csv
+import hashlib
+import io
 import html
 import json
 import os
@@ -104,6 +107,18 @@ def esc(s) -> str:
     return html.escape(str(s), quote=True)
 
 
+# Set once from the project root, so a figure that cannot be embedded can still
+# point at where the file does render.
+REPO: dict[str, str | None] = {"slug": None, "ref": None}
+
+
+def blob_url(path: str) -> str | None:
+    if not REPO["slug"]:
+        return None
+    return (f'https://github.com/{REPO["slug"]}/blob/{REPO["ref"]}/'
+            f'{path.lstrip("/")}')
+
+
 # ---------------------------------------------------------------------------
 # Reading the project
 # ---------------------------------------------------------------------------
@@ -121,39 +136,82 @@ def read_text(path: str) -> str | None:
         return fh.read()
 
 
+def _svg_length(value: str) -> float:
+    """`297mm`, `1024`, `12.5pt` -> px. Real exporters do not emit bare pixels.
+
+    kicad-cli writes physical page sizes, matplotlib writes points, Inkscape
+    writes whatever it was given. Reading the number and ignoring the unit
+    turned an A4 schematic into a 297 px thumbnail.
+    """
+    m = re.match(r"\s*(-?[\d.]+)\s*([a-z%]*)", str(value or ""), re.I)
+    if not m:
+        return 0.0
+    n, unit = float(m.group(1)), m.group(2).lower()
+    return n * {"": 1.0, "px": 1.0, "pt": 96 / 72, "pc": 16.0, "mm": 96 / 25.4,
+                "cm": 96 / 2.54, "in": 96.0}.get(unit, 1.0)
+
+
 def inline_svg(path: str) -> tuple[str | None, float]:
     """SVG goes in as markup: crisp at any zoom, themes with the page, no cap.
 
-    The root <svg> keeps its viewBox but loses fixed width/height so it scales
-    to the frame, and its ids are namespaced — several diagrams on one page
-    would otherwise collide on `#ah`, `#ra` and friends.
+    Everything here exists because a real exporter's SVG is not a tidy one:
+
+    * **ids collide.** Several diagrams on one page would otherwise share
+      `#ah`, `#ra`, `#glyph0-1` and each other's gradients, and the last one
+      defined wins for all of them.
+    * **class names collide, in both directions.** kicad-cli and matplotlib
+      both ship a `<style>` block, and its selectors are global once inlined.
+      Their `.t` or `.h` would restyle this page's text, and this page's would
+      restyle theirs. Every rule is therefore scoped to the wrapper.
+    * **width is a physical length.** See `_svg_length`.
+    * **`<script>` has no business here** and is stripped.
     """
     text = read_text(path)
     if not text:
         return None, 0.0
     text = re.sub(r"<\?xml[^>]*\?>", "", text)
     text = re.sub(r"<!DOCTYPE[^>]*>", "", text, flags=re.I)
+    text = re.sub(r"<script\b.*?</script>", "", text, flags=re.S | re.I)
     tag = re.search(r"<svg\b[^>]*>", text)
     if not tag:
         return None, 0.0
-    ns = "g" + str(abs(hash(path)) % 100000)
+
+    ns = "g" + hashlib.sha1(path.encode()).hexdigest()[:7]
     for m in set(re.findall(r'\bid="([^"]+)"', text)):
         text = re.sub(rf'\bid="{re.escape(m)}"', f'id="{ns}-{m}"', text)
         text = text.replace(f"url(#{m})", f"url(#{ns}-{m})")
+        text = re.sub(rf'(xlink:href|href)="#{re.escape(m)}"',
+                      rf'\1="#{ns}-{m}"', text)
+
+    def scope(block: re.Match) -> str:
+        body = block.group(1)
+        out = []
+        for chunk in re.split(r"(?<=\})", body):
+            if not chunk.strip():
+                continue
+            m = re.match(r"\s*([^{@]+)\{(.*)\}\s*$", chunk, re.S)
+            if not m:
+                out.append(chunk)                     # @media and friends: leave
+                continue
+            sels = ",".join(f"#{ns} {sel.strip()}" for sel in m.group(1).split(","))
+            out.append(f"{sels}{{{m.group(2)}}}")
+        return "<style>" + "".join(out) + "</style>"
+
+    text = re.sub(r"<style[^>]*>(.*?)</style>", scope, text, flags=re.S)
+
     head = tag.group(0)
-    # Intrinsic width, so a 400 px elevation is not blown up to the full
-    # column. Dropping width/height without a cap makes every diagram the same
-    # size, which reads as a mistake and destroys the scale relationship
-    # between a board render and a dimensioned drawing.
-    box = re.search(r'viewBox="[\d.\-]+ [\d.\-]+ ([\d.]+) ([\d.]+)"', head)
+    box = re.search(r'viewBox="\s*[\d.eE+-]+[ ,]+[\d.eE+-]+[ ,]+([\d.eE+-]+)',
+                    head)
     intrinsic = float(box.group(1)) if box else 0.0
     if not intrinsic:
-        w = re.search(r'\swidth="([\d.]+)', head)
-        intrinsic = float(w.group(1)) if w else 720.0
-    new = re.sub(r'\s(width|height)="[^"]*"', "", head)
-    if "preserveAspectRatio" not in new:
-        new = new[:-1] + ' preserveAspectRatio="xMidYMid meet">'
-    return text.replace(head, new, 1).strip(), intrinsic
+        w = re.search(r'\swidth="([^"]+)"', head)
+        intrinsic = _svg_length(w.group(1)) if w else 720.0
+    new_head = re.sub(r'\s(width|height)="[^"]*"', "", head)
+    if "preserveAspectRatio" not in new_head:
+        new_head = new_head[:-1] + ' preserveAspectRatio="xMidYMid meet">'
+    body = text.replace(head, new_head, 1).strip()
+    # The wrapper is what the scoped selectors hang off.
+    return f'<span id="{ns}" class="svgwrap">{body}</span>', intrinsic
 
 
 def png_width(blob: bytes) -> float:
@@ -247,8 +305,16 @@ def markdown_to_html(text: str, strip_h1: bool = True) -> str:
             close()
             continue
         close()
-        out.append(f"<p>{spans(ln)}</p>")
+        # Gather the whole paragraph before touching spans: `**a\nb**` is one
+        # emphasis run in markdown, and processing line by line leaves the
+        # asterisks on the page.
+        para = [ln.strip()]
         i += 1
+        while i < len(lines) and lines[i].strip() and not re.match(
+                r"^(#{1,6}\s|\s*[*-]\s|\s*\|)", lines[i]):
+            para.append(lines[i].strip())
+            i += 1
+        out.append(f"<p>{spans(' '.join(para))}</p>")
     close()
     return "\n".join(out)
 
@@ -273,17 +339,53 @@ class Phase:
         return review_gate.state(self.review) if self.review else "none"
 
 
+VIEWER = {".pdf": "GitHub's PDF viewer", ".stl": "GitHub's 3D viewer",
+          ".step": "any CAD package", ".stp": "any CAD package",
+          ".kicad_sch": "KiCad", ".kicad_pcb": "KiCad",
+          ".drawio": "draw.io", ".csv": "GitHub's table view"}
+
+
 def figure(root: str, path: str, caption: str = "") -> dict | None:
+    """A figure, or an honest note about why there isn't one.
+
+    Never returns None for a path someone asked for. Silently dropping a
+    figure is the worst behaviour available here: the agent lists an artefact,
+    the export failed or produced something unembeddable, and the review page
+    just does not mention it — so the human reviews a page with a hole in it
+    and nobody knows.
+    """
     full = os.path.join(root, path)
-    svg, width = inline_svg(full) if full.lower().endswith(".svg") else (None, 0.0)
-    if svg:
-        return {"svg": svg, "caption": caption, "path": path, "w": width}
+    ext = os.path.splitext(path)[1].lower()
+
+    if not os.path.exists(full):
+        return {"warn": f"{path} does not exist. The export that should have "
+                        f"produced it did not run, or failed.",
+                "caption": caption, "path": path}
+
+    if ext == ".svg":
+        svg, width = inline_svg(full)
+        if svg:
+            return {"svg": svg, "caption": caption, "path": path, "w": width}
+        return {"warn": f"{path} is not readable as SVG.",
+                "caption": caption, "path": path}
+
     uri, warn, rw = inline_raster(full)
     if uri:
         return {"uri": uri, "caption": caption, "path": path, "w": rw}
     if warn:
         return {"warn": warn, "caption": caption, "path": path}
-    return None
+
+    where = VIEWER.get(ext)
+    if where:
+        return {"warn": f"{path} cannot be embedded in this page — open it on "
+                        f"GitHub, where it renders in {where}." if ext in
+                        (".pdf", ".stl", ".csv") else
+                        f"{path} cannot be embedded in this page; it needs "
+                        f"{where}. Export an SVG or a PNG for review.",
+                "link": True, "caption": caption, "path": path}
+    return {"warn": f"{path} is a {ext or 'file'} — nothing on this page can "
+                    f"show it. Export an SVG or a PNG.",
+            "caption": caption, "path": path}
 
 
 def phase_vision(root: str) -> Phase | None:
@@ -358,24 +460,30 @@ def phase_plan(root: str) -> Phase | None:
 
 def phase_requirements(root: str) -> Phase | None:
     reqs, summary, findings = None, None, None
-    cached = read_text(os.path.join(root, "docs/design/requirements.json"))
-    if cached:
-        data = json.loads(cached)
-        reqs, summary, findings = (data.get("requirements"), data.get("summary"),
-                                   data.get("findings"))
-    elif req_trace and os.path.isdir(os.path.join(root, "requirements")):
+
+    # Live strictdoc wins. The cached export is the fallback for an environment
+    # without it — reading the cache first would let a stale snapshot shadow
+    # the real tree, which is exactly the drift this toolbox exists to stop.
+    if req_trace and os.path.isdir(os.path.join(root, "requirements")):
+        cwd = os.getcwd()
         try:
-            cwd = os.getcwd()
             os.chdir(root)
             reqs = req_trace.load("requirements")
             a = req_trace.analyse(reqs)
             summary = {k: a[k] for k in ("total", "verified", "with_evidence",
                                          "coverage_pct", "by_level")}
             findings = a["findings"]
-        except SystemExit:
+        except (SystemExit, OSError, ValueError):
             reqs = None
         finally:
             os.chdir(cwd)
+
+    if not reqs:
+        cached = read_text(os.path.join(root, "docs/design/requirements.json"))
+        if cached:
+            data = json.loads(cached)
+            reqs, summary, findings = (data.get("requirements"),
+                                       data.get("summary"), data.get("findings"))
     if not reqs:
         return None
 
@@ -464,6 +572,24 @@ def _humanise(path: str) -> str:
     return stem.replace("-", " ").replace("_", " ").strip().capitalize()
 
 
+def read_csv(path: str) -> tuple[list[str], list[list[str]]] | None:
+    text = read_text(path)
+    if not text:
+        return None
+    rows = [r for r in csv.reader(io.StringIO(text)) if any(c.strip() for c in r)]
+    if not rows:
+        return None
+    return rows[0], rows[1:]
+
+
+# A price that nobody checked is a guess wearing a number's clothes, and a BOM
+# is where that does real damage. A row is treated as verified only if it says
+# so; everything else is called out on the page rather than passed off.
+VERIFIED = re.compile(r"quoted|in stock|stock:|confirmed|verified|po |invoice",
+                      re.I)
+ESTIMATE = re.compile(r"estimate|est\.|approx|assumed|guess|tbd|unknown", re.I)
+
+
 def phase_from_config(root: str, cfg: dict) -> Phase | None:
     p = Phase(cfg["id"], cfg.get("title", cfg["id"].title()), cfg.get("eyebrow", ""))
     figs = []
@@ -474,10 +600,50 @@ def phase_from_config(root: str, cfg: dict) -> Phase | None:
         if fig:
             figs.append(fig)
     p.add("figures", figs)
+
     for path in cfg.get("docs") or []:
         text = read_text(os.path.join(root, path))
         if text:
             p.add("prose", markdown_to_html(text))
+        else:
+            p.notes.append(f"{path} is listed for this phase but does not exist.")
+
+    for spec in cfg.get("tables") or []:
+        path = spec.get("csv")
+        data = read_csv(os.path.join(root, path)) if path else None
+        if not data:
+            p.notes.append(f"{path} is listed for this phase but could not be read.")
+            continue
+        headers, rows = data
+        basis_col = next((i for i, h in enumerate(headers)
+                          if h.strip().lower() in ("basis", "source", "price basis")),
+                         None)
+        estimated = 0
+        marked = []
+        for r in rows:
+            tone = ""
+            if basis_col is not None and basis_col < len(r):
+                cell = r[basis_col]
+                if ESTIMATE.search(cell):
+                    tone, estimated = "stop", estimated + 1
+                elif VERIFIED.search(cell):
+                    tone = "ok"
+            marked.append({"cells": r, "tone": tone})
+        p.add("csvtable", {"title": spec.get("title") or _humanise(path),
+                           "note": spec.get("note"), "headers": headers,
+                           "rows": marked, "estimated": estimated,
+                           "basis_col": basis_col, "path": path})
+
+    links = []
+    for lk in cfg.get("links") or []:
+        path = lk.get("path", "")
+        links.append({"label": lk.get("label") or _humanise(path),
+                      "path": path, "why": lk.get("why", ""),
+                      "url": blob_url(path),
+                      "missing": bool(path) and not os.path.exists(
+                          os.path.join(root, path))})
+    p.add("links", links)
+
     return p if (p.blocks or cfg.get("always")) else None
 
 
@@ -566,6 +732,8 @@ code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
 .field .v{font-family:var(--mono);font-size:13px;color:var(--ink);
   display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
+.field .v a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
+.field .v a:hover{color:var(--accent);border-bottom-color:var(--accent)}
 
 /* ---- outstanding strip ---- */
 .strip{border:1px solid var(--rule);border-top:0;background:var(--sunk);
@@ -621,6 +789,7 @@ figure{margin:0 0 24px;min-width:0}
   gap:20px;align-items:start}
 .sheet{border:1px solid var(--rule);background:var(--panel);padding:16px;
   overflow-x:auto}
+.sheet .svgwrap{display:block}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
 figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:70ch}
@@ -665,6 +834,32 @@ blockquote{margin:0 0 22px;border-left:2px solid var(--rule);padding-left:16px;
 blockquote .who{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
   text-transform:uppercase;color:var(--muted);display:block;margin-top:6px}
 
+/* ---- review tab ---- */
+.badge{background:var(--stop);color:#fff;border-radius:999px;font-size:10.5px;
+  font-weight:700;padding:1px 6px;margin-left:2px;line-height:1.5}
+h3.sec{font-family:var(--cond);font-size:11px;letter-spacing:0.11em;
+  text-transform:uppercase;color:var(--muted);margin:34px 0 12px;
+  padding-bottom:7px;border-bottom:1px solid var(--rule)}
+ul.asks{margin:0;padding-left:17px}
+ul.asks li{margin:2px 0}
+ul.asks li.why{color:var(--stop)}
+.timeline{list-style:none;margin:0;padding:0}
+.ev{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule-soft)}
+.ev:last-child{border-bottom:0}
+.ev>.dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;margin-top:6px}
+.ev>div{min-width:0;flex:1}
+.evhead{font-size:14px;font-weight:500}
+.evhead a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
+.evhead a:hover{color:var(--accent)}
+.mutx{color:var(--muted);font-weight:400;font-size:12.5px}
+.evnote{margin:5px 0 0;color:var(--ink-2);max-width:70ch}
+.evfiles{margin:5px 0 0;font-size:12.5px;color:var(--muted)}
+.evfiles code{margin-right:5px}
+
+.tnote{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:70ch}
+td.t-stop{color:var(--stop);font-weight:500}
+td.t-ok{color:var(--ok)}
+
 .prose h2{font-size:19px;margin:26px 0 8px;font-weight:600}
 .prose h3{font-size:16px;margin:20px 0 6px;font-weight:600}
 .prose p{margin:0 0 11px;max-width:70ch}
@@ -701,12 +896,25 @@ def render_page(project: dict, phases: list[Phase]) -> str:
     if project.get("subtitle"):
         a(f"<p>{esc(project['subtitle'])}</p>")
     a("</div><div class='fields'>")
-    for k, v in (("Revision", project["revision"]), ("Branch", project["branch"]),
-                 ("Generated", project["generated"]),
-                 ("Phases", f"{len(phases)}"),
-                 ("Awaiting you", str(len(waiting)) if waiting else "none")):
+    slug, ref = project.get("repo"), project["branch"]
+    tree = f"https://github.com/{slug}/tree/{ref}" if slug else None
+    commit = f"https://github.com/{slug}/commit/{project['revision']}" if slug else None
+    fields = [("Revision", project["revision"], commit),
+              ("Branch", ref, tree),
+              ("Generated", project["generated"], None),
+              ("Phases", f"{len(phases)}", None),
+              ("Awaiting you", str(len(waiting)) if waiting else "none",
+               "#p-review" if waiting else None)]
+    for k, v, href in fields:
+        if href and href.startswith("#"):
+            val = f'<a href="{esc(href)}" data-goto="review">{esc(v)} →</a>'
+        elif href:
+            val = (f'<a href="{esc(href)}" target="_blank" rel="noopener">'
+                   f'{esc(v)} ↗</a>')
+        else:
+            val = esc(v)
         a(f'<div class="field"><span class="k">{esc(k)}</span>'
-          f'<span class="v">{esc(v)}</span></div>')
+          f'<span class="v">{val}</span></div>')
     a("</div></div>")
 
     a('<div class="strip"><span class="k">Outstanding</span>')
@@ -714,7 +922,7 @@ def render_page(project: dict, phases: list[Phase]) -> str:
         names = ", ".join(p.title for p in waiting)
         a(f'<p><strong>{esc(names)}</strong> — '
           f'{"needs another look" if any(p.state == "stale" for p in waiting) else "waiting on your answer"}. '
-          f'Comment on this page, or reply in the session.</p>')
+          f'<a href="#p-review" data-goto="review">See what is being asked →</a></p>')
     else:
         a("<p>Nothing is waiting on you. Every phase below is signed off and "
           "still matches what you saw.</p>")
@@ -722,6 +930,11 @@ def render_page(project: dict, phases: list[Phase]) -> str:
 
     # ---- tabs ------------------------------------------------------------
     a('<div class="tabs" role="tablist">')
+    a(f'<button class="tab" role="tab" id="t-review" aria-controls="p-review" '
+      f'aria-selected="false" data-tab="review">'
+      f'<span class="dot b-{"stop" if waiting else "ok"}"></span>Review'
+      + (f'<span class="badge">{len(waiting)}</span>' if waiting else "")
+      + "</button>")
     for i, p in enumerate(phases):
         _lbl, tone = STATE_LABEL.get(p.state, STATE_LABEL["none"])
         a(f'<button class="tab" role="tab" id="t-{esc(p.id)}" '
@@ -730,6 +943,10 @@ def render_page(project: dict, phases: list[Phase]) -> str:
           f'{esc(p.title)}</button>')
     a("</div>")
 
+    a('<section class="panel" role="tabpanel" id="p-review" '
+      'aria-labelledby="t-review" hidden>')
+    a(render_review_tab(phases))
+    a("</section>")
     for i, p in enumerate(phases):
         a(f'<section class="panel" role="tabpanel" id="p-{esc(p.id)}" '
           f'aria-labelledby="t-{esc(p.id)}"{"" if i == 0 else " hidden"}>')
@@ -752,6 +969,14 @@ function show(id){
   try{localStorage.setItem('mh-phase',id)}catch(e){}
 }
 tabs.forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+// Anything with data-goto switches tab and scrolls, so the Review worklist
+// can send you to the phase that raised the question.
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-goto]'); if(!a)return;
+  e.preventDefault(); show(a.dataset.goto);
+  const el=document.getElementById('p-'+a.dataset.goto);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+});
 tabs.forEach((t,i)=>t.addEventListener('keydown',e=>{
   const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;
   if(!d)return; e.preventDefault();
@@ -760,6 +985,95 @@ tabs.forEach((t,i)=>t.addEventListener('keydown',e=>{
 try{const s=localStorage.getItem('mh-phase');
   if(s&&tabs.some(t=>t.dataset.tab===s))show(s);}catch(e){}
 </script>""")
+    return "\n".join(o)
+
+
+def render_review_tab(phases: list[Phase]) -> str:
+    """What is being asked of you, and everything that has been asked before.
+
+    Two jobs, and they are different. The top half is a worklist: the open
+    questions, each linking to the phase that raises it, so "2 awaiting you" in
+    the title block leads somewhere rather than just being a number. The bottom
+    half is the project's memory — every round, what was asked, what came back,
+    and what moved between rounds. That is the half nobody keeps and everybody
+    later wishes they had.
+    """
+    o: list[str] = []
+    a = o.append
+    waiting = [p for p in phases
+               if p.state in ("requested", "stale", "changes_requested")]
+
+    a('<div class="phase-head"><div>')
+    a('<span class="eyebrow">Across the project</span>')
+    a("<h2>Review</h2></div>")
+    a(f'<span class="pill t-{"stop" if waiting else "ok"}">'
+      f'{len(waiting)} awaiting you</span></div>' if waiting
+      else '<span class="pill t-ok">All clear</span></div>')
+
+    if waiting:
+        a('<div class="scroll"><table><thead><tr><th>Phase</th><th>State</th>'
+          '<th>What we need decided</th><th>Since</th></tr></thead><tbody>')
+        for p in waiting:
+            label, tone = STATE_LABEL.get(p.state, STATE_LABEL["none"])
+            r = p.review or {}
+            qs = r.get("questions") or []
+            body = "".join(f"<li>{esc(q)}</li>" for q in qs) or \
+                "<li>Look it over and say whether it holds.</li>"
+            if p.state == "stale":
+                body += ("<li class=\"why\">Previously approved — "
+                         + esc(", ".join(review_gate.drifted(r)))
+                         + " changed since.</li>")
+            a(f'<tr><td><a href="#p-{esc(p.id)}" data-goto="{esc(p.id)}">'
+              f'{esc(p.title)}</a></td>'
+              f'<td class="state t-{tone}">{esc(label)}</td>'
+              f'<td><ul class="asks">{body}</ul></td>'
+              f'<td class="num">{esc(r.get("requested", "—"))}</td></tr>')
+        a("</tbody></table></div>")
+    else:
+        a('<p class="empty">Nothing is waiting on you. Every phase is signed '
+          "off and still matches what you saw.</p>")
+
+    # ---- history ---------------------------------------------------------
+    events = []
+    for p in phases:
+        for h in (p.review or {}).get("history") or []:
+            events.append((h.get("on", ""), p, h))
+    events.sort(key=lambda e: e[0], reverse=True)
+
+    a('<h3 class="sec">History</h3>')
+    if not events:
+        a('<p class="empty">No review rounds recorded yet.</p>')
+        return "\n".join(o)
+
+    a('<ol class="timeline">')
+    for on, p, h in events:
+        action = h.get("action", "")
+        tone = {"approved": "ok", "changes_requested": "stop",
+                "requested": "wait"}.get(action, "idle")
+        verb = {"approved": "approved", "changes_requested": "asked for changes",
+                "requested": "sent for review"}.get(action, action)
+        a(f'<li class="ev"><span class="dot b-{tone}"></span>')
+        a(f'<div><div class="evhead"><a href="#p-{esc(p.id)}" '
+          f'data-goto="{esc(p.id)}">{esc(p.title)}</a> '
+          f'<span class="t-{tone}">{esc(verb)}</span>'
+          + (f' <span class="mutx">by {esc(h["by"])}</span>' if h.get("by") else "")
+          + f' <span class="mutx">{esc(on)}</span>'
+          + (f' <code>{esc(h["commit"])}</code>' if h.get("commit") else "")
+          + "</div>")
+        if h.get("note"):
+            a(f'<p class="evnote">{esc(h["note"])}</p>')
+        if h.get("summary"):
+            a(f'<p class="evnote">{esc(h["summary"])}</p>')
+        moved = (h.get("changed") or []) + (h.get("added") or [])
+        if moved:
+            kind = "changed since the last round" if h.get("changed") else "added"
+            a('<p class="evfiles">' + esc(kind) + ": "
+              + "".join(f"<code>{esc(m)}</code>" for m in moved[:6]) + "</p>")
+        if h.get("questions"):
+            a("<ul class=\"asks\">"
+              + "".join(f"<li>{esc(q)}</li>" for q in h["questions"]) + "</ul>")
+        a("</div></li>")
+    a("</ol>")
     return "\n".join(o)
 
 
@@ -828,8 +1142,12 @@ def render_phase(p: Phase) -> str:
                     a(f'<div class="sheet"{cap_w}><img src="{f["uri"]}" '
                       f'alt="{esc(f.get("caption") or f["path"])}"></div>')
                 elif f.get("warn"):
-                    a(f'<div class="notes calm"><h3>Not embedded</h3>'
-                      f'<ul><li>{esc(f["warn"])}</li></ul></div>')
+                    url = blob_url(f["path"])
+                    link = (f' <a href="{esc(url)}" target="_blank" '
+                            f'rel="noopener">Open on GitHub ↗</a>'
+                            if url and f.get("link") else "")
+                    a(f'<div class="notes"><h3>Not shown here</h3>'
+                      f'<ul><li>{esc(f["warn"])}{link}</li></ul></div>')
                 cap = f.get("caption") or _humanise(f["path"])
                 a(f"<figcaption>{esc(cap)}</figcaption></figure>")
             if grid:
@@ -838,6 +1156,10 @@ def render_phase(p: Phase) -> str:
             a(render_table(payload))
         elif kind == "prose":
             a(f'<div class="prose">{payload}</div>')
+        elif kind == "csvtable":
+            a(render_csv_table(payload))
+        elif kind == "links":
+            a(render_links(payload))
 
     if p.notes:
         a('<div class="notes calm"><h3>Worth a human\'s eye</h3><ul>')
@@ -854,6 +1176,61 @@ def render_phase(p: Phase) -> str:
     return "\n".join(o)
 
 
+def render_csv_table(t: dict) -> str:
+    o = [f'<h3 class="sec">{esc(t["title"])}</h3>']
+    if t.get("note"):
+        o.append(f'<p class="tnote">{esc(t["note"])}</p>')
+    if t.get("estimated"):
+        o.append(f'<div class="notes"><h3>{t["estimated"]} price(s) are not '
+                 f'quoted</h3><ul><li>Rows marked in red carry an estimate, not '
+                 f'a checked price. Treat the roll-up as indicative until they '
+                 f'are quoted — a BOM cost built on guesses is the number that '
+                 f'gets committed to.</li></ul></div>')
+    o.append('<div class="scroll"><table><thead><tr>')
+    for h in t["headers"]:
+        o.append(f"<th>{esc(h)}</th>")
+    o.append("</tr></thead><tbody>")
+    for row in t["rows"]:
+        cls = f' class="t-{row["tone"]}"' if row["tone"] else ""
+        o.append("<tr>")
+        for j, cell in enumerate(row["cells"]):
+            num = ' class="num"' if re.fullmatch(
+                r"[£$€]?[\d.,]+ ?%?", str(cell).strip()) else ""
+            if j == t.get("basis_col") and row["tone"]:
+                num = cls
+            o.append(f"<td{num}>{esc(cell)}</td>")
+        o.append("</tr>")
+    o.append("</tbody></table></div>")
+    if t.get("path"):
+        url = blob_url(t["path"])
+        o.append(f'<p class="tnote">Source: '
+                 + (f'<a href="{esc(url)}" target="_blank" rel="noopener">'
+                    f'<code>{esc(t["path"])}</code> ↗</a>' if url
+                    else f'<code>{esc(t["path"])}</code>') + "</p>")
+    return "\n".join(o)
+
+
+def render_links(links: list[dict]) -> str:
+    if not links:
+        return ""
+    o = ['<h3 class="sec">Documents a run needs</h3>',
+         '<div class="scroll"><table><thead><tr><th>Document</th>'
+         '<th>State</th><th>What it is for</th></tr></thead><tbody>']
+    for lk in links:
+        if lk["missing"]:
+            state, tone = "Not produced", "stop"
+            name = esc(lk["label"])
+        else:
+            state, tone = "Ready", "ok"
+            name = (f'<a href="{esc(lk["url"])}" target="_blank" rel="noopener">'
+                    f'{esc(lk["label"])} ↗</a>' if lk["url"] else esc(lk["label"]))
+        o.append(f'<tr><td>{name}<div class="paths"><code>{esc(lk["path"])}</code>'
+                 f'</div></td><td class="state t-{tone}">{state}</td>'
+                 f'<td>{esc(lk["why"])}</td></tr>')
+    o.append("</tbody></table></div>")
+    return "\n".join(o)
+
+
 def render_table(t: dict) -> str:
     """A data table. `detail_col` says which column carries the prose, if any.
 
@@ -864,15 +1241,21 @@ def render_table(t: dict) -> str:
     table of numbers.
     """
     detail_col = t.get("detail_col")
-    o = ['<div class="scroll"><table><thead><tr>']
-    for h in t["headers"]:
+    # State sits second, right after the identifier: it is the column a reader
+    # scans first, and it was stranded at the far right past five numbers.
+    o = ['<div class="scroll"><table><thead><tr>',
+         f'<th>{esc(t["headers"][0])}</th><th>State</th>']
+    for h in t["headers"][1:]:
         o.append(f"<th>{esc(h)}</th>")
-    o.append("<th>State</th></tr></thead><tbody>")
+    o.append("</tr></thead><tbody>")
     for row in t["rows"]:
         cls = ' class="crit"' if row.get("crit") else ""
         o.append(f"<tr{cls}>")
-        for j, cell in enumerate(row["cells"]):
-            num = ' class="num"' if j and re.fullmatch(
+        o.append(f'<td>{esc(row["cells"][0])}</td>'
+                 f'<td class="state t-{row.get("tone", "idle")}">'
+                 f'{esc(row.get("state", ""))}</td>')
+        for j, cell in enumerate(row["cells"][1:], start=1):
+            num = ' class="num"' if re.fullmatch(
                 r"[\d.,+\-—%]+ ?\w{0,3}", str(cell)) else ""
             o.append(f"<td{num}>{esc(cell)}")
             if j == detail_col:
@@ -883,8 +1266,7 @@ def render_table(t: dict) -> str:
                              + "".join(f"<code>{esc(p)}</code>"
                                        for p in row["outputs"][:5]) + "</div>")
             o.append("</td>")
-        o.append(f'<td class="state t-{row.get("tone", "idle")}">'
-                 f'{esc(row.get("state", ""))}</td></tr>')
+        o.append("</tr>")
     o.append("</tbody></table></div>")
     return "\n".join(o)
 
@@ -896,6 +1278,9 @@ def main() -> int:
     ap.add_argument("--project", default=".", help="project root")
     ap.add_argument("--out", default="docs/review/artifact.html")
     ap.add_argument("--title", help="overrides plan.yaml / artifact.yaml")
+    ap.add_argument("--check", action="store_true",
+                    help="report artefacts that cannot be shown; write nothing. "
+                         "Exit 1 if any. Run this before publishing.")
     args = ap.parse_args()
 
     root = os.path.abspath(args.project)
@@ -912,6 +1297,7 @@ def main() -> int:
         os.chdir(cwd)
 
     import datetime
+    REPO["slug"], REPO["ref"] = repo, branch
     project = {
         "title": args.title or cfg.get("title") or plan.get("project") or "Project",
         "subtitle": cfg.get("subtitle", ""),
@@ -925,6 +1311,23 @@ def main() -> int:
                          "or block diagram found, and no reviews in the ledger.\n")
         return 1
 
+    # Preflight: everything that was asked for and could not be shown. An
+    # agent should run this before publishing, because the page it is about to
+    # put in front of a human is the last place to discover a failed export.
+    problems = [(p.id, f["warn"]) for p in phases
+                for kind, payload in p.blocks if kind == "figures"
+                for f in payload if f.get("warn")]
+
+    if args.check:
+        if problems:
+            print(f"{len(problems)} artefact(s) cannot be shown:\n")
+            for pid, w in problems:
+                print(f"  {pid:<14} {w}")
+            return 1
+        print(f"review page is clear ({len(phases)} phases, "
+              f"every artefact embeddable)")
+        return 0
+
     out = args.out if os.path.isabs(args.out) else os.path.join(root, args.out)
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     with open(out, "w") as fh:
@@ -935,10 +1338,29 @@ def main() -> int:
           f"{len(phases)} phase(s))")
     for p in phases:
         label, _ = STATE_LABEL.get(p.state, STATE_LABEL["none"])
-        print(f"  {p.id:<15} {label}")
-    if size > 8 * 1024 * 1024:
-        print("\n  WARNING: over 8 MB. The artifact cap is 16 MB — prune the "
-              "embedded rasters before it bites.")
+        note = ""
+        n = sum(1 for kind, payload in p.blocks if kind == "figures"
+                for f in payload if f.get("warn"))
+        if n:
+            note = f"   ({n} artefact(s) not shown)"
+        print(f"  {p.id:<15} {label}{note}")
+
+    if problems:
+        print(f"\n  {len(problems)} artefact(s) could not be embedded. Each is "
+              f"reported on the page\n  rather than silently dropped, but fix "
+              f"the export if you can:")
+        for pid, w in problems[:8]:
+            print(f"    {pid:<12} {w}")
+
+    # The artifact cap is 16 MB and a page of real board renders reaches it
+    # far sooner than a page of diagrams does.
+    if size > 12 * 1024 * 1024:
+        print(f"\n  TOO BIG: {size // 1024 // 1024} MB against a 16 MB cap. "
+              f"Downscale the rasters before publishing.")
+        return 1
+    if size > 6 * 1024 * 1024:
+        print(f"\n  WARNING: {size // 1024 // 1024} MB of a 16 MB cap. "
+              f"Downscale rasters before adding more phases.")
     print("\nPublish it with the Artifact tool, then record the URL in "
           f"{review_gate.LEDGER} so the next session updates the same page.")
     return 0
