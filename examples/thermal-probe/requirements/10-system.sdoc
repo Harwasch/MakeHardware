@@ -1,0 +1,26 @@
+[DOCUMENT]
+TITLE: System Requirements
+UID: DOC-SYSTEM
+
+[GRAMMAR]
+IMPORT_FROM_FILE: hardware.sgra
+
+[REQUIREMENT]
+UID: SYS-001
+TITLE: Battery life
+STATEMENT: >>>
+The device shall log for >= 7 d at a 1 min sampling interval on a single
+charge, at -20 degC.
+<<<
+RATIONALE: >>>
+A week means Friday-to-Friday, so nobody has to think about a schedule. Set at
+-20 degC because that is the walk-in temperature, and cell capacity there is
+roughly 80% of the 25 degC rating.
+<<<
+VERIFICATION: Analysis
+BUDGET: 7 d
+STATUS: Agreed
+RELATIONS:
+- TYPE: Parent
+  VALUE: VIS-001
+  ROLE: Refines

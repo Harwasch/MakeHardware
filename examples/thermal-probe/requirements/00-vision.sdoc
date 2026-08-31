@@ -1,0 +1,35 @@
+[DOCUMENT]
+TITLE: Vision
+UID: DOC-VISION
+
+[GRAMMAR]
+IMPORT_FROM_FILE: hardware.sgra
+
+[REQUIREMENT]
+UID: VIS-001
+TITLE: A week in a freezer on one charge
+STATEMENT: >>>
+It should last a working week in a walk-in freezer without anyone thinking
+about charging it.
+<<<
+VERIFICATION: Inspection
+STATUS: Agreed
+
+[REQUIREMENT]
+UID: VIS-002
+TITLE: Readable and operable wearing freezer gloves
+STATEMENT: >>>
+You should be able to read it and press what you need to press without taking
+a glove off.
+<<<
+VERIFICATION: Inspection
+STATUS: Agreed
+
+[REQUIREMENT]
+UID: VIS-003
+TITLE: Survives being dropped on a concrete floor
+STATEMENT: >>>
+It will be dropped. It should not stop working when it is.
+<<<
+VERIFICATION: Test
+STATUS: Agreed

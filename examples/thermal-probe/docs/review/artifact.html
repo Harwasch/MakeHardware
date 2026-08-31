@@ -1,0 +1,1212 @@
+<title>Thermal Probe Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#fcfcfb; --panel:#ffffff; --sunk:#f4f3f0;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --rule:#c3c2b7; --rule-soft:#e4e2dc;
+  --ok:#0ca30c; --wait:#2a78d6; --stop:#d03b3b; --idle:#898781;
+  --accent:#0f9b8e;
+  --sans:'IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --cond:'IBM Plex Sans Condensed',var(--sans);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#1a1a19; --panel:#242422; --sunk:#1f1f1e;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --rule:#383835; --rule-soft:#2c2c2a;
+    --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1a1a19; --panel:#242422; --sunk:#1f1f1e;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --rule:#383835; --rule-soft:#2c2c2a;
+  --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 72px}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
+  padding:0.1em 0.35em;border-radius:3px}
+
+/* ---- title block: the drawing-sheet header ---- */
+.block{border:1px solid var(--rule);background:var(--panel);margin:20px 0 0;
+  display:grid;grid-template-columns:1fr;}
+.block-main{padding:18px 20px 16px;border-bottom:1px solid var(--rule)}
+.block-main h1{font-size:29px;line-height:1.1;margin:0;font-weight:600;
+  letter-spacing:-0.015em;text-wrap:balance}
+.block-main p{margin:6px 0 0;color:var(--ink-2);font-size:14.5px;max-width:64ch}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+.field{padding:9px 20px;border-right:1px solid var(--rule-soft);min-width:0}
+.field:last-child{border-right:0}
+.field .k{font-family:var(--cond);font-size:10px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);display:block}
+.field .v{font-family:var(--mono);font-size:13px;color:var(--ink);
+  display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+
+/* ---- outstanding strip ---- */
+.strip{border:1px solid var(--rule);border-top:0;background:var(--sunk);
+  padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.strip .k{font-family:var(--cond);font-size:10px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted)}
+.strip p{margin:0;font-size:14px;color:var(--ink-2)}
+
+/* ---- tabs ---- */
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);
+  margin-top:24px;scrollbar-width:thin}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--sans);font-size:14px;font-weight:500;color:var(--ink-2);
+  padding:10px 14px 9px;cursor:pointer;white-space:nowrap;display:flex;
+  align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);
+  font-weight:600}
+.tab .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+
+/* ---- panel ---- */
+.panel{padding-top:26px}
+.phase-head{display:flex;justify-content:space-between;align-items:flex-start;
+  gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.phase-head h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em}
+.eyebrow{font-family:var(--cond);font-size:10.5px;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.pill{font-family:var(--cond);font-size:11px;letter-spacing:0.07em;
+  text-transform:uppercase;padding:4px 10px;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap;font-weight:600}
+.t-ok{color:var(--ok)} .t-wait{color:var(--wait)}
+.t-stop{color:var(--stop)} .t-idle{color:var(--muted)}
+.b-ok{background:var(--ok)} .b-wait{background:var(--wait)}
+.b-stop{background:var(--stop)} .b-idle{background:var(--muted)}
+
+.summary{border-left:2px solid var(--accent);padding:2px 0 2px 16px;
+  margin:0 0 22px;color:var(--ink-2);max-width:70ch;font-size:15px}
+
+/* ---- metrics ---- */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  border:1px solid var(--rule);background:var(--panel);margin-bottom:24px}
+.metric{padding:14px 18px;border-right:1px solid var(--rule-soft)}
+.metric:last-child{border-right:0}
+.metric .n{font-family:var(--mono);font-size:25px;font-weight:500;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.metric .l{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--muted);margin-top:4px}
+.metric .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* ---- figure: framed like a drawing sheet ---- */
+figure{margin:0 0 24px;min-width:0}
+.figgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;align-items:start}
+.sheet{border:1px solid var(--rule);background:var(--panel);padding:16px;
+  overflow-x:auto}
+.sheet svg{display:block;width:100%;height:auto;max-width:100%}
+.sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
+figcaption{font-family:var(--cond);font-size:11px;letter-spacing:0.07em;
+  text-transform:uppercase;color:var(--muted);margin-top:7px}
+
+/* ---- tables ---- */
+.scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel);
+  margin-bottom:24px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;
+  padding:9px 14px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-family:var(--mono);font-size:13px;white-space:nowrap}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  text-align:right;white-space:nowrap}
+.state{font-family:var(--cond);font-size:10.5px;letter-spacing:0.06em;
+  text-transform:uppercase;font-weight:600;white-space:nowrap}
+.crit{border-left:2px solid var(--ink)}
+.detail{color:var(--ink-2);font-size:13px;margin-top:3px;max-width:60ch}
+.paths{margin-top:4px}
+.paths code{font-size:11.5px;margin-right:6px;display:inline-block}
+
+/* ---- notes / questions ---- */
+.notes{border:1px solid var(--rule);border-left:3px solid var(--stop);
+  background:var(--panel);padding:14px 18px;margin-bottom:24px}
+.notes.calm{border-left-color:var(--muted)}
+.notes h3{font-family:var(--cond);font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.notes ul{margin:0;padding-left:18px}
+.notes li{margin:3px 0;font-size:14px;color:var(--ink-2)}
+.ask{border:1px solid var(--accent);background:var(--panel);padding:16px 18px;
+  margin-bottom:24px}
+.ask h3{font-family:var(--cond);font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 9px;font-weight:600}
+.ask ol{margin:0;padding-left:20px}
+.ask li{margin:5px 0;max-width:66ch}
+.ask .how{margin:12px 0 0;font-size:13.5px;color:var(--ink-2);
+  border-top:1px solid var(--rule-soft);padding-top:10px}
+blockquote{margin:0 0 22px;border-left:2px solid var(--rule);padding-left:16px;
+  color:var(--ink-2);max-width:70ch}
+blockquote .who{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-top:6px}
+
+.prose h2{font-size:19px;margin:26px 0 8px;font-weight:600}
+.prose h3{font-size:16px;margin:20px 0 6px;font-weight:600}
+.prose p{margin:0 0 11px;max-width:70ch}
+.prose ul{max-width:70ch}
+.empty{color:var(--muted);font-size:14.5px;max-width:62ch}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
+  color:var(--muted);font-size:12.5px}
+@media (max-width:640px){
+  .block-main h1{font-size:23px}
+  .field{border-right:0;border-bottom:1px solid var(--rule-soft)}
+  .metric{border-right:0;border-bottom:1px solid var(--rule-soft)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+<div class="block"><div class="block-main">
+<h1>Thermal Probe</h1>
+<p>A handheld logger for walk-in freezers. A week on one charge, readable through a glove.</p>
+</div><div class='fields'>
+<div class="field"><span class="k">Revision</span><span class="v">21f6347</span></div>
+<div class="field"><span class="k">Branch</span><span class="v">claude/makehardware-human-review-xo14y4</span></div>
+<div class="field"><span class="k">Generated</span><span class="v">2026-08-31</span></div>
+<div class="field"><span class="k">Phases</span><span class="v">6</span></div>
+<div class="field"><span class="k">Awaiting you</span><span class="v">2</span></div>
+</div></div>
+<div class="strip"><span class="k">Outstanding</span>
+<p><strong>Requirements, Architecture</strong> — needs another look. Comment on this page, or reply in the session.</p>
+</div>
+<div class="tabs" role="tablist">
+<button class="tab" role="tab" id="t-vision" aria-controls="p-vision" aria-selected="true" data-tab="vision"><span class="dot b-ok"></span>Vision</button>
+<button class="tab" role="tab" id="t-plan" aria-controls="p-plan" aria-selected="false" data-tab="plan"><span class="dot b-ok"></span>Plan</button>
+<button class="tab" role="tab" id="t-requirements" aria-controls="p-requirements" aria-selected="false" data-tab="requirements"><span class="dot b-stop"></span>Requirements</button>
+<button class="tab" role="tab" id="t-architecture" aria-controls="p-architecture" aria-selected="false" data-tab="architecture"><span class="dot b-wait"></span>Architecture</button>
+<button class="tab" role="tab" id="t-schematic" aria-controls="p-schematic" aria-selected="false" data-tab="schematic"><span class="dot b-idle"></span>Schematic</button>
+<button class="tab" role="tab" id="t-simulation" aria-controls="p-simulation" aria-selected="false" data-tab="simulation"><span class="dot b-idle"></span>Simulation</button>
+</div>
+<section class="panel" role="tabpanel" id="p-vision" aria-labelledby="t-vision">
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 1</span>
+<h2>Vision and concept selection</h2></div>
+<span class="pill t-ok">Approved</span></div>
+<p class="summary">Two concepts that differ in a nameable way: a one-handed wand
+with the probe on a lead, and a bench instrument that lives on a shelf. Both
+envelopes are measured off real geometry.</p>
+<blockquote>The wand. A freezer walk is one-handed and you are already carrying
+a clipboard — the bench version solves a problem we do not have.<span class="who">harrison · 2026-08-31</span></blockquote>
+<div class="prose"><p>A handheld probe that logs temperature in a walk-in freezer for a week on one charge, readable with gloves on. Every image below comes from a parametric model, so the numbers are measured off the geometry rather than estimated.</p>
+<h3>The choice</h3>
+<div class="scroll"><table><thead><tr><th></th><th><strong>Wand</strong></th><th><strong>Bench instrument</strong></th></tr></thead><tbody>
+<tr><td>Envelope (mm)</td><td>38 × 164 × 22</td><td>92 × 118 × 34</td></tr>
+<tr><td>Volume (mm³)</td><td>72,840</td><td>214,600</td></tr>
+<tr><td>Approx. mass (g)</td><td>102</td><td>300</td></tr>
+</tbody></table></div>
+<h3>Wand</h3>
+<p>One-handed. Probe on a 300 mm flex lead so the body never enters the cold zone. Two-digit display, one button.</p>
+<p><strong>What this one bets on:</strong> That the freezer walk is the whole job, so the display can be small and the body has to survive a glove.</p>
+<p><strong>38 × 164 × 22 mm</strong> · 72,840 mm³ · ~102 g at 1.4 g/cm³</p>
+<p></p>
+<h3>Bench instrument</h3>
+<p>Sits on a shelf in the plant room and gets picked up. Four-digit display with a trend strip, dock contacts on the base.</p>
+<p><strong>What this one bets on:</strong> That it lives in one place and is read at arm&#x27;s length, so it can be wider and carry a bigger cell.</p>
+<p><strong>92 × 118 × 34 mm</strong> · 214,600 mm³ · ~300 g at 1.4 g/cm³</p>
+<p></p></div>
+<div class="figgrid">
+<figure>
+<div class="sheet" style="max-width:360px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 326 503" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Wand: 38 by 164 by 22 millimetres" preserveAspectRatio="xMidYMid meet">
+<style>.o{fill:none;stroke:#0b0b0b;stroke-width:1.6}.f{fill:none;stroke:#52514e;stroke-width:1}.d{stroke:#898781;stroke-width:0.7}.t{font-size:10px;fill:#898781}.lbl{font-size:10.5px;fill:#52514e;font-weight:600;letter-spacing:0.06em}</style>
+<rect x="54" y="54" width="83.6" height="360.8" rx="13.2" class="o"/>
+<rect x="67.2" y="80.4" width="57.2" height="39.6" rx="2" class="f"/>
+<rect x="84.8" y="142.0" width="22.0" height="22.0" rx="8" class="f"/>
+<rect x="84.8" y="388.4" width="22.0" height="11.0" rx="3" class="f"/>
+<rect x="183.6" y="54" width="48.4" height="360.8" rx="13.2" class="o"/>
+<line x1="54" y1="434.8" x2="137.6" y2="434.8" class="d"/><line x1="54" y1="430.8" x2="54" y2="438.8" class="d"/><line x1="137.6" y1="430.8" x2="137.6" y2="438.8" class="d"/>
+<text x="95.8" y="449.8" class="t" text-anchor="middle">38 mm</text>
+<line x1="38" y1="54" x2="38" y2="414.8" class="d"/><line x1="34" y1="54" x2="42" y2="54" class="d"/><line x1="34" y1="414.8" x2="42" y2="414.8" class="d"/>
+<text x="30" y="234.4" class="t" text-anchor="middle" transform="rotate(-90 30 234.4)">164 mm</text>
+<line x1="183.6" y1="434.8" x2="232.0" y2="434.8" class="d"/>
+<text x="207.8" y="449.8" class="t" text-anchor="middle">22</text>
+<text x="54" y="38" class="lbl">FRONT</text>
+<text x="183.6" y="38" class="lbl">SIDE</text>
+</svg></div>
+<figcaption>concept a — elevation</figcaption></figure>
+<figure>
+<div class="sheet" style="max-width:505px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 471 402" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Bench instrument: 92 by 118 by 34 millimetres" preserveAspectRatio="xMidYMid meet">
+<style>.o{fill:none;stroke:#0b0b0b;stroke-width:1.6}.f{fill:none;stroke:#52514e;stroke-width:1}.d{stroke:#898781;stroke-width:0.7}.t{font-size:10px;fill:#898781}.lbl{font-size:10.5px;fill:#52514e;font-weight:600;letter-spacing:0.06em}</style>
+<rect x="54" y="54" width="202.4" height="259.6" rx="13.2" class="o"/>
+<rect x="76.0" y="84.8" width="158.4" height="74.8" rx="2" class="f"/>
+<rect x="80.4" y="186.0" width="30.8" height="30.8" rx="8" class="f"/>
+<rect x="128.8" y="186.0" width="30.8" height="30.8" rx="8" class="f"/>
+<rect x="142.0" y="296.0" width="26.4" height="11.0" rx="3" class="f"/>
+<rect x="302.4" y="54" width="74.8" height="259.6" rx="13.2" class="o"/>
+<line x1="54" y1="333.6" x2="256.4" y2="333.6" class="d"/><line x1="54" y1="329.6" x2="54" y2="337.6" class="d"/><line x1="256.4" y1="329.6" x2="256.4" y2="337.6" class="d"/>
+<text x="155.2" y="348.6" class="t" text-anchor="middle">92 mm</text>
+<line x1="38" y1="54" x2="38" y2="313.6" class="d"/><line x1="34" y1="54" x2="42" y2="54" class="d"/><line x1="34" y1="313.6" x2="42" y2="313.6" class="d"/>
+<text x="30" y="183.8" class="t" text-anchor="middle" transform="rotate(-90 30 183.8)">118 mm</text>
+<line x1="302.4" y1="333.6" x2="377.2" y2="333.6" class="d"/>
+<text x="339.8" y="348.6" class="t" text-anchor="middle">34</text>
+<text x="54" y="38" class="lbl">FRONT</text>
+<text x="302.4" y="38" class="lbl">SIDE</text>
+</svg></div>
+<figcaption>concept b — elevation</figcaption></figure>
+</div>
+</section>
+<section class="panel" role="tabpanel" id="p-plan" aria-labelledby="t-plan" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 2</span>
+<h2>Project plan</h2></div>
+<span class="pill t-ok">Approved</span></div>
+<p class="summary">Eleven chunks, nine sessions on the critical path. Layout is
+blocked on the enclosure envelope, which is the dependency I am least sure
+about.</p>
+<div class="metrics">
+<div class="metric"><div class="n">11</div><div class="l">chunks</div></div>
+<div class="metric"><div class="n">5</div><div class="l">done</div><div class="s">45% complete</div></div>
+<div class="metric"><div class="n">10</div><div class="l">sessions</div><div class="s">on the critical path</div></div>
+<div class="metric"><div class="n">1</div><div class="l">blocked</div></div>
+</div>
+<blockquote>Add the drop test earlier if the enclosure is printed rather than
+moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</span></blockquote>
+<figure>
+<div class="sheet" style="max-width:1534px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 670" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Project plan: Thermal Probe, 5 of 11 chunks done" preserveAspectRatio="xMidYMid meet">
+<style>
+.s{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .bar-in_progress{fill:#2a78d6}
+@media (prefers-color-scheme:dark){.s{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .bar-in_progress{fill:#3987e5}}
+.mut{fill:#898781} .bar-done{fill:#0ca30c} .bar-blocked{fill:#d03b3b} .bar-todo{fill:#898781}
+.crit{stroke:#0b0b0b;stroke-opacity:0.62;stroke-width:2}
+@media (prefers-color-scheme:dark){.crit{stroke:#ffffff;stroke-opacity:0.72}}
+.t{font-size:12px} .tb{font-size:12px;font-weight:600} .ts{font-size:10.5px} .h{font-size:15px;font-weight:600}
+</style>
+<rect width="1500" height="670" class="s" rx="6"/>
+<text x="20" y="27" class="h ink">Thermal Probe</text>
+<text x="20" y="47" class="t ink2">5/11 chunks complete · 45% · 10 sessions on the critical path · 1 blocked</text>
+<line x1="320" y1="76" x2="320" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="326" y="72" class="ts mut">S1</text>
+<line x1="436" y1="76" x2="436" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="442" y="72" class="ts mut">S2</text>
+<line x1="552" y1="76" x2="552" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="558" y="72" class="ts mut">S3</text>
+<line x1="668" y1="76" x2="668" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="674" y="72" class="ts mut">S4</text>
+<line x1="784" y1="76" x2="784" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="790" y="72" class="ts mut">S5</text>
+<line x1="900" y1="76" x2="900" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="906" y="72" class="ts mut">S6</text>
+<line x1="1016" y1="76" x2="1016" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1022" y="72" class="ts mut">S7</text>
+<line x1="1132" y1="76" x2="1132" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1138" y="72" class="ts mut">S8</text>
+<line x1="1248" y1="76" x2="1248" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1254" y="72" class="ts mut">S9</text>
+<line x1="1364" y1="76" x2="1364" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1370" y="72" class="ts mut">S10</text>
+<line x1="1480" y1="76" x2="1480" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="20" y="101" class="tb ink2">MECHANICAL</text>
+<line x1="20" y1="107" x2="1480" y2="107" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="131.0" class="t ink">V1 · Vision board and concept selection</text>
+<rect x="323" y="117.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="331" y="131.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="165.0" class="t ink">P1 · Project plan and disciplines</text>
+<rect x="439" y="151.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="447" y="165.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="199.0" class="t ink">R1 · System and discipline requirements</text>
+<rect x="555" y="185.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="563" y="199.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="233.0" class="t ink">M1 · Enclosure envelope and internal layout</text>
+<rect x="671" y="219.0" width="110" height="20" rx="4" class="bar-done"/>
+<text x="679" y="233.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="265" class="tb ink2">ELECTRICAL</text>
+<line x1="20" y1="271" x2="1480" y2="271" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="295.0" class="t ink">E1 · Power architecture and part selection</text>
+<rect x="671" y="281.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="679" y="295.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="329.0" class="t ink">E1B · Block diagram and power budget</text>
+<rect x="787" y="315.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="795" y="329.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
+<text x="20" y="363.0" class="t ink">E2 · Schematic capture and ERC</text>
+<rect x="903" y="349.0" width="226" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="911" y="363.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
+<text x="20" y="397.0" class="t ink">E3 · PCB layout, DRC and fabrication outputs</text>
+<rect x="1135" y="383.0" width="226" height="20" rx="4" class="bar-blocked crit"/>
+<text x="1143" y="397.0" class="ts" fill="#ffffff" opacity="0.96">✕ Blocked</text>
+<text x="20" y="429" class="tb ink2">TEST</text>
+<line x1="20" y1="435" x2="1480" y2="435" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="459.0" class="t ink">S1 · Standby current simulation across corne</text>
+<rect x="903" y="445.0" width="110" height="20" rx="4" class="bar-in_progress"/>
+<text x="911" y="459.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
+<text x="20" y="493.0" class="t ink">T1 · Verification run and traceability gate</text>
+<rect x="1367" y="479.0" width="110" height="20" rx="4" class="bar-todo crit"/>
+<text x="1375" y="493.0" class="ts" fill="#ffffff" opacity="0.96">○ To do</text>
+<text x="20" y="525" class="tb ink2">FIRMWARE</text>
+<line x1="20" y1="531" x2="1480" y2="531" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="555.0" class="t ink">F1 · Firmware bring-up and low-power schedul</text>
+<rect x="1135" y="541.0" width="226" height="20" rx="4" class="bar-todo crit"/>
+<text x="1143" y="555.0" class="ts" fill="#ffffff" opacity="0.96">○ To do</text>
+<defs><marker id="g90396-ah" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
+<path d="M433,127.0 H443 V161.0 H436" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M549,161.0 H559 V195.0 H552" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M665,195.0 H675 V291.0 H668" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M781,291.0 H791 V325.0 H784" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M665,195.0 H675 V229.0 H668" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
+<path d="M897,325.0 H907 V359.0 H900" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M781,229.0 H842.0 V359.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
+<path d="M897,325.0 H907 V455.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
+<path d="M1129,359.0 H1139 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M781,229.0 H958.0 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
+<path d="M1129,359.0 H1139 V551.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M1361,393.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M1361,551.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
+<path d="M1013,455.0 H1190.0 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
+<rect x="20" y="613" width="11" height="11" rx="2.5" class="bar-done"/>
+<text x="37" y="622" class="ts ink2">✓ Done</text>
+<rect x="90.8" y="613" width="11" height="11" rx="2.5" class="bar-in_progress"/>
+<text x="107.8" y="622" class="ts ink2">▶ In progress</text>
+<rect x="205.0" y="613" width="11" height="11" rx="2.5" class="bar-blocked"/>
+<text x="222.0" y="622" class="ts ink2">✕ Blocked</text>
+<rect x="294.4" y="613" width="11" height="11" rx="2.5" class="bar-todo"/>
+<text x="311.4" y="622" class="ts ink2">○ To do</text>
+<text x="377.4" y="622" class="ts mut">outlined bars = critical path</text>
+</svg></div>
+<figcaption>Dependency chart — one column per session, scheduled by longest path. Outlined bars are the critical path.</figcaption></figure>
+<div class="scroll"><table><thead><tr>
+<th>Chunk</th>
+<th>Title</th>
+<th>Discipline</th>
+<th>Needs first</th>
+<th>Est.</th>
+<th>State</th></tr></thead><tbody>
+<tr class="crit">
+<td>V1
+</td>
+<td>Vision board and concept selection
+<div class="detail">Interview, then two concepts as build123d modules — a one-handed wand and a bench instrument — rendered into a vision document with envelopes and masses measured off the models.</div>
+<div class="paths"><code>docs/design/vision.md</code><code>docs/design/vision/</code></div>
+</td>
+<td>mechanical
+</td>
+<td class="num">—
+</td>
+<td class="num">1
+</td>
+<td class="state t-ok">Done</td></tr>
+<tr class="crit">
+<td>P1
+</td>
+<td>Project plan and disciplines
+<div class="detail">Agree what work exists and in what order, and which disciplines the project actually has.</div>
+<div class="paths"><code>docs/plan.md</code></div>
+</td>
+<td>mechanical
+</td>
+<td>V1
+</td>
+<td class="num">1
+</td>
+<td class="state t-ok">Done</td></tr>
+<tr class="crit">
+<td>R1
+</td>
+<td>System and discipline requirements
+<div class="detail">VIS- intent decomposed into testable SYS- requirements, then into ELE-, MEC- and FW- requirements with budgets that roll up.</div>
+<div class="paths"><code>requirements/</code><code>docs/design/requirements-map.svg</code></div>
+</td>
+<td>mechanical
+</td>
+<td>P1
+</td>
+<td class="num">1
+</td>
+<td class="state t-ok">Done</td></tr>
+<tr class="crit">
+<td>E1
+</td>
+<td>Power architecture and part selection
+<div class="detail">Cell chemistry, charger, regulator topology and the always-on rail budget. The 40 uA standby figure is decided here.</div>
+<div class="paths"><code>docs/design/adr-0002-power.md</code></div>
+</td>
+<td>electrical
+</td>
+<td>R1
+</td>
+<td class="num">1
+</td>
+<td class="state t-ok">Done</td></tr>
+<tr class="crit">
+<td>E1B
+</td>
+<td>Block diagram and power budget
+<div class="detail">Every IC, the full power tree with a current budget per rail, and the data buses with their controllers. Settled before any schematic exists.</div>
+<div class="paths"><code>hw/block-diagram.yaml</code><code>docs/design/block-diagram.svg</code></div>
+</td>
+<td>electrical
+</td>
+<td>E1
+</td>
+<td class="num">1
+</td>
+<td class="state t-wait">In progress</td></tr>
+<tr>
+<td>M1
+</td>
+<td>Enclosure envelope and internal layout
+<div class="detail">Outer envelope frozen from the agreed concept, cell and board volumes placed, and the board outline published as an interface.</div>
+<div class="paths"><code>cad/enclosure.py</code></div>
+</td>
+<td>mechanical
+</td>
+<td>R1
+</td>
+<td class="num">1
+</td>
+<td class="state t-ok">Done</td></tr>
+<tr class="crit">
+<td>E2
+</td>
+<td>Schematic capture and ERC
+<div class="detail">Capture the agreed block diagram, pick every passive against house practice, and get ERC clean.</div>
+<div class="paths"><code>hw/probe.kicad_sch</code><code>docs/design/schematic.pdf</code></div>
+</td>
+<td>electrical
+</td>
+<td>E1B, M1
+</td>
+<td class="num">2
+</td>
+<td class="state t-wait">In progress</td></tr>
+<tr>
+<td>S1
+</td>
+<td>Standby current simulation across corners
+<div class="detail">ngspice on the always-on rail at tolerance, temperature and supply extremes, cross-checked against the closed-form leakage sum.</div>
+<div class="paths"><code>sim/standby/</code><code>docs/design/standby-results.md</code></div>
+</td>
+<td>test
+</td>
+<td>E1B
+</td>
+<td class="num">1
+</td>
+<td class="state t-wait">In progress</td></tr>
+<tr class="crit">
+<td>E3
+</td>
+<td>PCB layout, DRC and fabrication outputs
+<div class="detail">Two-layer board inside the frozen outline. Pre-route checks first — net class widths against pad sizes, DRC on the placed board.</div>
+<div class="paths"><code>hw/probe.kicad_pcb</code><code>docs/design/pcb-layers.pdf</code></div>
+</td>
+<td>electrical
+</td>
+<td>E2, M1
+</td>
+<td class="num">2
+</td>
+<td class="state t-stop">Blocked</td></tr>
+<tr class="crit">
+<td>F1
+</td>
+<td>Firmware bring-up and low-power scheduler
+<div class="detail">Boot, ADC sampling, flash logging and the sleep scheduler that the 40 uA budget depends on.</div>
+<div class="paths"><code>fw/</code></div>
+</td>
+<td>firmware
+</td>
+<td>E2
+</td>
+<td class="num">2
+</td>
+<td class="state t-idle">To do</td></tr>
+<tr class="crit">
+<td>T1
+</td>
+<td>Verification run and traceability gate
+<div class="detail">Close every requirement against evidence at the corners, or report it unmet. Walk back up to the VIS- entries.</div>
+<div class="paths"><code>docs/design/verification-report.md</code></div>
+</td>
+<td>test
+</td>
+<td>E3, F1, S1
+</td>
+<td class="num">1
+</td>
+<td class="state t-idle">To do</td></tr>
+</tbody></table></div>
+<div class="notes calm"><h3>Worth a human's eye</h3><ul>
+<li>R1 is done but review &#x27;requirements&#x27; was approved, then docs/design/requirements-map.svg changed</li>
+</ul></div>
+</section>
+<section class="panel" role="tabpanel" id="p-requirements" aria-labelledby="t-requirements" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 3</span>
+<h2>Requirements tree</h2></div>
+<span class="pill t-stop">Needs another look</span></div>
+<p class="summary">Fifteen requirements. SYS-001 moved from 12 h to 7 d after the
+logging interval was settled at one minute, which is the number worth arguing
+about.</p>
+<div class="metrics">
+<div class="metric"><div class="n">14</div><div class="l">requirements</div></div>
+<div class="metric"><div class="n">1</div><div class="l">verified</div></div>
+<div class="metric"><div class="n">7.1%</div><div class="l">with evidence</div></div>
+<div class="metric"><div class="n">11</div><div class="l">gaps</div><div class="s">the gate is failing on</div></div>
+</div>
+<div class="notes"><h3>Approved, then it moved</h3><ul>
+<li><code>docs/design/requirements-map.svg</code> changed after sign-off</li>
+</ul></div>
+<blockquote>7 days. A week means Friday-to-Friday and nobody has to think.<span class="who">harrison · on the previous version</span></blockquote>
+<div class="ask"><h3>What we need decided</h3><ol>
+<li>Is 7 days the right target, or is 5 with a smaller cell better?</li>
+<li>Is anything here that nobody asked for?</li>
+</ol><p class="how">Comment on this page — select the thing you are talking about and leave a note, or reply in the Claude session. Say which and <strong>why</strong>: the reason outlives the choice.</p></div>
+<figure>
+<div class="sheet" style="max-width:1082px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1048 912" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Requirements map: 14 requirements, 1 verified, 11 gaps" preserveAspectRatio="xMidYMid meet">
+<style>
+.s{fill:#fcfcfb} .card{fill:#ffffff} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7}
+@media (prefers-color-scheme:dark){.s{fill:#1a1a19} .card{fill:#242422} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835}}
+.mut{fill:#898781} .t{font-size:11.5px} .tb{font-size:12px;font-weight:600} .ts{font-size:10px} .h{font-size:16px;font-weight:600} .hd{font-size:11px;font-weight:600}
+</style>
+<rect width="1048" height="912" class="s" rx="6"/>
+<text x="24" y="30" class="h ink">Requirements map</text>
+<text x="24" y="50" class="t ink2">14 requirements · 1 verified · 1 with evidence (7.1%) · 11 gap(s), marked in red</text>
+<text x="24" y="68" class="ts mut">an arrow points from a requirement to the one that refines it</text>
+<text x="24" y="86" class="hd ink2">VISION — what was asked for</text>
+<text x="392" y="86" class="hd ink2">SYSTEM — testable at the product</text>
+<text x="760" y="86" class="hd ink2">DISCIPLINE — ELE / MEC / FW / MFG</text>
+<defs><marker id="g23104-ra" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
+<path d="M288.0,357.0 H340.0 V249.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M288.0,357.0 H340.0 V465.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M288.0,573.0 H340.0 V573.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M288.0,735.0 H340.0 V735.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,249.0 H708.0 V141.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,249.0 H708.0 V249.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,465.0 H708.0 V465.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,735.0 H708.0 V681.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,735.0 H708.0 V789.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,573.0 H708.0 V573.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<path d="M656.0,249.0 H708.0 V357.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
+<rect x="24.0" y="312.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="24.0" y="312.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="38.0" y="332.0" class="tb ink">VIS-001</text>
+<text x="278.0" y="332.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="38.0" y="351.0" class="t ink2">A week in a freezer on one charge</text>
+<text x="38.0" y="368.0" class="ts mut">Inspection</text>
+<text x="38.0" y="382.0" class="ts mut">refined by 2 requirements</text>
+<rect x="24.0" y="528.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="24.0" y="528.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="38.0" y="548.0" class="tb ink">VIS-002</text>
+<text x="278.0" y="548.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="38.0" y="567.0" class="t ink2">Readable and operable wearing…</text>
+<text x="38.0" y="584.0" class="ts mut">Inspection</text>
+<text x="38.0" y="598.0" class="ts mut">refined by 1 requirement</text>
+<rect x="24.0" y="690.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="24.0" y="690.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="38.0" y="710.0" class="tb ink">VIS-003</text>
+<text x="278.0" y="710.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="38.0" y="729.0" class="t ink2">Survives being dropped on a…</text>
+<text x="38.0" y="746.0" class="ts mut">Test</text>
+<text x="38.0" y="760.0" class="ts mut">refined by 1 requirement</text>
+<rect x="392.0" y="204.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="204.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="224.0" class="tb ink">SYS-001</text>
+<text x="646.0" y="224.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="243.0" class="t ink2">Battery life &gt;= 7 d logging at 1…</text>
+<text x="406.0" y="260.0" class="ts mut">Analysis · budget 7 d</text>
+<text x="406.0" y="274.0" class="ts mut">refined by 3 requirements</text>
+<rect x="392.0" y="420.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="420.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="440.0" class="tb ink">SYS-002</text>
+<text x="646.0" y="440.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="459.0" class="t ink2">Operating range -30 to +40 degC</text>
+<text x="406.0" y="476.0" class="ts mut">Test</text>
+<text x="406.0" y="490.0" class="ts mut">refined by 1 requirement</text>
+<rect x="392.0" y="528.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="528.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="548.0" class="tb ink">SYS-003</text>
+<text x="646.0" y="548.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="567.0" class="t ink2">Display legible at 500 mm in 50 lx</text>
+<text x="406.0" y="584.0" class="ts mut">Inspection</text>
+<text x="406.0" y="598.0" class="ts mut">refined by 1 requirement</text>
+<rect x="392.0" y="690.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="690.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="710.0" class="tb ink">SYS-004</text>
+<text x="646.0" y="710.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="729.0" class="t ink2">Survives 1.2 m drop onto concrete,…</text>
+<text x="406.0" y="746.0" class="ts mut">Test · budget 1.2 m</text>
+<text x="406.0" y="760.0" class="ts mut">refined by 2 requirements</text>
+<rect x="760.0" y="96.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="96.0" width="5" height="90" fill="#e08a1e" rx="2.5"/>
+<text x="774.0" y="116.0" class="tb ink">ELE-001</text>
+<text x="1014.0" y="116.0" class="ts" text-anchor="end" fill="#e08a1e">▶ Implemented</text>
+<text x="774.0" y="135.0" class="t ink2">Standby current &lt;= 40 uA on the…</text>
+<text x="774.0" y="152.0" class="ts mut">Simulation · budget 40 uA</text>
+<text x="774.0" y="166.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="166.0" class="ts" fill="#898781">✓ artefact linked</text>
+<rect x="760.0" y="204.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="204.0" width="5" height="90" fill="#898781" rx="2.5"/>
+<text x="774.0" y="224.0" class="tb ink">ELE-002</text>
+<text x="1014.0" y="224.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="243.0" class="t ink2">Logging-cycle charge &lt;= 180 uAh per…</text>
+<text x="774.0" y="260.0" class="ts mut">Simulation · budget 180 uAh</text>
+<text x="774.0" y="274.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="274.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+<rect x="760.0" y="420.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="420.0" width="5" height="90" fill="#898781" rx="2.5"/>
+<text x="774.0" y="440.0" class="tb ink">ELE-003</text>
+<text x="1014.0" y="440.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="459.0" class="t ink2">ADC error &lt;= 0.15 degC over -30 to…</text>
+<text x="774.0" y="476.0" class="ts mut">Test · budget 0.2 degC</text>
+<text x="774.0" y="490.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="490.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+<rect x="760.0" y="636.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
+<rect x="760.0" y="636.0" width="5" height="90" fill="#0ca30c" rx="2.5"/>
+<text x="774.0" y="656.0" class="tb ink">MEC-001</text>
+<text x="1014.0" y="656.0" class="ts" text-anchor="end" fill="#0ca30c">✓ Verified</text>
+<text x="774.0" y="675.0" class="t ink2">Envelope &lt;= 38 x 164 x 22 mm</text>
+<text x="774.0" y="692.0" class="ts mut">Inspection</text>
+<text x="774.0" y="706.0" class="ts" fill="#898781">✓ evidence</text>
+<text x="834.4" y="706.0" class="ts" fill="#898781">✓ artefact linked</text>
+<rect x="760.0" y="744.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="744.0" width="5" height="90" fill="#898781" rx="2.5"/>
+<text x="774.0" y="764.0" class="tb ink">MEC-002</text>
+<text x="1014.0" y="764.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="783.0" class="t ink2">Enclosure withstands 1.2 m drop, 6…</text>
+<text x="774.0" y="800.0" class="ts mut">Test</text>
+<text x="774.0" y="814.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="814.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+<rect x="760.0" y="528.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="528.0" width="5" height="90" fill="#898781" rx="2.5"/>
+<text x="774.0" y="548.0" class="tb ink">MEC-003</text>
+<text x="1014.0" y="548.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="567.0" class="t ink2">Display window transmits &gt;= 88% at…</text>
+<text x="774.0" y="584.0" class="ts mut">Inspection · budget 88%</text>
+<text x="774.0" y="598.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="598.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+<rect x="760.0" y="312.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="312.0" width="5" height="90" fill="#898781" rx="2.5"/>
+<text x="774.0" y="332.0" class="tb ink">FW-001</text>
+<text x="1014.0" y="332.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="351.0" class="t ink2">Sleep between samples, wake on RTC…</text>
+<text x="774.0" y="368.0" class="ts mut">Test</text>
+<text x="774.0" y="382.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="382.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+<rect x="24" y="873" width="10" height="10" rx="2" fill="#898781"/>
+<text x="39" y="882" class="ts ink2">· Draft</text>
+<rect x="101.0" y="873" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="116.0" y="882" class="ts ink2">= Agreed</text>
+<rect x="184.4" y="873" width="10" height="10" rx="2" fill="#e08a1e"/>
+<text x="199.4" y="882" class="ts ink2">▶ Implemented</text>
+<rect x="299.8" y="873" width="10" height="10" rx="2" fill="#0ca30c"/>
+<text x="314.8" y="882" class="ts ink2">✓ Verified</text>
+<rect x="396.0" y="873" width="10" height="10" rx="2" fill="#8b5cf6"/>
+<text x="411.0" y="882" class="ts ink2">~ Waived</text>
+<rect x="479.4" y="873" width="10" height="10" rx="2" fill="none" stroke="#d03b3b" stroke-width="2"/>
+<text x="494.4" y="882" class="ts ink2">red border = a gap the gate is failing on</text>
+</svg></div>
+<figcaption>Requirement tree — an arrow points from a requirement to the one that refines it. Red borders are gaps the gate is failing on.</figcaption></figure>
+<div class="scroll"><table><thead><tr>
+<th>UID</th>
+<th>Requirement</th>
+<th>Method</th>
+<th>Budget</th>
+<th>Refines</th>
+<th>State</th></tr></thead><tbody>
+<tr>
+<td>VIS-001
+</td>
+<td>A week in a freezer on one charge
+</td>
+<td>Inspection
+</td>
+<td class="num">—
+</td>
+<td class="num">—
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>VIS-002
+</td>
+<td>Readable and operable wearing freezer gloves
+</td>
+<td>Inspection
+</td>
+<td class="num">—
+</td>
+<td class="num">—
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>VIS-003
+</td>
+<td>Survives being dropped on a concrete floor
+</td>
+<td>Test
+</td>
+<td class="num">—
+</td>
+<td class="num">—
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>SYS-001
+</td>
+<td>Battery life &gt;= 7 d logging at 1 min intervals
+</td>
+<td>Analysis
+</td>
+<td class="num">7 d
+</td>
+<td>VIS-001
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>SYS-002
+</td>
+<td>Operating range -30 to +40 degC
+</td>
+<td>Test
+</td>
+<td class="num">—
+</td>
+<td>VIS-001
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>SYS-003
+</td>
+<td>Display legible at 500 mm in 50 lx
+</td>
+<td>Inspection
+</td>
+<td class="num">—
+</td>
+<td>VIS-002
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>SYS-004
+</td>
+<td>Survives 1.2 m drop onto concrete, 6 faces
+</td>
+<td>Test
+</td>
+<td class="num">1.2 m
+</td>
+<td>VIS-003
+</td>
+<td class="state t-wait">Agreed</td></tr>
+<tr>
+<td>ELE-001
+</td>
+<td>Standby current &lt;= 40 uA on the always-on rail
+<div class="paths"><code>hw/block-diagram.yaml</code></div>
+</td>
+<td>Simulation
+</td>
+<td class="num">40 uA
+</td>
+<td>SYS-001
+</td>
+<td class="state t-wait">Implemented</td></tr>
+<tr>
+<td>ELE-002
+</td>
+<td>Logging-cycle charge &lt;= 180 uAh per sample
+</td>
+<td>Simulation
+</td>
+<td class="num">180 uAh
+</td>
+<td>SYS-001
+</td>
+<td class="state t-idle">Draft</td></tr>
+<tr>
+<td>ELE-003
+</td>
+<td>ADC error &lt;= 0.2 degC over -30 to +40 degC
+</td>
+<td>Test
+</td>
+<td>0.2 degC
+</td>
+<td>SYS-002
+</td>
+<td class="state t-idle">Draft</td></tr>
+<tr>
+<td>MEC-001
+</td>
+<td>Envelope &lt;= 38 x 164 x 22 mm
+<div class="paths"><code>cad/enclosure.py</code></div>
+</td>
+<td>Inspection
+</td>
+<td class="num">—
+</td>
+<td>SYS-004
+</td>
+<td class="state t-ok">Verified</td></tr>
+<tr>
+<td>MEC-002
+</td>
+<td>Enclosure withstands 1.2 m drop, 6 faces
+</td>
+<td>Test
+</td>
+<td class="num">—
+</td>
+<td>SYS-004
+</td>
+<td class="state t-idle">Draft</td></tr>
+<tr>
+<td>MEC-003
+</td>
+<td>Display window transmits &gt;= 88% at 550 nm
+</td>
+<td>Inspection
+</td>
+<td class="num">88%
+</td>
+<td>SYS-003
+</td>
+<td class="state t-idle">Draft</td></tr>
+<tr>
+<td>FW-001
+</td>
+<td>Sleep between samples, wake on RTC only
+</td>
+<td>Test
+</td>
+<td class="num">—
+</td>
+<td>SYS-001
+</td>
+<td class="state t-idle">Draft</td></tr>
+</tbody></table></div>
+<div class="notes calm"><h3>Worth a human's eye</h3><ul>
+<li>ELE-001 (Standby current &lt;= 40 uA on the always-on rail) has no EVIDENCE for its Simulation verification</li>
+<li>ELE-002 (Logging-cycle charge &lt;= 180 uAh per sample) has no EVIDENCE for its Simulation verification</li>
+<li>ELE-003 (ADC error &lt;= 0.2 degC over -30 to +40 degC) has no EVIDENCE for its Test verification</li>
+<li>MEC-002 (Enclosure withstands 1.2 m drop, 6 faces) has no EVIDENCE for its Test verification</li>
+<li>MEC-003 (Display window transmits &gt;= 88% at 550 nm) has no EVIDENCE for its Inspection verification</li>
+<li>FW-001 (Sleep between samples, wake on RTC only) has no EVIDENCE for its Test verification</li>
+<li>ELE-002 (Logging-cycle charge &lt;= 180 uAh per sample) has no File relation to a design artefact</li>
+<li>ELE-003 (ADC error &lt;= 0.2 degC over -30 to +40 degC) has no File relation to a design artefact</li>
+<li>MEC-002 (Enclosure withstands 1.2 m drop, 6 faces) has no File relation to a design artefact</li>
+<li>MEC-003 (Display window transmits &gt;= 88% at 550 nm) has no File relation to a design artefact</li>
+<li>FW-001 (Sleep between samples, wake on RTC only) has no File relation to a design artefact</li>
+</ul></div>
+</section>
+<section class="panel" role="tabpanel" id="p-architecture" aria-labelledby="t-architecture" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 4</span>
+<h2>Block diagram, power tree and buses</h2></div>
+<span class="pill t-wait">Awaiting your review</span></div>
+<p class="summary">Four rails. VBUS is the tight one at 90% of the USB-C default
+500 mA while charging, which is fine because it is a charge-only rail — but it
+is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
+<div class="metrics">
+<div class="metric"><div class="n">10</div><div class="l">blocks</div></div>
+<div class="metric"><div class="n">4</div><div class="l">rails</div></div>
+<div class="metric"><div class="n">4</div><div class="l">buses</div></div>
+<div class="metric"><div class="n">1</div><div class="l">rails tight</div><div class="s">within 20% of the limit</div></div>
+</div>
+<div class="ask"><h3>What we need decided</h3><ol>
+<li>Is a rail or a part missing?</li>
+<li>SPI1 shares flash and LCD on one bus — acceptable, or separate them?</li>
+<li>Is charging at 450 mA off a 500 mA port too close?</li>
+</ol><p class="how">Comment on this page — select the thing you are talking about and leave a note, or reply in the Claude session. Say which and <strong>why</strong>: the reason outlives the choice.</p></div>
+<figure>
+<div class="sheet" style="max-width:1238px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1204 902" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Electrical block diagram: Thermal Probe, 10 blocks, 4 rails, 4 buses" preserveAspectRatio="xMidYMid meet">
+<style>
+.s{fill:#fcfcfb} .bx{fill:#ffffff;stroke:#c3c2b7} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .gt{fill:#c3c2b7}
+@media (prefers-color-scheme:dark){.s{fill:#1a1a19} .bx{fill:#242422;stroke:#383835} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .gt{fill:#383835}}
+.mut{fill:#898781}
+.t{font-size:12px} .tb{font-size:12.5px;font-weight:600} .ts{font-size:10px} .tr{font-size:11.5px;font-weight:600} .h{font-size:15px;font-weight:600} .hh{font-size:11px;font-weight:600;letter-spacing:0.06em}
+</style>
+<rect width="1204" height="902" class="s" rx="6"/>
+<text x="24" y="27" class="h ink">Thermal Probe  ·  rev C</text>
+<text x="24" y="46" class="t ink2">10 blocks · 4 rails · 4 buses</text>
+<text x="24" y="61" class="ts mut">generated from block-diagram.yaml — edit the spec, not this file</text>
+<text x="24" y="84" class="hh mut">POWER TREE</text>
+<rect x="24.0" y="96.0" width="6" height="32" rx="3" fill="#d03b3b"/>
+<text x="38.0" y="108.0" class="tr" fill="#d03b3b">VBUS  5.0 V  ← J1</text>
+<rect x="284" y="98.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="98.0" width="135.0" height="9" rx="4.5" fill="#e08a1e"/>
+<text x="446" y="107.0" class="ts ink2">450 mA max of 500 mA  (90%)  ! tight</text>
+<text x="38.0" y="124.0" class="ts mut">U1 450 mA</text>
+<rect x="24.0" y="142.0" width="6" height="32" rx="3" fill="#e08a1e"/>
+<text x="38.0" y="154.0" class="tr" fill="#e08a1e">VBAT  3.7 V  ← BT1</text>
+<rect x="284" y="144.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="144.0" width="3.0" height="9" rx="4.5" fill="#e08a1e"/>
+<text x="446" y="153.0" class="ts ink2">11 mA max of 1.20 A  (1%)</text>
+<text x="38.0" y="170.0" class="ts mut">U2 0 mA</text>
+<path d="M33.0,156.0 V200.0 H43.0" fill="none" class="ax" stroke-width="1.2" opacity="0.6"/>
+<rect x="46.0" y="188.0" width="6" height="32" rx="3" fill="#0ca30c"/>
+<text x="60.0" y="200.0" class="tr" fill="#0ca30c">V3P3  3.3 V  ← U2</text>
+<rect x="284" y="190.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="190.0" width="7.4" height="9" rx="4.5" fill="#0ca30c"/>
+<text x="446" y="199.0" class="ts ink2">12 mA max of 250 mA  (5%)</text>
+<text x="60.0" y="216.0" class="ts mut">U3 8 mA  U5 4 mA  U4 0 mA  DS1 0 mA</text>
+<path d="M55.0,202.0 V246.0 H65.0" fill="none" class="ax" stroke-width="1.2" opacity="0.6"/>
+<rect x="68.0" y="234.0" width="6" height="32" rx="3" fill="#2a78d6"/>
+<text x="82.0" y="246.0" class="tr" fill="#2a78d6">VREF  2.5 V  ← U4</text>
+<rect x="284" y="236.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="236.0" width="3.8" height="9" rx="4.5" fill="#2a78d6"/>
+<text x="446" y="245.0" class="ts ink2">0 mA max of 10 mA  (2%)</text>
+<text x="82.0" y="262.0" class="ts mut">RT1 0 mA</text>
+<text x="24" y="302" class="hh mut">FUNCTIONAL BLOCKS AND DATA BUSES</text>
+<rect x="24.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="336.0" class="tb ink">J1 · USB-C receptacle</text>
+<text x="34.0" y="352.0" class="t ink2">TYPE-C-31-M-12</text>
+<text x="34.0" y="370.0" class="ts mut">CONNECTOR</text>
+<rect x="24.0" y="420.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="440.0" class="tb ink">BT1 · LiPo cell, 900 mAh</text>
+<text x="34.0" y="456.0" class="t ink2">LP503035</text>
+<text x="34.0" y="474.0" class="ts mut">POWER</text>
+<rect x="24.0" y="524.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="544.0" class="tb ink">U1 · Battery charger</text>
+<text x="34.0" y="560.0" class="t ink2">MCP73831T-2ACI/OT</text>
+<text x="34.0" y="578.0" class="ts mut">REGULATOR</text>
+<rect x="167.0" y="568.0" width="33.0" height="15" rx="7.5" fill="#d03b3b"/>
+<text x="183.5" y="579.0" class="ts" fill="#ffffff" text-anchor="middle">VBUS</text>
+<rect x="24.0" y="628.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="648.0" class="tb ink">U2 · 3.3 V LDO</text>
+<text x="34.0" y="664.0" class="t ink2">MCP1700T-3302E/TT</text>
+<text x="34.0" y="682.0" class="ts mut">REGULATOR</text>
+<rect x="167.0" y="672.0" width="33.0" height="15" rx="7.5" fill="#e08a1e"/>
+<text x="183.5" y="683.0" class="ts" fill="#ffffff" text-anchor="middle">VBAT</text>
+<rect x="274.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="284.0" y="336.0" class="tb ink">U3 · MCU</text>
+<text x="284.0" y="352.0" class="t ink2">STM32L071KBU6</text>
+<text x="284.0" y="370.0" class="ts mut">MCU</text>
+<rect x="417.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="433.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="524.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="534.0" y="336.0" class="tb ink">U5 · Log flash, 16 Mbit</text>
+<text x="534.0" y="352.0" class="t ink2">W25Q16JVUXIQ</text>
+<text x="534.0" y="370.0" class="ts mut">MEMORY</text>
+<rect x="667.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="683.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="524.0" y="420.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="534.0" y="440.0" class="tb ink">DS1 · Segment LCD module</text>
+<text x="534.0" y="456.0" class="t ink2">VIM-878-DP-RC-S-LV</text>
+<text x="534.0" y="474.0" class="ts mut">INTERFACE</text>
+<rect x="667.0" y="464.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="683.5" y="475.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="524.0" y="524.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="534.0" y="544.0" class="tb ink">RT1 · Probe thermistor, NTC 10</text>
+<text x="534.0" y="560.0" class="t ink2">NTCLE100E3103JB0</text>
+<text x="534.0" y="578.0" class="ts mut">SENSOR</text>
+<rect x="667.0" y="568.0" width="33.0" height="15" rx="7.5" fill="#2a78d6"/>
+<text x="683.5" y="579.0" class="ts" fill="#ffffff" text-anchor="middle">VREF</text>
+<rect x="524.0" y="628.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="534.0" y="648.0" class="tb ink">SW1 · Wake button</text>
+<text x="534.0" y="664.0" class="t ink2">TL3305AF160QG</text>
+<text x="534.0" y="682.0" class="ts mut">INTERFACE</text>
+<rect x="774.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="784.0" y="336.0" class="tb ink">U4 · Voltage reference</text>
+<text x="784.0" y="352.0" class="t ink2">REF3025AIDBZR</text>
+<text x="784.0" y="370.0" class="ts mut">ANALOG</text>
+<rect x="917.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="933.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<line x1="472.0" y1="738.0" x2="722.0" y2="738.0" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M460.0,339.0 H472.0 V738.0" fill="none" stroke="#8b5cf6" stroke-width="1.6"/>
+<path d="M-4.5,-5 L4.5,-5 L0,3.5 z" transform="translate(472.0,734.0)" fill="#8b5cf6"/>
+<circle cx="460.0" cy="339.0" r="2.4" fill="#8b5cf6"/>
+<path d="M710.0,339.0 H722.0 V738.0" fill="none" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="722.0" cy="738.0" r="3.2" fill="#8b5cf6"/>
+<circle cx="710.0" cy="339.0" r="2.4" fill="#8b5cf6"/>
+<path d="M710.0,443.0 H722.0 V738.0" fill="none" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="722.0" cy="738.0" r="3.2" fill="#8b5cf6"/>
+<circle cx="710.0" cy="443.0" r="2.4" fill="#8b5cf6"/>
+<text x="732.0" y="742.0" class="ts" fill="#8b5cf6">SPI1 · SPI · 8 MHz, two chip selects. Flash and LCD share the bus.</text>
+<line x1="483.0" y1="768.0" x2="733.0" y2="768.0" stroke="#d03b3b" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M710.0,559.0 H733.0 V768.0" fill="none" stroke="#d03b3b" stroke-width="1.6"/>
+<circle cx="733.0" cy="768.0" r="3.2" fill="#d03b3b"/>
+<circle cx="710.0" cy="559.0" r="2.4" fill="#d03b3b"/>
+<path d="M460.0,351.0 H483.0 V768.0" fill="none" stroke="#d03b3b" stroke-width="1.6"/>
+<circle cx="483.0" cy="768.0" r="3.2" fill="#d03b3b"/>
+<circle cx="460.0" cy="351.0" r="2.4" fill="#d03b3b"/>
+<text x="743.0" y="772.0" class="ts" fill="#d03b3b">ADC1 · ANALOG · Ratiometric against VREF, 12-bit, 16x oversampled</text>
+<line x1="244.0" y1="798.0" x2="494.0" y2="798.0" stroke="#64748b" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M460.0,363.0 H494.0 V798.0" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="494.0" cy="798.0" r="3.2" fill="#64748b"/>
+<circle cx="460.0" cy="363.0" r="2.4" fill="#64748b"/>
+<path d="M210.0,363.0 H244.0 V798.0" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="244.0" cy="798.0" r="3.2" fill="#64748b"/>
+<circle cx="210.0" cy="363.0" r="2.4" fill="#64748b"/>
+<text x="504.0" y="802.0" class="ts" fill="#64748b">SWD1 · SWD · Debug on the USB-C sideband pins via a test fixture</text>
+<line x1="505.0" y1="828.0" x2="755.0" y2="828.0" stroke="#6b7280" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M710.0,651.0 H755.0 V828.0" fill="none" stroke="#6b7280" stroke-width="1.6"/>
+<circle cx="755.0" cy="828.0" r="3.2" fill="#6b7280"/>
+<circle cx="710.0" cy="651.0" r="2.4" fill="#6b7280"/>
+<path d="M460.0,339.0 H505.0 V828.0" fill="none" stroke="#6b7280" stroke-width="1.6"/>
+<circle cx="505.0" cy="828.0" r="3.2" fill="#6b7280"/>
+<circle cx="460.0" cy="339.0" r="2.4" fill="#6b7280"/>
+<text x="765.0" y="832.0" class="ts" fill="#6b7280">GPIO1 · GPIO · Wake interrupt, pulled up internally</text>
+<text x="24" y="886" class="ts mut">▼ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
+</svg></div>
+<figcaption>Power tree with a budget gauge per rail, then the functional blocks and the buses between them.</figcaption></figure>
+<div class="scroll"><table><thead><tr>
+<th>Rail</th>
+<th>V</th>
+<th>Typ</th>
+<th>Max</th>
+<th>Limit</th>
+<th>Used</th>
+<th>State</th></tr></thead><tbody>
+<tr>
+<td>VBUS
+</td>
+<td class="num">5.0 V
+<div class="detail">USB-C sink, 5 V @ 500 mA default. Charging only; not a run rail.</div>
+<div class="paths"><code>U1 450 mA</code></div>
+</td>
+<td class="num">100 mA
+</td>
+<td class="num">450 mA
+</td>
+<td class="num">500 mA
+</td>
+<td class="num">90%
+</td>
+<td class="state t-wait">tight</td></tr>
+<tr>
+<td>VBAT
+</td>
+<td class="num">3.7 V
+<div class="detail">900 mAh LiPo, 3.0-4.2 V. Limit is the cell&#x27;s 1C discharge rating, not a regulator. Peak is set by the display backlight inrush.</div>
+<div class="paths"><code>V3P3 11 mA</code><code>U2 0 mA</code></div>
+</td>
+<td class="num">4 mA
+</td>
+<td class="num">11 mA
+</td>
+<td class="num">1.20 A
+</td>
+<td class="num">1%
+</td>
+<td class="state t-ok">ok</td></tr>
+<tr>
+<td>V3P3
+</td>
+<td class="num">3.3 V
+<div class="detail">MCP1700 LDO, 250 mA. Always-on rail; the 40 uA standby budget lives here.</div>
+<div class="paths"><code>U3 8 mA</code><code>U5 4 mA</code><code>VREF 0 mA</code><code>U4 0 mA</code><code>DS1 0 mA</code></div>
+</td>
+<td class="num">4 mA
+</td>
+<td class="num">12 mA
+</td>
+<td class="num">250 mA
+</td>
+<td class="num">5%
+</td>
+<td class="state t-ok">ok</td></tr>
+<tr>
+<td>VREF
+</td>
+<td class="num">2.5 V
+<div class="detail">REF3025 reference for the thermistor divider. Gated off in standby.</div>
+<div class="paths"><code>RT1 0 mA</code></div>
+</td>
+<td class="num">0 mA
+</td>
+<td class="num">0 mA
+</td>
+<td class="num">10 mA
+</td>
+<td class="num">2%
+</td>
+<td class="state t-ok">ok</td></tr>
+</tbody></table></div>
+<div class="notes calm"><h3>Worth a human's eye</h3><ul>
+<li>BT1: nothing powers it</li>
+<li>SW1: nothing powers it</li>
+<li>U4: on no bus — is it really unconnected?</li>
+</ul></div>
+</section>
+<section class="panel" role="tabpanel" id="p-schematic" aria-labelledby="t-schematic" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 5</span>
+<h2>Schematic</h2></div>
+<span class="pill t-idle">Not yet submitted</span></div>
+<div class="prose"><h3>Status</h3>
+<p>Accepted — 2026-08-14</p>
+<h3>Context</h3>
+<p><code>ELE-001</code> caps standby draw at 40 uA on the always-on rail. The rail is 3.3 V</p>
+<p>and carries under 12 mA even when the display is refreshing, so the question is</p>
+<p>quiescent current, not efficiency at load.</p>
+<h3>Decision</h3>
+<p>MCP1700 LDO from VBAT, rather than a buck converter.</p>
+<h3>Consequences</h3>
+<ul>
+<li>Quiescent current 1.6 uA typ, 4 uA max over temperature. That is 10% of the</li>
+</ul>
+<p>  40 uA budget, which leaves room for the reference and the MCU&#x27;s stop-mode</p>
+<p>  leakage.</p>
+<ul>
+<li>Dropout is 178 mV at 100 mA, so the minimum usable cell voltage is 3.48 V.</li>
+</ul>
+<p>  That truncates the discharge curve and costs roughly 4% of nameplate</p>
+<p>  capacity — accepted, and it feeds the <code>SYS-001</code> analysis.</p>
+<ul>
+<li>Efficiency above 5 mA is poor. The display refresh burst runs at 12 mA for</li>
+</ul>
+<p>  40 ms once a minute, which is 8 uAh per hour of waste. Negligible here, but</p>
+<p>  if a backlight is ever added this decision has to be revisited.</p>
+<h3>Alternatives considered</h3>
+<ul>
+<li><strong>TPS62740 buck</strong>: 360 nA Iq and far better burst efficiency, but it needs a</li>
+</ul>
+<p>  2.2 uH inductor and 4 mm² of board the <code>MEC-001</code> envelope does not have at</p>
+<p>  the agreed 38 mm width.</p>
+<ul>
+<li><strong>Direct from VBAT, no regulator</strong>: the ADC reference would then move with</li>
+</ul>
+<p>  the cell, and <code>ELE-003</code> asks for 0.2 degC over the range. Ratiometric</p>
+<p>  measurement against a gated REF3025 was cheaper than a regulator good enough</p>
+<p>  to be a reference.</p></div>
+</section>
+<section class="panel" role="tabpanel" id="p-simulation" aria-labelledby="t-simulation" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 6</span>
+<h2>Simulation</h2></div>
+<span class="pill t-idle">Not yet submitted</span></div>
+<div class="prose"><p>ngspice, deck at <code>sim/standby/standby.cir</code>, run 2026-08-27.</p>
+<p>Cross-checked against the closed-form leakage sum (1.6 + 42 + 1 + 12 uA typ).</p>
+<div class="scroll"><table><thead><tr><th>Corner</th><th>Measured</th><th>Required</th><th>Margin</th></tr></thead><tbody>
+<tr><td>25 °C, 3.7 V nom</td><td>12.4 µA</td><td>≤ 40 µA</td><td>+69%</td></tr>
+<tr><td>−30 °C, 4.2 V max</td><td>9.1 µA</td><td>≤ 40 µA</td><td>+77%</td></tr>
+<tr><td>+40 °C, 3.5 V min</td><td>31.8 µA</td><td>≤ 40 µA</td><td>+20%</td></tr>
+<tr><td>+60 °C, 4.2 V max (beyond spec)</td><td>58.2 µA</td><td>≤ 40 µA</td><td><strong>−46% FAIL</strong></td></tr>
+</tbody></table></div>
+<p>The +60 °C corner is outside the <code>SYS-002</code> range of −30 to +40 °C and is</p>
+<p>reported for information: it shows the margin is dominated by the reference&#x27;s</p>
+<p>temperature coefficient, so a hotter variant of this product would need the</p>
+<p>reference gated rather than always on.</p>
+<p><strong>Not yet varied:</strong> the reference could be duty-cycled with the ADC instead of</p>
+<p>running continuously, which would remove 42 µA of the 31.8 µA worst case</p>
+<p>outright. That is the obvious lever and it has not been modelled.</p>
+<p><code>observations</code> was empty on all four runs — no singular-matrix or</p>
+<p>convergence warnings.</p></div>
+</section>
+<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>21f6347</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
+</div>
+<script>
+const tabs=[...document.querySelectorAll('.tab')];
+function show(id){
+  tabs.forEach(t=>{const on=t.dataset.tab===id;
+    t.setAttribute('aria-selected',on?'true':'false');
+    document.getElementById('p-'+t.dataset.tab).hidden=!on;});
+  try{localStorage.setItem('mh-phase',id)}catch(e){}
+}
+tabs.forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+tabs.forEach((t,i)=>t.addEventListener('keydown',e=>{
+  const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;
+  if(!d)return; e.preventDefault();
+  const n=tabs[(i+d+tabs.length)%tabs.length]; n.focus(); show(n.dataset.tab);
+}));
+try{const s=localStorage.getItem('mh-phase');
+  if(s&&tabs.some(t=>t.dataset.tab===s))show(s);}catch(e){}
+</script>

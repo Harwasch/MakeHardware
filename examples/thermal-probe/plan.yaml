@@ -1,0 +1,145 @@
+project: Thermal Probe
+disciplines:
+- mechanical
+- electrical
+- firmware
+- test
+chunks:
+- id: V1
+  title: Vision board and concept selection
+  description: Interview, then two concepts as build123d modules — a one-handed wand
+    and a bench instrument — rendered into a vision document with envelopes and masses
+    measured off the models.
+  discipline: mechanical
+  status: done
+  depends_on: []
+  estimate_sessions: 1
+  review: vision
+  outputs:
+  - docs/design/vision.md
+  - docs/design/vision/
+- id: P1
+  title: Project plan and disciplines
+  description: Agree what work exists and in what order, and which disciplines the
+    project actually has.
+  discipline: mechanical
+  status: done
+  depends_on:
+  - V1
+  estimate_sessions: 1
+  review: plan
+  outputs:
+  - docs/plan.md
+- id: R1
+  title: System and discipline requirements
+  description: VIS- intent decomposed into testable SYS- requirements, then into ELE-,
+    MEC- and FW- requirements with budgets that roll up.
+  discipline: mechanical
+  status: done
+  depends_on:
+  - P1
+  estimate_sessions: 1
+  review: requirements
+  outputs:
+  - requirements/
+  - docs/design/requirements-map.svg
+- id: E1
+  title: Power architecture and part selection
+  description: Cell chemistry, charger, regulator topology and the always-on rail
+    budget. The 40 uA standby figure is decided here.
+  discipline: electrical
+  status: done
+  depends_on:
+  - R1
+  estimate_sessions: 1
+  outputs:
+  - docs/design/adr-0002-power.md
+- id: E1B
+  title: Block diagram and power budget
+  description: Every IC, the full power tree with a current budget per rail, and the
+    data buses with their controllers. Settled before any schematic exists.
+  discipline: electrical
+  status: in_progress
+  depends_on:
+  - E1
+  estimate_sessions: 1
+  review: architecture
+  outputs:
+  - hw/block-diagram.yaml
+  - docs/design/block-diagram.svg
+- id: M1
+  title: Enclosure envelope and internal layout
+  description: Outer envelope frozen from the agreed concept, cell and board volumes
+    placed, and the board outline published as an interface.
+  discipline: mechanical
+  status: done
+  depends_on:
+  - R1
+  estimate_sessions: 1
+  outputs:
+  - cad/enclosure.py
+- id: E2
+  title: Schematic capture and ERC
+  description: Capture the agreed block diagram, pick every passive against house
+    practice, and get ERC clean.
+  discipline: electrical
+  status: in_progress
+  depends_on:
+  - E1B
+  - M1
+  estimate_sessions: 2
+  review: schematic
+  outputs:
+  - hw/probe.kicad_sch
+  - docs/design/schematic.pdf
+- id: S1
+  title: Standby current simulation across corners
+  description: ngspice on the always-on rail at tolerance, temperature and supply
+    extremes, cross-checked against the closed-form leakage sum.
+  discipline: test
+  status: in_progress
+  depends_on:
+  - E1B
+  estimate_sessions: 1
+  outputs:
+  - sim/standby/
+  - docs/design/standby-results.md
+- id: E3
+  title: PCB layout, DRC and fabrication outputs
+  description: Two-layer board inside the frozen outline. Pre-route checks first —
+    net class widths against pad sizes, DRC on the placed board.
+  discipline: electrical
+  status: blocked
+  depends_on:
+  - E2
+  - M1
+  estimate_sessions: 2
+  review: layout
+  outputs:
+  - hw/probe.kicad_pcb
+  - docs/design/pcb-layers.pdf
+- id: F1
+  title: Firmware bring-up and low-power scheduler
+  description: Boot, ADC sampling, flash logging and the sleep scheduler that the
+    40 uA budget depends on.
+  discipline: firmware
+  status: todo
+  depends_on:
+  - E2
+  estimate_sessions: 2
+  outputs:
+  - fw/
+- id: T1
+  title: Verification run and traceability gate
+  description: Close every requirement against evidence at the corners, or report
+    it unmet. Walk back up to the VIS- entries.
+  discipline: test
+  status: todo
+  depends_on:
+  - E3
+  - F1
+  - S1
+  estimate_sessions: 1
+  review: verification
+  outputs:
+  - docs/design/verification-report.md

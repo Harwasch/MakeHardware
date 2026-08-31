@@ -1,0 +1,19 @@
+# Per-project shape for the review page. Every field is optional — without this
+# file the standard phases are built from whatever the repo contains.
+title: Thermal Probe
+subtitle: >-
+  A handheld logger for walk-in freezers. A week on one charge, readable
+  through a glove.
+
+phases:
+  - id: schematic
+    title: Schematic
+    eyebrow: Stage 5
+    after: architecture
+    docs: [docs/design/adr-0002-power.md]
+
+  - id: simulation
+    title: Simulation
+    eyebrow: Stage 6
+    after: schematic
+    docs: [docs/design/standby-results.md]

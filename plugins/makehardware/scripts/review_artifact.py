@@ -1,0 +1,920 @@
+#!/usr/bin/env python3
+"""Build the project review page — one tabbed HTML file, generated from the repo.
+
+The review packets under `docs/review/` are what a human reads on github.com.
+This is the other surface: a single page, published as a Claude Artifact, that
+accumulates one tab per phase as the project advances and carries the whole
+project by the end of it. Artifacts take anchored comments, which is a better
+review instrument than a paragraph in a chat log, and the comments come back to
+the agent.
+
+**Nothing here is typed by hand.** Every number, table, diagram and status is
+read from the file that owns it — `plan.yaml`, `hw/block-diagram.yaml`, the
+requirements export, `docs/review/reviews.yaml`, the SVGs already on disk. That
+is the same rule the rest of the toolbox follows, and for the same reason: the
+most-read document in a project must not be the one nothing can check. The only
+prose that comes from a person is the framing — the summary and the questions —
+and that is stored in `reviews.yaml`, so it regenerates identically.
+
+Phases are **pinned**, not live. A tab shows the artefacts as they stood at the
+commit the human was asked about, because a sign-off against a moving target is
+not a sign-off. `review-gate`'s digests are what detect drift; this page reports
+it.
+
+    review-artifact                       # write docs/review/artifact.html
+    review-artifact --project examples/thermal-probe
+    review-artifact --title "Thermal Probe"
+
+Per-project customisation lives in `docs/review/artifact.yaml` — extra tabs,
+extra artefacts, reordering. See ARTIFACT_YAML_DOC below.
+"""
+from __future__ import annotations
+
+import argparse
+import base64
+import html
+import json
+import os
+import re
+import subprocess
+import sys
+
+import yaml
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+
+import review_gate  # noqa: E402  — the ledger and the git helpers
+
+try:
+    import plan_render
+except Exception:                                     # pragma: no cover
+    plan_render = None
+try:
+    import block_diagram
+except Exception:                                     # pragma: no cover
+    block_diagram = None
+try:
+    import req_trace
+except Exception:                                     # pragma: no cover
+    req_trace = None
+
+
+ARTIFACT_YAML_DOC = """\
+# docs/review/artifact.yaml — per-project shape for the review page.
+#
+# Every field is optional. Without this file the standard phases are built from
+# whatever exists in the repo, which is the right answer for most projects.
+#
+# title: Thermal Probe                 # defaults to plan.yaml's project name
+# subtitle: Walk-in freezer logger     # one line under the title block
+# phases:                              # add to, or override, the standard set
+#   - id: schematic
+#     title: Schematic
+#     after: architecture              # where it sits in the tab bar
+#     images: [docs/design/schematic/sheet-1.svg]
+#     docs:   [docs/design/adr-0002-power.md]
+#     tables:
+#       - title: ERC
+#         csv: docs/design/erc-summary.csv
+# hide: [simulation]                   # standard phases to leave out
+"""
+
+# Images small enough to inline as a data URI without wrecking the page. SVG is
+# inlined as markup instead and has no limit worth enforcing.
+RASTER_BUDGET = 220 * 1024
+
+STATE_LABEL = {
+    "approved":          ("Approved", "ok"),
+    "requested":         ("Awaiting your review", "wait"),
+    "changes_requested": ("Changes requested", "stop"),
+    "stale":             ("Needs another look", "stop"),
+    "none":              ("Not yet submitted", "idle"),
+}
+
+PLAN_STATUS = {
+    "done":        ("Done", "ok"),
+    "in_progress": ("In progress", "wait"),
+    "blocked":     ("Blocked", "stop"),
+    "todo":        ("To do", "idle"),
+}
+
+
+def esc(s) -> str:
+    return html.escape(str(s), quote=True)
+
+
+# ---------------------------------------------------------------------------
+# Reading the project
+# ---------------------------------------------------------------------------
+def read_yaml(path: str) -> dict | None:
+    if not os.path.exists(path):
+        return None
+    with open(path) as fh:
+        return yaml.safe_load(fh) or {}
+
+
+def read_text(path: str) -> str | None:
+    if not os.path.isfile(path):
+        return None
+    with open(path, errors="replace") as fh:
+        return fh.read()
+
+
+def inline_svg(path: str) -> tuple[str | None, float]:
+    """SVG goes in as markup: crisp at any zoom, themes with the page, no cap.
+
+    The root <svg> keeps its viewBox but loses fixed width/height so it scales
+    to the frame, and its ids are namespaced — several diagrams on one page
+    would otherwise collide on `#ah`, `#ra` and friends.
+    """
+    text = read_text(path)
+    if not text:
+        return None, 0.0
+    text = re.sub(r"<\?xml[^>]*\?>", "", text)
+    text = re.sub(r"<!DOCTYPE[^>]*>", "", text, flags=re.I)
+    tag = re.search(r"<svg\b[^>]*>", text)
+    if not tag:
+        return None, 0.0
+    ns = "g" + str(abs(hash(path)) % 100000)
+    for m in set(re.findall(r'\bid="([^"]+)"', text)):
+        text = re.sub(rf'\bid="{re.escape(m)}"', f'id="{ns}-{m}"', text)
+        text = text.replace(f"url(#{m})", f"url(#{ns}-{m})")
+    head = tag.group(0)
+    # Intrinsic width, so a 400 px elevation is not blown up to the full
+    # column. Dropping width/height without a cap makes every diagram the same
+    # size, which reads as a mistake and destroys the scale relationship
+    # between a board render and a dimensioned drawing.
+    box = re.search(r'viewBox="[\d.\-]+ [\d.\-]+ ([\d.]+) ([\d.]+)"', head)
+    intrinsic = float(box.group(1)) if box else 0.0
+    if not intrinsic:
+        w = re.search(r'\swidth="([\d.]+)', head)
+        intrinsic = float(w.group(1)) if w else 720.0
+    new = re.sub(r'\s(width|height)="[^"]*"', "", head)
+    if "preserveAspectRatio" not in new:
+        new = new[:-1] + ' preserveAspectRatio="xMidYMid meet">'
+    return text.replace(head, new, 1).strip(), intrinsic
+
+
+def inline_raster(path: str) -> tuple[str | None, str | None]:
+    """(data-uri, warning). Big rasters are linked rather than embedded."""
+    if not os.path.isfile(path):
+        return None, None
+    size = os.path.getsize(path)
+    if size > RASTER_BUDGET:
+        return None, (f"{path} is {size // 1024} kB — too large to embed. "
+                      f"Downscale it for review, or link it.")
+    mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".gif": "image/gif", ".webp": "image/webp"}.get(
+                os.path.splitext(path)[1].lower())
+    if not mime:
+        return None, None
+    with open(path, "rb") as fh:
+        return f"data:{mime};base64,{base64.b64encode(fh.read()).decode()}", None
+
+
+def markdown_to_html(text: str, strip_h1: bool = True) -> str:
+    """Enough markdown for what the toolbox writes: headings, tables, lists,
+    emphasis, code and images. Not a general parser, deliberately — the input
+    is generated by this repo's own tools."""
+    out: list[str] = []
+    lines = text.splitlines()
+    i, in_list, in_table = 0, False, False
+
+    def close():
+        nonlocal in_list, in_table
+        if in_list:
+            out.append("</ul>")
+            in_list = False
+        if in_table:
+            out.append("</tbody></table></div>")
+            in_table = False
+
+    def spans(s: str) -> str:
+        s = esc(s)
+        s = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", "", s)          # images: handled apart
+        s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+        s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+        s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+        s = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", s)
+        return s
+
+    while i < len(lines):
+        ln = lines[i]
+        if not ln.strip():
+            close()
+            i += 1
+            continue
+        m = re.match(r"^(#{1,6})\s+(.*)$", ln)
+        if m:
+            close()
+            lvl = len(m.group(1))
+            if not (strip_h1 and lvl == 1):
+                out.append(f"<h{min(lvl + 1, 6)}>{spans(m.group(2))}</h{min(lvl + 1, 6)}>")
+            i += 1
+            continue
+        if ln.lstrip().startswith(("* ", "- ")):
+            if not in_list:
+                close()
+                out.append("<ul>")
+                in_list = True
+            out.append(f"<li>{spans(ln.lstrip()[2:])}</li>")
+            i += 1
+            continue
+        if ln.strip().startswith("|") and i + 1 < len(lines) and \
+                re.match(r"^\s*\|[\s:|-]+\|\s*$", lines[i + 1]):
+            close()
+            heads = [c.strip() for c in ln.strip().strip("|").split("|")]
+            out.append('<div class="scroll"><table><thead><tr>'
+                       + "".join(f"<th>{spans(h)}</th>" for h in heads)
+                       + "</tr></thead><tbody>")
+            in_table = True
+            i += 2
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+                out.append("<tr>" + "".join(f"<td>{spans(c)}</td>" for c in cells)
+                           + "</tr>")
+                i += 1
+            close()
+            continue
+        close()
+        out.append(f"<p>{spans(ln)}</p>")
+        i += 1
+    close()
+    return "\n".join(out)
+
+
+# ---------------------------------------------------------------------------
+# Phase content
+# ---------------------------------------------------------------------------
+class Phase:
+    def __init__(self, pid: str, title: str, eyebrow: str = ""):
+        self.id, self.title, self.eyebrow = pid, title, eyebrow
+        self.review: dict | None = None
+        self.blocks: list[tuple[str, object]] = []
+        self.metrics: list[tuple[str, str, str]] = []
+        self.notes: list[str] = []
+
+    def add(self, kind: str, payload) -> None:
+        if payload:
+            self.blocks.append((kind, payload))
+
+    @property
+    def state(self) -> str:
+        return review_gate.state(self.review) if self.review else "none"
+
+
+def figure(root: str, path: str, caption: str = "") -> dict | None:
+    full = os.path.join(root, path)
+    svg, width = inline_svg(full) if full.lower().endswith(".svg") else (None, 0.0)
+    if svg:
+        return {"svg": svg, "caption": caption, "path": path, "w": width}
+    uri, warn = inline_raster(full)
+    if uri:
+        return {"uri": uri, "caption": caption, "path": path}
+    if warn:
+        return {"warn": warn, "caption": caption, "path": path}
+    return None
+
+
+def phase_vision(root: str) -> Phase | None:
+    doc = read_text(os.path.join(root, "docs/design/vision.md"))
+    vdir = os.path.join(root, "docs/design/vision")
+    if not doc and not os.path.isdir(vdir):
+        return None
+    p = Phase("vision", "Vision", "Stage 1")
+    if doc:
+        p.add("prose", markdown_to_html(doc))
+    figs = []
+    for stem in sorted(os.listdir(vdir)) if os.path.isdir(vdir) else []:
+        d = os.path.join(vdir, stem)
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if f.lower().endswith((".svg", ".png", ".jpg", ".jpeg")):
+                fig = figure(root, os.path.relpath(os.path.join(d, f), root),
+                             f"{stem.replace('_', ' ')} — {os.path.splitext(f)[0]}")
+                if fig:
+                    figs.append(fig)
+    p.add("figures", figs)
+    return p
+
+
+def phase_plan(root: str) -> Phase | None:
+    plan = read_yaml(os.path.join(root, "plan.yaml"))
+    if not plan or not plan.get("chunks"):
+        return None
+    p = Phase("plan", "Plan", "Stage 2")
+    chunks = plan["chunks"]
+    counts = {k: sum(1 for c in chunks if c.get("status") == k) for k in PLAN_STATUS}
+    total = len(chunks)
+    sessions = "—"
+    crit: set = set()
+    if plan_render:
+        placed, span = plan_render.schedule(plan)
+        crit = plan_render.critical_path(plan, placed)
+        sessions = str(span)
+    p.metrics = [
+        (str(total), "chunks", ""),
+        (f'{counts["done"]}', "done", f'{round(100 * counts["done"] / total)}% complete'),
+        (sessions, "sessions", "on the critical path"),
+        (f'{counts["blocked"]}', "blocked", "" if counts["blocked"] else "nothing stuck"),
+    ]
+    p.add("figures", [f for f in [figure(
+        root, "docs/plan.svg",
+        "Dependency chart — one column per session, scheduled by longest "
+        "path. Outlined bars are the critical path.")] if f])
+
+    rows = []
+    for c in chunks:
+        label, tone = PLAN_STATUS.get(c.get("status", "todo"), PLAN_STATUS["todo"])
+        deps = ", ".join(c.get("depends_on") or []) or "—"
+        rows.append({
+            "cells": [c.get("id", ""), c.get("title", ""),
+                      c.get("discipline", ""), deps,
+                      str(c.get("estimate_sessions", 1))],
+            "tone": tone, "state": label,
+            "crit": c.get("id") in crit,
+            "detail": c.get("description") or c.get("notes") or "",
+            "outputs": c.get("outputs") or [],
+            "review": c.get("review"),
+        })
+    p.add("chunks", {"headers": ["Chunk", "Title", "Discipline", "Needs first", "Est."],
+                     "rows": rows})
+    if plan_render:
+        claims = plan_render.check_claims(plan)
+        p.notes = claims
+    return p
+
+
+def phase_requirements(root: str) -> Phase | None:
+    reqs, summary, findings = None, None, None
+    cached = read_text(os.path.join(root, "docs/design/requirements.json"))
+    if cached:
+        data = json.loads(cached)
+        reqs, summary, findings = (data.get("requirements"), data.get("summary"),
+                                   data.get("findings"))
+    elif req_trace and os.path.isdir(os.path.join(root, "requirements")):
+        try:
+            cwd = os.getcwd()
+            os.chdir(root)
+            reqs = req_trace.load("requirements")
+            a = req_trace.analyse(reqs)
+            summary = {k: a[k] for k in ("total", "verified", "with_evidence",
+                                         "coverage_pct", "by_level")}
+            findings = a["findings"]
+        except SystemExit:
+            reqs = None
+        finally:
+            os.chdir(cwd)
+    if not reqs:
+        return None
+
+    p = Phase("requirements", "Requirements", "Stage 3")
+    gaps = sum(len(v) for v in (findings or {}).values())
+    p.metrics = [
+        (str(summary["total"]), "requirements", ""),
+        (str(summary["verified"]), "verified", ""),
+        (f'{summary["coverage_pct"]}%', "with evidence", ""),
+        (str(gaps), "gaps", "the gate is failing on" if gaps else "clean"),
+    ]
+    p.add("figures", [f for f in [figure(
+        root, "docs/design/requirements-map.svg",
+        "Requirement tree — an arrow points from a requirement to the one "
+        "that refines it. Red borders are gaps the gate is failing on.")] if f])
+
+    rows = []
+    for r in reqs:
+        tone = {"Verified": "ok", "Implemented": "wait", "Agreed": "wait",
+                "Waived": "idle"}.get(r.get("status", ""), "idle")
+        rows.append({"cells": [r.get("uid", ""), r.get("title", ""),
+                               r.get("verification", ""),
+                               r.get("budget", "") or "—",
+                               ", ".join(r.get("parents") or []) or "—"],
+                     "tone": tone, "state": r.get("status", ""),
+                     "detail": "", "outputs": r.get("files") or [], "crit": False,
+                     "review": None})
+    p.add("chunks", {"headers": ["UID", "Requirement", "Method", "Budget", "Refines"],
+                     "rows": rows})
+    for kind, items in (findings or {}).items():
+        p.notes.extend(items)
+    return p
+
+
+def phase_architecture(root: str) -> Phase | None:
+    spec = read_yaml(os.path.join(root, "hw/block-diagram.yaml"))
+    if not spec or not spec.get("blocks"):
+        return None
+    p = Phase("architecture", "Architecture", "Stage 4")
+    p.add("figures", [f for f in [figure(
+        root, "docs/design/block-diagram.svg",
+        "Power tree with a budget gauge per rail, then the functional "
+        "blocks and the buses between them.")] if f])
+
+    if block_diagram:
+        rows = block_diagram.budget(spec)
+        tight = [r for r in rows if r.get("tight")]
+        over = [r for r in rows if r.get("over")]
+        p.metrics = [
+            (str(len(spec["blocks"])), "blocks", ""),
+            (str(len(rows)), "rails", ""),
+            (str(len(spec.get("buses") or [])), "buses", ""),
+            (str(len(over) or len(tight)),
+             "rails over budget" if over else "rails tight",
+             "" if over else "within 20% of the limit"),
+        ]
+        brows = []
+        for r in rows:
+            limit = r["limit"]
+            pct = f'{100 * r["max"] / limit:.0f}%' if limit else "—"
+            tone = "stop" if r["over"] else ("wait" if r["tight"] else "ok")
+            brows.append({
+                "cells": [r["id"], f'{r["voltage"]} V',
+                          block_diagram._amps(r["typ"]),
+                          block_diagram._amps(r["max"]),
+                          block_diagram._amps(limit) if limit else "—", pct],
+                "tone": tone,
+                "state": "over budget" if r["over"] else ("tight" if r["tight"] else "ok"),
+                "detail": r.get("notes") or "",
+                "outputs": [f'{bid} {block_diagram._amps(mx)}'
+                            for bid, _n, _t, mx in
+                            sorted(r["loads"], key=lambda l: -l[3])[:5]],
+                "crit": False, "review": None,
+            })
+        p.add("chunks", {"headers": ["Rail", "V", "Typ", "Max", "Limit", "Used"],
+                         "rows": brows})
+        _errors, warnings = block_diagram.validate(spec)
+        p.notes = warnings
+    return p
+
+
+def phase_from_config(root: str, cfg: dict) -> Phase | None:
+    p = Phase(cfg["id"], cfg.get("title", cfg["id"].title()), cfg.get("eyebrow", ""))
+    figs = []
+    for path in cfg.get("images") or []:
+        fig = figure(root, path)
+        if fig:
+            figs.append(fig)
+    p.add("figures", figs)
+    for path in cfg.get("docs") or []:
+        text = read_text(os.path.join(root, path))
+        if text:
+            p.add("prose", markdown_to_html(text))
+    return p if (p.blocks or cfg.get("always")) else None
+
+
+STANDARD = [phase_vision, phase_plan, phase_requirements, phase_architecture]
+
+
+def collect(root: str, cfg: dict) -> list[Phase]:
+    hide = set(cfg.get("hide") or [])
+    phases = [p for p in (fn(root) for fn in STANDARD) if p and p.id not in hide]
+    for extra in cfg.get("phases") or []:
+        p = phase_from_config(root, extra)
+        if not p or p.id in hide:
+            continue
+        after = extra.get("after")
+        idx = next((i + 1 for i, q in enumerate(phases) if q.id == after), len(phases))
+        phases.insert(idx, p)
+
+    ledger = review_gate.load(os.path.join(root, review_gate.LEDGER))
+    for p in phases:
+        p.review = review_gate.find(ledger, p.id)
+    # A review with no phase of its own still belongs on the page.
+    known = {p.id for p in phases}
+    for r in ledger.get("reviews", []):
+        if r.get("id") not in known and r.get("id") not in hide:
+            p = Phase(r["id"], r.get("title", r["id"]).split(",")[0], "")
+            p.review = r
+            phases.append(p)
+    return phases
+
+
+# ---------------------------------------------------------------------------
+# The page
+#
+# Treated as an instrument, not a document: it is scanned and operated. The
+# header is a drawing title block, because that is the vernacular of the
+# subject and it encodes real information — project, revision, date, phase,
+# state. Colours are the ones plan_render and block_diagram already use, so an
+# inlined diagram sits flush on the page rather than looking pasted in.
+# ---------------------------------------------------------------------------
+CSS = """
+:root{
+  --ground:#fcfcfb; --panel:#ffffff; --sunk:#f4f3f0;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --rule:#c3c2b7; --rule-soft:#e4e2dc;
+  --ok:#0ca30c; --wait:#2a78d6; --stop:#d03b3b; --idle:#898781;
+  --accent:#0f9b8e;
+  --sans:'IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --cond:'IBM Plex Sans Condensed',var(--sans);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#1a1a19; --panel:#242422; --sunk:#1f1f1e;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --rule:#383835; --rule-soft:#2c2c2a;
+    --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#1a1a19; --panel:#242422; --sunk:#1f1f1e;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --rule:#383835; --rule-soft:#2c2c2a;
+  --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 72px}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
+  padding:0.1em 0.35em;border-radius:3px}
+
+/* ---- title block: the drawing-sheet header ---- */
+.block{border:1px solid var(--rule);background:var(--panel);margin:20px 0 0;
+  display:grid;grid-template-columns:1fr;}
+.block-main{padding:18px 20px 16px;border-bottom:1px solid var(--rule)}
+.block-main h1{font-size:29px;line-height:1.1;margin:0;font-weight:600;
+  letter-spacing:-0.015em;text-wrap:balance}
+.block-main p{margin:6px 0 0;color:var(--ink-2);font-size:14.5px;max-width:64ch}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+.field{padding:9px 20px;border-right:1px solid var(--rule-soft);min-width:0}
+.field:last-child{border-right:0}
+.field .k{font-family:var(--cond);font-size:10px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);display:block}
+.field .v{font-family:var(--mono);font-size:13px;color:var(--ink);
+  display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+
+/* ---- outstanding strip ---- */
+.strip{border:1px solid var(--rule);border-top:0;background:var(--sunk);
+  padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.strip .k{font-family:var(--cond);font-size:10px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted)}
+.strip p{margin:0;font-size:14px;color:var(--ink-2)}
+
+/* ---- tabs ---- */
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);
+  margin-top:24px;scrollbar-width:thin}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--sans);font-size:14px;font-weight:500;color:var(--ink-2);
+  padding:10px 14px 9px;cursor:pointer;white-space:nowrap;display:flex;
+  align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);
+  font-weight:600}
+.tab .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+
+/* ---- panel ---- */
+.panel{padding-top:26px}
+.phase-head{display:flex;justify-content:space-between;align-items:flex-start;
+  gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.phase-head h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em}
+.eyebrow{font-family:var(--cond);font-size:10.5px;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.pill{font-family:var(--cond);font-size:11px;letter-spacing:0.07em;
+  text-transform:uppercase;padding:4px 10px;border-radius:999px;
+  border:1px solid currentColor;white-space:nowrap;font-weight:600}
+.t-ok{color:var(--ok)} .t-wait{color:var(--wait)}
+.t-stop{color:var(--stop)} .t-idle{color:var(--muted)}
+.b-ok{background:var(--ok)} .b-wait{background:var(--wait)}
+.b-stop{background:var(--stop)} .b-idle{background:var(--muted)}
+
+.summary{border-left:2px solid var(--accent);padding:2px 0 2px 16px;
+  margin:0 0 22px;color:var(--ink-2);max-width:70ch;font-size:15px}
+
+/* ---- metrics ---- */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  border:1px solid var(--rule);background:var(--panel);margin-bottom:24px}
+.metric{padding:14px 18px;border-right:1px solid var(--rule-soft)}
+.metric:last-child{border-right:0}
+.metric .n{font-family:var(--mono);font-size:25px;font-weight:500;
+  font-variant-numeric:tabular-nums;line-height:1.1}
+.metric .l{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--muted);margin-top:4px}
+.metric .s{font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* ---- figure: framed like a drawing sheet ---- */
+figure{margin:0 0 24px;min-width:0}
+.figgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;align-items:start}
+.sheet{border:1px solid var(--rule);background:var(--panel);padding:16px;
+  overflow-x:auto}
+.sheet svg{display:block;width:100%;height:auto;max-width:100%}
+.sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
+figcaption{font-family:var(--cond);font-size:11px;letter-spacing:0.07em;
+  text-transform:uppercase;color:var(--muted);margin-top:7px}
+
+/* ---- tables ---- */
+.scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel);
+  margin-bottom:24px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;
+  padding:9px 14px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{font-family:var(--mono);font-size:13px;white-space:nowrap}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  text-align:right;white-space:nowrap}
+.state{font-family:var(--cond);font-size:10.5px;letter-spacing:0.06em;
+  text-transform:uppercase;font-weight:600;white-space:nowrap}
+.crit{border-left:2px solid var(--ink)}
+.detail{color:var(--ink-2);font-size:13px;margin-top:3px;max-width:60ch}
+.paths{margin-top:4px}
+.paths code{font-size:11.5px;margin-right:6px;display:inline-block}
+
+/* ---- notes / questions ---- */
+.notes{border:1px solid var(--rule);border-left:3px solid var(--stop);
+  background:var(--panel);padding:14px 18px;margin-bottom:24px}
+.notes.calm{border-left-color:var(--muted)}
+.notes h3{font-family:var(--cond);font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.notes ul{margin:0;padding-left:18px}
+.notes li{margin:3px 0;font-size:14px;color:var(--ink-2)}
+.ask{border:1px solid var(--accent);background:var(--panel);padding:16px 18px;
+  margin-bottom:24px}
+.ask h3{font-family:var(--cond);font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 9px;font-weight:600}
+.ask ol{margin:0;padding-left:20px}
+.ask li{margin:5px 0;max-width:66ch}
+.ask .how{margin:12px 0 0;font-size:13.5px;color:var(--ink-2);
+  border-top:1px solid var(--rule-soft);padding-top:10px}
+blockquote{margin:0 0 22px;border-left:2px solid var(--rule);padding-left:16px;
+  color:var(--ink-2);max-width:70ch}
+blockquote .who{font-family:var(--cond);font-size:10.5px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-top:6px}
+
+.prose h2{font-size:19px;margin:26px 0 8px;font-weight:600}
+.prose h3{font-size:16px;margin:20px 0 6px;font-weight:600}
+.prose p{margin:0 0 11px;max-width:70ch}
+.prose ul{max-width:70ch}
+.empty{color:var(--muted);font-size:14.5px;max-width:62ch}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
+  color:var(--muted);font-size:12.5px}
+@media (max-width:640px){
+  .block-main h1{font-size:23px}
+  .field{border-right:0;border-bottom:1px solid var(--rule-soft)}
+  .metric{border-right:0;border-bottom:1px solid var(--rule-soft)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+"""
+
+
+def render_page(project: dict, phases: list[Phase]) -> str:
+    o: list[str] = []
+    a = o.append
+    a(f"<title>{esc(project['title'])} Review</title>")
+    a('<link rel="preconnect" href="https://fonts.googleapis.com">')
+    a('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>')
+    a('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
+      'family=IBM+Plex+Mono:wght@400;500&'
+      'family=IBM+Plex+Sans+Condensed:wght@500;600&'
+      'family=IBM+Plex+Sans:wght@400;500;600&display=swap">')
+    a(f"<style>{CSS}</style>")
+    a('<div class="wrap">')
+
+    # ---- title block -----------------------------------------------------
+    waiting = [p for p in phases if p.state in ("requested", "stale", "changes_requested")]
+    a('<div class="block"><div class="block-main">')
+    a(f"<h1>{esc(project['title'])}</h1>")
+    if project.get("subtitle"):
+        a(f"<p>{esc(project['subtitle'])}</p>")
+    a("</div><div class='fields'>")
+    for k, v in (("Revision", project["revision"]), ("Branch", project["branch"]),
+                 ("Generated", project["generated"]),
+                 ("Phases", f"{len(phases)}"),
+                 ("Awaiting you", str(len(waiting)) if waiting else "none")):
+        a(f'<div class="field"><span class="k">{esc(k)}</span>'
+          f'<span class="v">{esc(v)}</span></div>')
+    a("</div></div>")
+
+    a('<div class="strip"><span class="k">Outstanding</span>')
+    if waiting:
+        names = ", ".join(p.title for p in waiting)
+        a(f'<p><strong>{esc(names)}</strong> — '
+          f'{"needs another look" if any(p.state == "stale" for p in waiting) else "waiting on your answer"}. '
+          f'Comment on this page, or reply in the session.</p>')
+    else:
+        a("<p>Nothing is waiting on you. Every phase below is signed off and "
+          "still matches what you saw.</p>")
+    a("</div>")
+
+    # ---- tabs ------------------------------------------------------------
+    a('<div class="tabs" role="tablist">')
+    for i, p in enumerate(phases):
+        _lbl, tone = STATE_LABEL.get(p.state, STATE_LABEL["none"])
+        a(f'<button class="tab" role="tab" id="t-{esc(p.id)}" '
+          f'aria-controls="p-{esc(p.id)}" aria-selected="{"true" if i == 0 else "false"}" '
+          f'data-tab="{esc(p.id)}"><span class="dot b-{tone}"></span>'
+          f'{esc(p.title)}</button>')
+    a("</div>")
+
+    for i, p in enumerate(phases):
+        a(f'<section class="panel" role="tabpanel" id="p-{esc(p.id)}" '
+          f'aria-labelledby="t-{esc(p.id)}"{"" if i == 0 else " hidden"}>')
+        a(render_phase(p))
+        a("</section>")
+
+    a(f'<footer>Generated by <code>review-artifact</code> from '
+      f'{esc(project["repo"] or "the project repository")} at '
+      f'<code>{esc(project["revision"])}</code>. Every figure and number here is '
+      f'read from the file that owns it — nothing on this page is typed by hand. '
+      f'Each phase is pinned to the commit it was reviewed at.</footer>')
+    a("</div>")
+
+    a("""<script>
+const tabs=[...document.querySelectorAll('.tab')];
+function show(id){
+  tabs.forEach(t=>{const on=t.dataset.tab===id;
+    t.setAttribute('aria-selected',on?'true':'false');
+    document.getElementById('p-'+t.dataset.tab).hidden=!on;});
+  try{localStorage.setItem('mh-phase',id)}catch(e){}
+}
+tabs.forEach(t=>t.addEventListener('click',()=>show(t.dataset.tab)));
+tabs.forEach((t,i)=>t.addEventListener('keydown',e=>{
+  const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;
+  if(!d)return; e.preventDefault();
+  const n=tabs[(i+d+tabs.length)%tabs.length]; n.focus(); show(n.dataset.tab);
+}));
+try{const s=localStorage.getItem('mh-phase');
+  if(s&&tabs.some(t=>t.dataset.tab===s))show(s);}catch(e){}
+</script>""")
+    return "\n".join(o)
+
+
+def render_phase(p: Phase) -> str:
+    o: list[str] = []
+    a = o.append
+    label, tone = STATE_LABEL.get(p.state, STATE_LABEL["none"])
+    r = p.review or {}
+
+    a('<div class="phase-head"><div>')
+    if p.eyebrow:
+        a(f'<span class="eyebrow">{esc(p.eyebrow)}</span>')
+    a(f"<h2>{esc(r.get('title') or p.title)}</h2></div>")
+    a(f'<span class="pill t-{tone}">{esc(label)}</span></div>')
+
+    if r.get("summary"):
+        a(f'<p class="summary">{esc(r["summary"].strip())}</p>')
+
+    if p.metrics:
+        a('<div class="metrics">')
+        for n, l, s in p.metrics:
+            a(f'<div class="metric"><div class="n">{esc(n)}</div>'
+              f'<div class="l">{esc(l)}</div>'
+              + (f'<div class="s">{esc(s)}</div>' if s else "") + "</div>")
+        a("</div>")
+
+    # The decision, or the ask — whichever this phase is at.
+    if p.state == "approved":
+        a(f'<blockquote>{esc(r.get("note") or "Approved.")}'
+          f'<span class="who">{esc(r.get("reviewer") or "reviewer")} · '
+          f'{esc(r.get("decided") or "")}</span></blockquote>')
+    elif p.state == "stale":
+        a('<div class="notes"><h3>Approved, then it moved</h3><ul>')
+        for path in review_gate.drifted(r):
+            a(f"<li><code>{esc(path)}</code> changed after sign-off</li>")
+        a("</ul></div>")
+        if r.get("note"):
+            a(f'<blockquote>{esc(r["note"])}<span class="who">'
+              f'{esc(r.get("reviewer") or "reviewer")} · on the previous version'
+              f"</span></blockquote>")
+    elif p.state == "changes_requested" and r.get("note"):
+        a(f'<blockquote>{esc(r["note"])}<span class="who">changes requested · '
+          f'{esc(r.get("decided") or "")}</span></blockquote>')
+
+    if p.state in ("requested", "stale", "changes_requested") and r.get("questions"):
+        a('<div class="ask"><h3>What we need decided</h3><ol>')
+        for q in r["questions"]:
+            a(f"<li>{esc(q)}</li>")
+        a("</ol><p class=\"how\">Comment on this page — select the thing you are "
+          "talking about and leave a note, or reply in the Claude session. Say "
+          "which and <strong>why</strong>: the reason outlives the choice.</p></div>")
+
+    for kind, payload in p.blocks:
+        if kind == "figures":
+            narrow = [f for f in payload if 0 < f.get("w", 0) <= 560]
+            grid = len(payload) > 1 and len(narrow) == len(payload)
+            if grid:
+                a('<div class="figgrid">')
+            for f in payload:
+                a("<figure>")
+                if f.get("svg"):
+                    cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
+                    a(f'<div class="sheet"{cap_w}>{f["svg"]}</div>')
+                elif f.get("uri"):
+                    a(f'<div class="sheet"><img src="{f["uri"]}" '
+                      f'alt="{esc(f.get("caption") or f["path"])}"></div>')
+                elif f.get("warn"):
+                    a(f'<div class="notes calm"><h3>Not embedded</h3>'
+                      f'<ul><li>{esc(f["warn"])}</li></ul></div>')
+                cap = f.get("caption") or os.path.basename(f["path"])
+                a(f"<figcaption>{esc(cap)}</figcaption></figure>")
+            if grid:
+                a("</div>")
+        elif kind == "chunks":
+            a(render_table(payload))
+        elif kind == "prose":
+            a(f'<div class="prose">{payload}</div>')
+
+    if p.notes:
+        a('<div class="notes calm"><h3>Worth a human\'s eye</h3><ul>')
+        for n in p.notes[:14]:
+            a(f"<li>{esc(n)}</li>")
+        if len(p.notes) > 14:
+            a(f"<li>… and {len(p.notes) - 14} more</li>")
+        a("</ul></div>")
+
+    if not p.blocks and not p.metrics:
+        a('<p class="empty">This phase has been opened for review but has no '
+          "artefacts on the page yet. Whatever is being reviewed lives in the "
+          "repository — see the review packet.</p>")
+    return "\n".join(o)
+
+
+def render_table(t: dict) -> str:
+    o = ['<div class="scroll"><table><thead><tr>']
+    for h in t["headers"]:
+        o.append(f"<th>{esc(h)}</th>")
+    o.append("<th>State</th></tr></thead><tbody>")
+    for row in t["rows"]:
+        cls = ' class="crit"' if row.get("crit") else ""
+        o.append(f"<tr{cls}>")
+        for j, cell in enumerate(row["cells"]):
+            num = ' class="num"' if j and re.fullmatch(
+                r"[\d.,+\-—%]+ ?\w{0,3}", str(cell)) else ""
+            o.append(f"<td{num}>{esc(cell)}")
+            if j == 1 and row.get("detail"):
+                o.append(f'<div class="detail">{esc(row["detail"])}</div>')
+            if j == 1 and row.get("outputs"):
+                o.append('<div class="paths">'
+                         + "".join(f"<code>{esc(p)}</code>"
+                                   for p in row["outputs"][:5]) + "</div>")
+            o.append("</td>")
+        o.append(f'<td class="state t-{row.get("tone", "idle")}">'
+                 f'{esc(row.get("state", ""))}</td></tr>')
+    o.append("</tbody></table></div>")
+    return "\n".join(o)
+
+
+# ---------------------------------------------------------------------------
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--project", default=".", help="project root")
+    ap.add_argument("--out", default="docs/review/artifact.html")
+    ap.add_argument("--title", help="overrides plan.yaml / artifact.yaml")
+    args = ap.parse_args()
+
+    root = os.path.abspath(args.project)
+    cfg = read_yaml(os.path.join(root, "docs/review/artifact.yaml")) or {}
+    plan = read_yaml(os.path.join(root, "plan.yaml")) or {}
+
+    cwd = os.getcwd()
+    os.chdir(root)
+    try:
+        revision = review_gate._git("rev-parse", "--short", "HEAD") or "uncommitted"
+        branch = review_gate.head_ref()
+        repo = review_gate.repo_slug()
+    finally:
+        os.chdir(cwd)
+
+    import datetime
+    project = {
+        "title": args.title or cfg.get("title") or plan.get("project") or "Project",
+        "subtitle": cfg.get("subtitle", ""),
+        "revision": revision, "branch": branch, "repo": repo,
+        "generated": datetime.date.today().isoformat(),
+    }
+
+    phases = collect(root, cfg)
+    if not phases:
+        sys.stderr.write("Nothing to review yet: no vision, plan, requirements "
+                         "or block diagram found, and no reviews in the ledger.\n")
+        return 1
+
+    out = args.out if os.path.isabs(args.out) else os.path.join(root, args.out)
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    with open(out, "w") as fh:
+        fh.write(render_page(project, phases))
+
+    size = os.path.getsize(out)
+    print(f"wrote {os.path.relpath(out, cwd)}  ({size // 1024} kB, "
+          f"{len(phases)} phase(s))")
+    for p in phases:
+        label, _ = STATE_LABEL.get(p.state, STATE_LABEL["none"])
+        print(f"  {p.id:<15} {label}")
+    if size > 8 * 1024 * 1024:
+        print("\n  WARNING: over 8 MB. The artifact cap is 16 MB — prune the "
+              "embedded rasters before it bites.")
+    print("\nPublish it with the Artifact tool, then record the URL in "
+          f"{review_gate.LEDGER} so the next session updates the same page.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

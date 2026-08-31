@@ -1,0 +1,109 @@
+<mxfile host="MakeHardware" type="device">
+  <diagram name="Thermal Probe  ·  rev C" id="block-diagram">
+    <mxGraphModel dx="1204" dy="902" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1204" pageHeight="902" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Thermal Probe  ·  rev C" style="text=1;html=1;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#0b0b0b;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="24" y="14" width="520" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="generated from block-diagram.yaml — edit the spec, not this file" style="text=1;html=1;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#898781;fontStyle=0;" parent="1" vertex="1">
+          <mxGeometry x="24" y="38" width="520" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="hdr-power" value="POWER TREE" style="text=1;html=1;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#898781;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="24" y="74" width="240" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="rail-VBUS" value="&lt;b&gt;VBUS  5.0 V  ← J1  |  450 mA max of 500 mA (90%)  ! tight&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;U1 450 mA&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="24.0" y="94.0" width="470" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="rail-VBAT" value="&lt;b&gt;VBAT  3.7 V  ← BT1  |  11 mA max of 1.20 A (1%)&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;U2 0 mA&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e08a1e;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="24.0" y="140.0" width="470" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="rail-V3P3" value="&lt;b&gt;V3P3  3.3 V  ← U2  |  12 mA max of 250 mA (5%)&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;U3 8 mA  U5 4 mA  U4 0 mA  DS1 0 mA&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#0ca30c;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="46.0" y="186.0" width="448" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="rail-V3P3-from" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#0ca30c;strokeWidth=1.5;endArrow=block;endSize=6;exitX=0;exitY=1;entryX=0;entryY=0.5;" parent="1" edge="1" source="rail-VBAT" target="rail-V3P3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rail-VREF" value="&lt;b&gt;VREF  2.5 V  ← U4  |  0 mA max of 10 mA (2%)&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;RT1 0 mA&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2a78d6;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="68.0" y="232.0" width="426" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="rail-VREF-from" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#2a78d6;strokeWidth=1.5;endArrow=block;endSize=6;exitX=0;exitY=1;entryX=0;entryY=0.5;" parent="1" edge="1" source="rail-V3P3" target="rail-VREF">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hdr-blocks" value="FUNCTIONAL BLOCKS AND DATA BUSES" style="text=1;html=1;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#898781;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="24" y="294" width="360" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="J1" value="&lt;b&gt;J1 · USB-C receptacle&lt;/b&gt;&lt;br/&gt;TYPE-C-31-M-12&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;CONNECTOR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="24.0" y="316.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="BT1" value="&lt;b&gt;BT1 · LiPo cell, 900 mAh&lt;/b&gt;&lt;br/&gt;LP503035&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;POWER&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="24.0" y="420.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="U1" value="&lt;b&gt;U1 · Battery charger&lt;/b&gt;&lt;br/&gt;MCP73831T-2ACI/OT&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;REGULATOR  ·  [VBUS]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="24.0" y="524.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="U2" value="&lt;b&gt;U2 · 3.3 V LDO&lt;/b&gt;&lt;br/&gt;MCP1700T-3302E/TT&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;REGULATOR  ·  [VBAT]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="24.0" y="628.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="U3" value="&lt;b&gt;U3 · MCU&lt;/b&gt;&lt;br/&gt;STM32L071KBU6&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;MCU  ·  [V3P3]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="274.0" y="316.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="U5" value="&lt;b&gt;U5 · Log flash, 16 Mbit&lt;/b&gt;&lt;br/&gt;W25Q16JVUXIQ&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;MEMORY  ·  [V3P3]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="524.0" y="316.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="DS1" value="&lt;b&gt;DS1 · Segment LCD module&lt;/b&gt;&lt;br/&gt;VIM-878-DP-RC-S-LV&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;INTERFACE  ·  [V3P3]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="524.0" y="420.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="RT1" value="&lt;b&gt;RT1 · Probe thermistor, NTC 10k&lt;/b&gt;&lt;br/&gt;NTCLE100E3103JB0&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;SENSOR  ·  [VREF]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="524.0" y="524.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="SW1" value="&lt;b&gt;SW1 · Wake button&lt;/b&gt;&lt;br/&gt;TL3305AF160QG&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;INTERFACE&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="524.0" y="628.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="U4" value="&lt;b&gt;U4 · Voltage reference&lt;/b&gt;&lt;br/&gt;REF3025AIDBZR&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;ANALOG  ·  [V3P3]&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;fontSize=12;verticalAlign=middle;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="774.0" y="316.0" width="186" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SPI1" value="SPI1 · SPI · 8 MHz, two chip selects. Flash and LCD share the bus." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#8b5cf6;strokeColor=none;fontColor=#ffffff;fontSize=10;arcSize=40;verticalAlign=middle;align=left;spacingLeft=8;" parent="1" vertex="1">
+          <mxGeometry x="472.0" y="730.0" width="250.0" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SPI1-U3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8b5cf6;strokeWidth=1.6;endArrow=block;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="U3" target="spine-SPI1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SPI1-U5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8b5cf6;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="U5" target="spine-SPI1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SPI1-DS1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#8b5cf6;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="DS1" target="spine-SPI1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-ADC1" value="ADC1 · ANALOG · Ratiometric against VREF, 12-bit, 16x oversampled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d03b3b;strokeColor=none;fontColor=#ffffff;fontSize=10;arcSize=40;verticalAlign=middle;align=left;spacingLeft=8;" parent="1" vertex="1">
+          <mxGeometry x="483.0" y="760.0" width="250.0" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-ADC1-RT1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d03b3b;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="RT1" target="spine-ADC1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-ADC1-U3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d03b3b;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="U3" target="spine-ADC1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SWD1" value="SWD1 · SWD · Debug on the USB-C sideband pins via a test fixture" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#64748b;strokeColor=none;fontColor=#ffffff;fontSize=10;arcSize=40;verticalAlign=middle;align=left;spacingLeft=8;" parent="1" vertex="1">
+          <mxGeometry x="244.0" y="790.0" width="250.0" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SWD1-U3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748b;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="U3" target="spine-SWD1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-SWD1-J1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#64748b;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="J1" target="spine-SWD1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-GPIO1" value="GPIO1 · GPIO · Wake interrupt, pulled up internally" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6b7280;strokeColor=none;fontColor=#ffffff;fontSize=10;arcSize=40;verticalAlign=middle;align=left;spacingLeft=8;" parent="1" vertex="1">
+          <mxGeometry x="505.0" y="820.0" width="250.0" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-GPIO1-SW1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b7280;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="SW1" target="spine-GPIO1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="spine-GPIO1-U3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b7280;strokeWidth=1.6;endArrow=oval;endFill=1;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="U3" target="spine-GPIO1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

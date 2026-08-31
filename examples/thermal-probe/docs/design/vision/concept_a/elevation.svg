@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="326" height="503" viewBox="0 0 326 503" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Wand: 38 by 164 by 22 millimetres">
+<style>.o{fill:none;stroke:#0b0b0b;stroke-width:1.6}.f{fill:none;stroke:#52514e;stroke-width:1}.d{stroke:#898781;stroke-width:0.7}.t{font-size:10px;fill:#898781}.lbl{font-size:10.5px;fill:#52514e;font-weight:600;letter-spacing:0.06em}</style>
+<rect x="54" y="54" width="83.6" height="360.8" rx="13.2" class="o"/>
+<rect x="67.2" y="80.4" width="57.2" height="39.6" rx="2" class="f"/>
+<rect x="84.8" y="142.0" width="22.0" height="22.0" rx="8" class="f"/>
+<rect x="84.8" y="388.4" width="22.0" height="11.0" rx="3" class="f"/>
+<rect x="183.6" y="54" width="48.4" height="360.8" rx="13.2" class="o"/>
+<line x1="54" y1="434.8" x2="137.6" y2="434.8" class="d"/><line x1="54" y1="430.8" x2="54" y2="438.8" class="d"/><line x1="137.6" y1="430.8" x2="137.6" y2="438.8" class="d"/>
+<text x="95.8" y="449.8" class="t" text-anchor="middle">38 mm</text>
+<line x1="38" y1="54" x2="38" y2="414.8" class="d"/><line x1="34" y1="54" x2="42" y2="54" class="d"/><line x1="34" y1="414.8" x2="42" y2="414.8" class="d"/>
+<text x="30" y="234.4" class="t" text-anchor="middle" transform="rotate(-90 30 234.4)">164 mm</text>
+<line x1="183.6" y1="434.8" x2="232.0" y2="434.8" class="d"/>
+<text x="207.8" y="449.8" class="t" text-anchor="middle">22</text>
+<text x="54" y="38" class="lbl">FRONT</text>
+<text x="183.6" y="38" class="lbl">SIDE</text>
+</svg>

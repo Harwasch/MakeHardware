@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="670" viewBox="0 0 1500 670" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Project plan: Thermal Probe, 5 of 11 chunks done">
+<style>
+.s{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .bar-in_progress{fill:#2a78d6}
+@media (prefers-color-scheme:dark){.s{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .bar-in_progress{fill:#3987e5}}
+.mut{fill:#898781} .bar-done{fill:#0ca30c} .bar-blocked{fill:#d03b3b} .bar-todo{fill:#898781}
+.crit{stroke:#0b0b0b;stroke-opacity:0.62;stroke-width:2}
+@media (prefers-color-scheme:dark){.crit{stroke:#ffffff;stroke-opacity:0.72}}
+.t{font-size:12px} .tb{font-size:12px;font-weight:600} .ts{font-size:10.5px} .h{font-size:15px;font-weight:600}
+</style>
+<rect width="1500" height="670" class="s" rx="6"/>
+<text x="20" y="27" class="h ink">Thermal Probe</text>
+<text x="20" y="47" class="t ink2">5/11 chunks complete · 45% · 10 sessions on the critical path · 1 blocked</text>
+<line x1="320" y1="76" x2="320" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="326" y="72" class="ts mut">S1</text>
+<line x1="436" y1="76" x2="436" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="442" y="72" class="ts mut">S2</text>
+<line x1="552" y1="76" x2="552" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="558" y="72" class="ts mut">S3</text>
+<line x1="668" y1="76" x2="668" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="674" y="72" class="ts mut">S4</text>
+<line x1="784" y1="76" x2="784" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="790" y="72" class="ts mut">S5</text>
+<line x1="900" y1="76" x2="900" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="906" y="72" class="ts mut">S6</text>
+<line x1="1016" y1="76" x2="1016" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1022" y="72" class="ts mut">S7</text>
+<line x1="1132" y1="76" x2="1132" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1138" y="72" class="ts mut">S8</text>
+<line x1="1248" y1="76" x2="1248" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1254" y="72" class="ts mut">S9</text>
+<line x1="1364" y1="76" x2="1364" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="1370" y="72" class="ts mut">S10</text>
+<line x1="1480" y1="76" x2="1480" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
+<text x="20" y="101" class="tb ink2">MECHANICAL</text>
+<line x1="20" y1="107" x2="1480" y2="107" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="131.0" class="t ink">V1 · Vision board and concept selection</text>
+<rect x="323" y="117.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="331" y="131.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="165.0" class="t ink">P1 · Project plan and disciplines</text>
+<rect x="439" y="151.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="447" y="165.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="199.0" class="t ink">R1 · System and discipline requirements</text>
+<rect x="555" y="185.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="563" y="199.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="233.0" class="t ink">M1 · Enclosure envelope and internal layout</text>
+<rect x="671" y="219.0" width="110" height="20" rx="4" class="bar-done"/>
+<text x="679" y="233.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="265" class="tb ink2">ELECTRICAL</text>
+<line x1="20" y1="271" x2="1480" y2="271" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="295.0" class="t ink">E1 · Power architecture and part selection</text>
+<rect x="671" y="281.0" width="110" height="20" rx="4" class="bar-done crit"/>
+<text x="679" y="295.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<text x="20" y="329.0" class="t ink">E1B · Block diagram and power budget</text>
+<rect x="787" y="315.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="795" y="329.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
+<text x="20" y="363.0" class="t ink">E2 · Schematic capture and ERC</text>
+<rect x="903" y="349.0" width="226" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="911" y="363.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
+<text x="20" y="397.0" class="t ink">E3 · PCB layout, DRC and fabrication outputs</text>
+<rect x="1135" y="383.0" width="226" height="20" rx="4" class="bar-blocked crit"/>
+<text x="1143" y="397.0" class="ts" fill="#ffffff" opacity="0.96">✕ Blocked</text>
+<text x="20" y="429" class="tb ink2">TEST</text>
+<line x1="20" y1="435" x2="1480" y2="435" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="459.0" class="t ink">S1 · Standby current simulation across corne</text>
+<rect x="903" y="445.0" width="110" height="20" rx="4" class="bar-in_progress"/>
+<text x="911" y="459.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
+<text x="20" y="493.0" class="t ink">T1 · Verification run and traceability gate</text>
+<rect x="1367" y="479.0" width="110" height="20" rx="4" class="bar-todo crit"/>
+<text x="1375" y="493.0" class="ts" fill="#ffffff" opacity="0.96">○ To do</text>
+<text x="20" y="525" class="tb ink2">FIRMWARE</text>
+<line x1="20" y1="531" x2="1480" y2="531" class="ax" stroke-width="1" opacity="0.35"/>
+<text x="20" y="555.0" class="t ink">F1 · Firmware bring-up and low-power schedul</text>
+<rect x="1135" y="541.0" width="226" height="20" rx="4" class="bar-todo crit"/>
+<text x="1143" y="555.0" class="ts" fill="#ffffff" opacity="0.96">○ To do</text>
+<defs><marker id="ah" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
+<path d="M433,127.0 H443 V161.0 H436" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M549,161.0 H559 V195.0 H552" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M665,195.0 H675 V291.0 H668" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M781,291.0 H791 V325.0 H784" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M665,195.0 H675 V229.0 H668" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#ah)"/>
+<path d="M897,325.0 H907 V359.0 H900" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M781,229.0 H842.0 V359.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#ah)"/>
+<path d="M897,325.0 H907 V455.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#ah)"/>
+<path d="M1129,359.0 H1139 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M781,229.0 H958.0 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#ah)"/>
+<path d="M1129,359.0 H1139 V551.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M1361,393.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M1361,551.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#ah)"/>
+<path d="M1013,455.0 H1190.0 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#ah)"/>
+<rect x="20" y="613" width="11" height="11" rx="2.5" class="bar-done"/>
+<text x="37" y="622" class="ts ink2">✓ Done</text>
+<rect x="90.8" y="613" width="11" height="11" rx="2.5" class="bar-in_progress"/>
+<text x="107.8" y="622" class="ts ink2">▶ In progress</text>
+<rect x="205.0" y="613" width="11" height="11" rx="2.5" class="bar-blocked"/>
+<text x="222.0" y="622" class="ts ink2">✕ Blocked</text>
+<rect x="294.4" y="613" width="11" height="11" rx="2.5" class="bar-todo"/>
+<text x="311.4" y="622" class="ts ink2">○ To do</text>
+<text x="377.4" y="622" class="ts mut">outlined bars = critical path</text>
+</svg>
