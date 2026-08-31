@@ -108,8 +108,7 @@ figure{margin:0 0 24px;min-width:0}
   overflow-x:auto}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
-figcaption{font-family:var(--cond);font-size:11px;letter-spacing:0.07em;
-  text-transform:uppercase;color:var(--muted);margin-top:7px}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:70ch}
 
 /* ---- tables ---- */
 .scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel);
@@ -170,10 +169,10 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <h1>Thermal Probe</h1>
 <p>A handheld logger for walk-in freezers. A week on one charge, readable through a glove.</p>
 </div><div class='fields'>
-<div class="field"><span class="k">Revision</span><span class="v">21f6347</span></div>
+<div class="field"><span class="k">Revision</span><span class="v">cb4b78a</span></div>
 <div class="field"><span class="k">Branch</span><span class="v">claude/makehardware-human-review-xo14y4</span></div>
 <div class="field"><span class="k">Generated</span><span class="v">2026-08-31</span></div>
-<div class="field"><span class="k">Phases</span><span class="v">6</span></div>
+<div class="field"><span class="k">Phases</span><span class="v">9</span></div>
 <div class="field"><span class="k">Awaiting you</span><span class="v">2</span></div>
 </div></div>
 <div class="strip"><span class="k">Outstanding</span>
@@ -184,8 +183,11 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <button class="tab" role="tab" id="t-plan" aria-controls="p-plan" aria-selected="false" data-tab="plan"><span class="dot b-ok"></span>Plan</button>
 <button class="tab" role="tab" id="t-requirements" aria-controls="p-requirements" aria-selected="false" data-tab="requirements"><span class="dot b-stop"></span>Requirements</button>
 <button class="tab" role="tab" id="t-architecture" aria-controls="p-architecture" aria-selected="false" data-tab="architecture"><span class="dot b-wait"></span>Architecture</button>
+<button class="tab" role="tab" id="t-cad" aria-controls="p-cad" aria-selected="false" data-tab="cad"><span class="dot b-ok"></span>CAD</button>
 <button class="tab" role="tab" id="t-schematic" aria-controls="p-schematic" aria-selected="false" data-tab="schematic"><span class="dot b-idle"></span>Schematic</button>
 <button class="tab" role="tab" id="t-simulation" aria-controls="p-simulation" aria-selected="false" data-tab="simulation"><span class="dot b-idle"></span>Simulation</button>
+<button class="tab" role="tab" id="t-fea" aria-controls="p-fea" aria-selected="false" data-tab="fea"><span class="dot b-idle"></span>Thermal FEA</button>
+<button class="tab" role="tab" id="t-mfg" aria-controls="p-mfg" aria-selected="false" data-tab="mfg"><span class="dot b-idle"></span>Manufacturing</button>
 </div>
 <section class="panel" role="tabpanel" id="p-vision" aria-labelledby="t-vision">
 <div class="phase-head"><div>
@@ -271,7 +273,7 @@ about.</p>
 <blockquote>Add the drop test earlier if the enclosure is printed rather than
 moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</span></blockquote>
 <figure>
-<div class="sheet" style="max-width:1534px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 670" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Project plan: Thermal Probe, 5 of 11 chunks done" preserveAspectRatio="xMidYMid meet">
+<div class="sheet" style="max-width:1534px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 670" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Project plan: Thermal Probe, 0 of 11 chunks done" preserveAspectRatio="xMidYMid meet">
 <style>
 .s{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .bar-in_progress{fill:#2a78d6}
 @media (prefers-color-scheme:dark){.s{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .bar-in_progress{fill:#3987e5}}
@@ -282,7 +284,7 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</
 </style>
 <rect width="1500" height="670" class="s" rx="6"/>
 <text x="20" y="27" class="h ink">Thermal Probe</text>
-<text x="20" y="47" class="t ink2">5/11 chunks complete · 45% · 10 sessions on the critical path · 1 blocked</text>
+<text x="20" y="47" class="t ink2">0/11 chunks complete · 0% · 10 sessions on the critical path · 1 blocked</text>
 <line x1="320" y1="76" x2="320" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
 <text x="326" y="72" class="ts mut">S1</text>
 <line x1="436" y1="76" x2="436" y2="592" class="ax" stroke-width="1" opacity="0.5"/>
@@ -307,22 +309,22 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</
 <text x="20" y="101" class="tb ink2">MECHANICAL</text>
 <line x1="20" y1="107" x2="1480" y2="107" class="ax" stroke-width="1" opacity="0.35"/>
 <text x="20" y="131.0" class="t ink">V1 · Vision board and concept selection</text>
-<rect x="323" y="117.0" width="110" height="20" rx="4" class="bar-done crit"/>
-<text x="331" y="131.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<rect x="323" y="117.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="331" y="131.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
 <text x="20" y="165.0" class="t ink">P1 · Project plan and disciplines</text>
-<rect x="439" y="151.0" width="110" height="20" rx="4" class="bar-done crit"/>
-<text x="447" y="165.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<rect x="439" y="151.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="447" y="165.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
 <text x="20" y="199.0" class="t ink">R1 · System and discipline requirements</text>
-<rect x="555" y="185.0" width="110" height="20" rx="4" class="bar-done crit"/>
-<text x="563" y="199.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<rect x="555" y="185.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="563" y="199.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
 <text x="20" y="233.0" class="t ink">M1 · Enclosure envelope and internal layout</text>
-<rect x="671" y="219.0" width="110" height="20" rx="4" class="bar-done"/>
-<text x="679" y="233.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<rect x="671" y="219.0" width="110" height="20" rx="4" class="bar-in_progress"/>
+<text x="679" y="233.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
 <text x="20" y="265" class="tb ink2">ELECTRICAL</text>
 <line x1="20" y1="271" x2="1480" y2="271" class="ax" stroke-width="1" opacity="0.35"/>
 <text x="20" y="295.0" class="t ink">E1 · Power architecture and part selection</text>
-<rect x="671" y="281.0" width="110" height="20" rx="4" class="bar-done crit"/>
-<text x="679" y="295.0" class="ts" fill="#ffffff" opacity="0.96">✓ Done</text>
+<rect x="671" y="281.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
+<text x="679" y="295.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
 <text x="20" y="329.0" class="t ink">E1B · Block diagram and power budget</text>
 <rect x="787" y="315.0" width="110" height="20" rx="4" class="bar-in_progress crit"/>
 <text x="795" y="329.0" class="ts" fill="#ffffff" opacity="0.96">▶ In progress</text>
@@ -345,21 +347,21 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</
 <text x="20" y="555.0" class="t ink">F1 · Firmware bring-up and low-power schedul</text>
 <rect x="1135" y="541.0" width="226" height="20" rx="4" class="bar-todo crit"/>
 <text x="1143" y="555.0" class="ts" fill="#ffffff" opacity="0.96">○ To do</text>
-<defs><marker id="g90396-ah" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
-<path d="M433,127.0 H443 V161.0 H436" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M549,161.0 H559 V195.0 H552" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M665,195.0 H675 V291.0 H668" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M781,291.0 H791 V325.0 H784" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M665,195.0 H675 V229.0 H668" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
-<path d="M897,325.0 H907 V359.0 H900" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M781,229.0 H842.0 V359.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
-<path d="M897,325.0 H907 V455.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
-<path d="M1129,359.0 H1139 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M781,229.0 H958.0 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
-<path d="M1129,359.0 H1139 V551.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M1361,393.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M1361,551.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g90396-ah)"/>
-<path d="M1013,455.0 H1190.0 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g90396-ah)"/>
+<defs><marker id="g69423-ah" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
+<path d="M433,127.0 H443 V161.0 H436" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M549,161.0 H559 V195.0 H552" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M665,195.0 H675 V291.0 H668" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M781,291.0 H791 V325.0 H784" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M665,195.0 H675 V229.0 H668" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g69423-ah)"/>
+<path d="M897,325.0 H907 V359.0 H900" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M781,229.0 H842.0 V359.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g69423-ah)"/>
+<path d="M897,325.0 H907 V455.0 H900" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g69423-ah)"/>
+<path d="M1129,359.0 H1139 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M781,229.0 H958.0 V393.0 H1132" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g69423-ah)"/>
+<path d="M1129,359.0 H1139 V551.0 H1132" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M1361,393.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M1361,551.0 H1371 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1.6" opacity="0.85" marker-end="url(#g69423-ah)"/>
+<path d="M1013,455.0 H1190.0 V489.0 H1364" fill="none" stroke="#898781" stroke-width="1" opacity="0.45" marker-end="url(#g69423-ah)"/>
 <rect x="20" y="613" width="11" height="11" rx="2.5" class="bar-done"/>
 <text x="37" y="622" class="ts ink2">✓ Done</text>
 <rect x="90.8" y="613" width="11" height="11" rx="2.5" class="bar-in_progress"/>
@@ -560,148 +562,186 @@ about.</p>
 <li>Is anything here that nobody asked for?</li>
 </ol><p class="how">Comment on this page — select the thing you are talking about and leave a note, or reply in the Claude session. Say which and <strong>why</strong>: the reason outlives the choice.</p></div>
 <figure>
-<div class="sheet" style="max-width:1082px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1048 912" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Requirements map: 14 requirements, 1 verified, 11 gaps" preserveAspectRatio="xMidYMid meet">
+<div class="sheet" style="max-width:1082px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1048 1010" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Requirements map: 14 requirements, 1 verified, 11 gaps" preserveAspectRatio="xMidYMid meet">
 <style>
 .s{fill:#fcfcfb} .card{fill:#ffffff} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7}
 @media (prefers-color-scheme:dark){.s{fill:#1a1a19} .card{fill:#242422} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835}}
 .mut{fill:#898781} .t{font-size:11.5px} .tb{font-size:12px;font-weight:600} .ts{font-size:10px} .h{font-size:16px;font-weight:600} .hd{font-size:11px;font-weight:600}
 </style>
-<rect width="1048" height="912" class="s" rx="6"/>
+<rect width="1048" height="1010" class="s" rx="6"/>
 <text x="24" y="30" class="h ink">Requirements map</text>
 <text x="24" y="50" class="t ink2">14 requirements · 1 verified · 1 with evidence (7.1%) · 11 gap(s), marked in red</text>
 <text x="24" y="68" class="ts mut">an arrow points from a requirement to the one that refines it</text>
 <text x="24" y="86" class="hd ink2">VISION — what was asked for</text>
 <text x="392" y="86" class="hd ink2">SYSTEM — testable at the product</text>
 <text x="760" y="86" class="hd ink2">DISCIPLINE — ELE / MEC / FW / MFG</text>
-<defs><marker id="g23104-ra" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
-<path d="M288.0,357.0 H340.0 V249.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M288.0,357.0 H340.0 V465.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M288.0,573.0 H340.0 V573.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M288.0,735.0 H340.0 V735.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,249.0 H708.0 V141.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,249.0 H708.0 V249.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,465.0 H708.0 V465.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,735.0 H708.0 V681.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,735.0 H708.0 V789.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,573.0 H708.0 V573.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<path d="M656.0,249.0 H708.0 V357.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g23104-ra)"/>
-<rect x="24.0" y="312.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="24.0" y="312.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="38.0" y="332.0" class="tb ink">VIS-001</text>
-<text x="278.0" y="332.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="38.0" y="351.0" class="t ink2">A week in a freezer on one charge</text>
-<text x="38.0" y="368.0" class="ts mut">Inspection</text>
-<text x="38.0" y="382.0" class="ts mut">refined by 2 requirements</text>
-<rect x="24.0" y="528.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="24.0" y="528.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="38.0" y="548.0" class="tb ink">VIS-002</text>
-<text x="278.0" y="548.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="38.0" y="567.0" class="t ink2">Readable and operable wearing…</text>
-<text x="38.0" y="584.0" class="ts mut">Inspection</text>
-<text x="38.0" y="598.0" class="ts mut">refined by 1 requirement</text>
-<rect x="24.0" y="690.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="24.0" y="690.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="38.0" y="710.0" class="tb ink">VIS-003</text>
-<text x="278.0" y="710.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="38.0" y="729.0" class="t ink2">Survives being dropped on a…</text>
-<text x="38.0" y="746.0" class="ts mut">Test</text>
-<text x="38.0" y="760.0" class="ts mut">refined by 1 requirement</text>
-<rect x="392.0" y="204.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="392.0" y="204.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="406.0" y="224.0" class="tb ink">SYS-001</text>
-<text x="646.0" y="224.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="406.0" y="243.0" class="t ink2">Battery life &gt;= 7 d logging at 1…</text>
-<text x="406.0" y="260.0" class="ts mut">Analysis · budget 7 d</text>
-<text x="406.0" y="274.0" class="ts mut">refined by 3 requirements</text>
-<rect x="392.0" y="420.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="392.0" y="420.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="406.0" y="440.0" class="tb ink">SYS-002</text>
-<text x="646.0" y="440.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="406.0" y="459.0" class="t ink2">Operating range -30 to +40 degC</text>
-<text x="406.0" y="476.0" class="ts mut">Test</text>
-<text x="406.0" y="490.0" class="ts mut">refined by 1 requirement</text>
-<rect x="392.0" y="528.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="392.0" y="528.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="406.0" y="548.0" class="tb ink">SYS-003</text>
-<text x="646.0" y="548.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="406.0" y="567.0" class="t ink2">Display legible at 500 mm in 50 lx</text>
-<text x="406.0" y="584.0" class="ts mut">Inspection</text>
-<text x="406.0" y="598.0" class="ts mut">refined by 1 requirement</text>
-<rect x="392.0" y="690.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="392.0" y="690.0" width="5" height="90" fill="#2a78d6" rx="2.5"/>
-<text x="406.0" y="710.0" class="tb ink">SYS-004</text>
-<text x="646.0" y="710.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
-<text x="406.0" y="729.0" class="t ink2">Survives 1.2 m drop onto concrete,…</text>
-<text x="406.0" y="746.0" class="ts mut">Test · budget 1.2 m</text>
-<text x="406.0" y="760.0" class="ts mut">refined by 2 requirements</text>
-<rect x="760.0" y="96.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
-<rect x="760.0" y="96.0" width="5" height="90" fill="#e08a1e" rx="2.5"/>
+<defs><marker id="g46239-ra" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#898781"/></marker></defs>
+<path d="M288.0,392.0 H340.0 V270.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M288.0,392.0 H340.0 V514.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M288.0,636.0 H340.0 V636.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M288.0,819.0 H340.0 V819.0 H389.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,270.0 H708.0 V148.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,270.0 H708.0 V270.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,514.0 H708.0 V514.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,819.0 H708.0 V758.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,819.0 H708.0 V880.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,636.0 H708.0 V636.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<path d="M656.0,270.0 H708.0 V392.0 H757.0" fill="none" stroke="#898781" stroke-width="1.2" opacity="0.6" marker-end="url(#g46239-ra)"/>
+<g><title>VIS-001 — A week in a freezer on one charge</title>
+<rect x="24.0" y="340.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="24.0" y="340.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="38.0" y="360.0" class="tb ink">VIS-001</text>
+<text x="278.0" y="360.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="38.0" y="379.0" class="t ink2">A week in a freezer on one charge</text>
+<text x="38.0" y="410.0" class="ts mut">Inspection</text>
+<text x="38.0" y="424.0" class="ts mut">refined by 2 requirements</text>
+</g>
+<g><title>VIS-002 — Readable and operable wearing freezer gloves</title>
+<rect x="24.0" y="584.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="24.0" y="584.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="38.0" y="604.0" class="tb ink">VIS-002</text>
+<text x="278.0" y="604.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="38.0" y="623.0" class="t ink2">Readable and operable wearing freezer</text>
+<text x="38.0" y="638.0" class="t ink2">gloves</text>
+<text x="38.0" y="654.0" class="ts mut">Inspection</text>
+<text x="38.0" y="668.0" class="ts mut">refined by 1 requirement</text>
+</g>
+<g><title>VIS-003 — Survives being dropped on a concrete floor</title>
+<rect x="24.0" y="767.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="24.0" y="767.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="38.0" y="787.0" class="tb ink">VIS-003</text>
+<text x="278.0" y="787.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="38.0" y="806.0" class="t ink2">Survives being dropped on a concrete</text>
+<text x="38.0" y="821.0" class="t ink2">floor</text>
+<text x="38.0" y="837.0" class="ts mut">Test</text>
+<text x="38.0" y="851.0" class="ts mut">refined by 1 requirement</text>
+</g>
+<g><title>SYS-001 — Battery life &gt;= 7 d logging at 1 min intervals</title>
+<rect x="392.0" y="218.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="218.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="238.0" class="tb ink">SYS-001</text>
+<text x="646.0" y="238.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="257.0" class="t ink2">Battery life &gt;= 7 d logging at 1 min</text>
+<text x="406.0" y="272.0" class="t ink2">intervals</text>
+<text x="406.0" y="288.0" class="ts mut">Analysis · budget 7 d</text>
+<text x="406.0" y="302.0" class="ts mut">refined by 3 requirements</text>
+</g>
+<g><title>SYS-002 — Operating range -30 to +40 degC</title>
+<rect x="392.0" y="462.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="462.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="482.0" class="tb ink">SYS-002</text>
+<text x="646.0" y="482.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="501.0" class="t ink2">Operating range -30 to +40 degC</text>
+<text x="406.0" y="532.0" class="ts mut">Test</text>
+<text x="406.0" y="546.0" class="ts mut">refined by 1 requirement</text>
+</g>
+<g><title>SYS-003 — Display legible at 500 mm in 50 lx</title>
+<rect x="392.0" y="584.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="584.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="604.0" class="tb ink">SYS-003</text>
+<text x="646.0" y="604.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="623.0" class="t ink2">Display legible at 500 mm in 50 lx</text>
+<text x="406.0" y="654.0" class="ts mut">Inspection</text>
+<text x="406.0" y="668.0" class="ts mut">refined by 1 requirement</text>
+</g>
+<g><title>SYS-004 — Survives 1.2 m drop onto concrete, 6 faces</title>
+<rect x="392.0" y="767.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="392.0" y="767.0" width="5" height="104" fill="#2a78d6" rx="2.5"/>
+<text x="406.0" y="787.0" class="tb ink">SYS-004</text>
+<text x="646.0" y="787.0" class="ts" text-anchor="end" fill="#2a78d6">= Agreed</text>
+<text x="406.0" y="806.0" class="t ink2">Survives 1.2 m drop onto concrete, 6</text>
+<text x="406.0" y="821.0" class="t ink2">faces</text>
+<text x="406.0" y="837.0" class="ts mut">Test · budget 1.2 m</text>
+<text x="406.0" y="851.0" class="ts mut">refined by 2 requirements</text>
+</g>
+<g><title>ELE-001 — Standby current &lt;= 40 uA on the always-on rail · no evidence</title>
+<rect x="760.0" y="96.0" width="264" height="104" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="96.0" width="5" height="104" fill="#e08a1e" rx="2.5"/>
 <text x="774.0" y="116.0" class="tb ink">ELE-001</text>
 <text x="1014.0" y="116.0" class="ts" text-anchor="end" fill="#e08a1e">▶ Implemented</text>
-<text x="774.0" y="135.0" class="t ink2">Standby current &lt;= 40 uA on the…</text>
-<text x="774.0" y="152.0" class="ts mut">Simulation · budget 40 uA</text>
-<text x="774.0" y="166.0" class="ts" fill="#d03b3b">✕ evidence</text>
-<text x="834.4" y="166.0" class="ts" fill="#898781">✓ artefact linked</text>
-<rect x="760.0" y="204.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
-<rect x="760.0" y="204.0" width="5" height="90" fill="#898781" rx="2.5"/>
-<text x="774.0" y="224.0" class="tb ink">ELE-002</text>
-<text x="1014.0" y="224.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
-<text x="774.0" y="243.0" class="t ink2">Logging-cycle charge &lt;= 180 uAh per…</text>
-<text x="774.0" y="260.0" class="ts mut">Simulation · budget 180 uAh</text>
-<text x="774.0" y="274.0" class="ts" fill="#d03b3b">✕ evidence</text>
-<text x="834.4" y="274.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
-<rect x="760.0" y="420.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
-<rect x="760.0" y="420.0" width="5" height="90" fill="#898781" rx="2.5"/>
-<text x="774.0" y="440.0" class="tb ink">ELE-003</text>
-<text x="1014.0" y="440.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
-<text x="774.0" y="459.0" class="t ink2">ADC error &lt;= 0.15 degC over -30 to…</text>
-<text x="774.0" y="476.0" class="ts mut">Test · budget 0.2 degC</text>
-<text x="774.0" y="490.0" class="ts" fill="#d03b3b">✕ evidence</text>
-<text x="834.4" y="490.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
-<rect x="760.0" y="636.0" width="264" height="90" rx="6" class="card ax" stroke-width="1"/>
-<rect x="760.0" y="636.0" width="5" height="90" fill="#0ca30c" rx="2.5"/>
-<text x="774.0" y="656.0" class="tb ink">MEC-001</text>
-<text x="1014.0" y="656.0" class="ts" text-anchor="end" fill="#0ca30c">✓ Verified</text>
-<text x="774.0" y="675.0" class="t ink2">Envelope &lt;= 38 x 164 x 22 mm</text>
-<text x="774.0" y="692.0" class="ts mut">Inspection</text>
-<text x="774.0" y="706.0" class="ts" fill="#898781">✓ evidence</text>
-<text x="834.4" y="706.0" class="ts" fill="#898781">✓ artefact linked</text>
-<rect x="760.0" y="744.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
-<rect x="760.0" y="744.0" width="5" height="90" fill="#898781" rx="2.5"/>
-<text x="774.0" y="764.0" class="tb ink">MEC-002</text>
-<text x="1014.0" y="764.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
-<text x="774.0" y="783.0" class="t ink2">Enclosure withstands 1.2 m drop, 6…</text>
-<text x="774.0" y="800.0" class="ts mut">Test</text>
-<text x="774.0" y="814.0" class="ts" fill="#d03b3b">✕ evidence</text>
-<text x="834.4" y="814.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
-<rect x="760.0" y="528.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
-<rect x="760.0" y="528.0" width="5" height="90" fill="#898781" rx="2.5"/>
-<text x="774.0" y="548.0" class="tb ink">MEC-003</text>
-<text x="1014.0" y="548.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
-<text x="774.0" y="567.0" class="t ink2">Display window transmits &gt;= 88% at…</text>
-<text x="774.0" y="584.0" class="ts mut">Inspection · budget 88%</text>
-<text x="774.0" y="598.0" class="ts" fill="#d03b3b">✕ evidence</text>
-<text x="834.4" y="598.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
-<rect x="760.0" y="312.0" width="264" height="90" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
-<rect x="760.0" y="312.0" width="5" height="90" fill="#898781" rx="2.5"/>
-<text x="774.0" y="332.0" class="tb ink">FW-001</text>
-<text x="1014.0" y="332.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
-<text x="774.0" y="351.0" class="t ink2">Sleep between samples, wake on RTC…</text>
-<text x="774.0" y="368.0" class="ts mut">Test</text>
-<text x="774.0" y="382.0" class="ts" fill="#d03b3b">✕ evidence</text>
-<text x="834.4" y="382.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
-<rect x="24" y="873" width="10" height="10" rx="2" fill="#898781"/>
-<text x="39" y="882" class="ts ink2">· Draft</text>
-<rect x="101.0" y="873" width="10" height="10" rx="2" fill="#2a78d6"/>
-<text x="116.0" y="882" class="ts ink2">= Agreed</text>
-<rect x="184.4" y="873" width="10" height="10" rx="2" fill="#e08a1e"/>
-<text x="199.4" y="882" class="ts ink2">▶ Implemented</text>
-<rect x="299.8" y="873" width="10" height="10" rx="2" fill="#0ca30c"/>
-<text x="314.8" y="882" class="ts ink2">✓ Verified</text>
-<rect x="396.0" y="873" width="10" height="10" rx="2" fill="#8b5cf6"/>
-<text x="411.0" y="882" class="ts ink2">~ Waived</text>
-<rect x="479.4" y="873" width="10" height="10" rx="2" fill="none" stroke="#d03b3b" stroke-width="2"/>
-<text x="494.4" y="882" class="ts ink2">red border = a gap the gate is failing on</text>
+<text x="774.0" y="135.0" class="t ink2">Standby current &lt;= 40 uA on the</text>
+<text x="774.0" y="150.0" class="t ink2">always-on rail</text>
+<text x="774.0" y="166.0" class="ts mut">Simulation · budget 40 uA</text>
+<text x="774.0" y="180.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="180.0" class="ts" fill="#898781">✓ artefact linked</text>
+</g>
+<g><title>ELE-002 — Logging-cycle charge &lt;= 180 uAh per sample · no evidence, no design artefact</title>
+<rect x="760.0" y="218.0" width="264" height="104" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="218.0" width="5" height="104" fill="#898781" rx="2.5"/>
+<text x="774.0" y="238.0" class="tb ink">ELE-002</text>
+<text x="1014.0" y="238.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="257.0" class="t ink2">Logging-cycle charge &lt;= 180 uAh per</text>
+<text x="774.0" y="272.0" class="t ink2">sample</text>
+<text x="774.0" y="288.0" class="ts mut">Simulation · budget 180 uAh</text>
+<text x="774.0" y="302.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="302.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+</g>
+<g><title>ELE-003 — ADC error &lt;= 0.15 degC over -30 to +40 degC · no evidence, no design artefact</title>
+<rect x="760.0" y="462.0" width="264" height="104" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="462.0" width="5" height="104" fill="#898781" rx="2.5"/>
+<text x="774.0" y="482.0" class="tb ink">ELE-003</text>
+<text x="1014.0" y="482.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="501.0" class="t ink2">ADC error &lt;= 0.15 degC over -30 to +40</text>
+<text x="774.0" y="516.0" class="t ink2">degC</text>
+<text x="774.0" y="532.0" class="ts mut">Test · budget 0.2 degC</text>
+<text x="774.0" y="546.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="546.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+</g>
+<g><title>MEC-001 — Envelope &lt;= 38 x 164 x 22 mm</title>
+<rect x="760.0" y="706.0" width="264" height="104" rx="6" class="card ax" stroke-width="1"/>
+<rect x="760.0" y="706.0" width="5" height="104" fill="#0ca30c" rx="2.5"/>
+<text x="774.0" y="726.0" class="tb ink">MEC-001</text>
+<text x="1014.0" y="726.0" class="ts" text-anchor="end" fill="#0ca30c">✓ Verified</text>
+<text x="774.0" y="745.0" class="t ink2">Envelope &lt;= 38 x 164 x 22 mm</text>
+<text x="774.0" y="776.0" class="ts mut">Inspection</text>
+<text x="774.0" y="790.0" class="ts" fill="#898781">✓ evidence</text>
+<text x="834.4" y="790.0" class="ts" fill="#898781">✓ artefact linked</text>
+</g>
+<g><title>MEC-002 — Enclosure withstands 1.2 m drop, 6 faces · no evidence, no design artefact</title>
+<rect x="760.0" y="828.0" width="264" height="104" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="828.0" width="5" height="104" fill="#898781" rx="2.5"/>
+<text x="774.0" y="848.0" class="tb ink">MEC-002</text>
+<text x="1014.0" y="848.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="867.0" class="t ink2">Enclosure withstands 1.2 m drop, 6</text>
+<text x="774.0" y="882.0" class="t ink2">faces</text>
+<text x="774.0" y="898.0" class="ts mut">Test</text>
+<text x="774.0" y="912.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="912.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+</g>
+<g><title>MEC-003 — Display window transmits &gt;= 88% at 550 nm · no evidence, no design artefact</title>
+<rect x="760.0" y="584.0" width="264" height="104" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="584.0" width="5" height="104" fill="#898781" rx="2.5"/>
+<text x="774.0" y="604.0" class="tb ink">MEC-003</text>
+<text x="1014.0" y="604.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="623.0" class="t ink2">Display window transmits &gt;= 88% at 550</text>
+<text x="774.0" y="638.0" class="t ink2">nm</text>
+<text x="774.0" y="654.0" class="ts mut">Inspection · budget 88%</text>
+<text x="774.0" y="668.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="668.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+</g>
+<g><title>FW-001 — Sleep between samples, wake on RTC only · no evidence, no design artefact</title>
+<rect x="760.0" y="340.0" width="264" height="104" rx="6" class="card" stroke="#d03b3b" stroke-width="2"/>
+<rect x="760.0" y="340.0" width="5" height="104" fill="#898781" rx="2.5"/>
+<text x="774.0" y="360.0" class="tb ink">FW-001</text>
+<text x="1014.0" y="360.0" class="ts" text-anchor="end" fill="#898781">· Draft</text>
+<text x="774.0" y="379.0" class="t ink2">Sleep between samples, wake on RTC</text>
+<text x="774.0" y="394.0" class="t ink2">only</text>
+<text x="774.0" y="410.0" class="ts mut">Test</text>
+<text x="774.0" y="424.0" class="ts" fill="#d03b3b">✕ evidence</text>
+<text x="834.4" y="424.0" class="ts" fill="#d03b3b">✕ artefact linked</text>
+</g>
+<rect x="24" y="971" width="10" height="10" rx="2" fill="#898781"/>
+<text x="39" y="980" class="ts ink2">· Draft</text>
+<rect x="101.0" y="971" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="116.0" y="980" class="ts ink2">= Agreed</text>
+<rect x="184.4" y="971" width="10" height="10" rx="2" fill="#e08a1e"/>
+<text x="199.4" y="980" class="ts ink2">▶ Implemented</text>
+<rect x="299.8" y="971" width="10" height="10" rx="2" fill="#0ca30c"/>
+<text x="314.8" y="980" class="ts ink2">✓ Verified</text>
+<rect x="396.0" y="971" width="10" height="10" rx="2" fill="#8b5cf6"/>
+<text x="411.0" y="980" class="ts ink2">~ Waived</text>
+<rect x="479.4" y="971" width="10" height="10" rx="2" fill="none" stroke="#d03b3b" stroke-width="2"/>
+<text x="494.4" y="980" class="ts ink2">red border = a gap the gate is failing on</text>
 </svg></div>
 <figcaption>Requirement tree — an arrow points from a requirement to the one that refines it. Red borders are gaps the gate is failing on.</figcaption></figure>
 <div class="scroll"><table><thead><tr>
@@ -916,14 +956,14 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <li>Is charging at 450 mA off a 500 mA port too close?</li>
 </ol><p class="how">Comment on this page — select the thing you are talking about and leave a note, or reply in the Claude session. Say which and <strong>why</strong>: the reason outlives the choice.</p></div>
 <figure>
-<div class="sheet" style="max-width:1238px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1204 902" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Electrical block diagram: Thermal Probe, 10 blocks, 4 rails, 4 buses" preserveAspectRatio="xMidYMid meet">
+<div class="sheet" style="max-width:1324px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 872" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Electrical block diagram: Thermal Probe, 10 blocks, 4 rails, 4 buses" preserveAspectRatio="xMidYMid meet">
 <style>
 .s{fill:#fcfcfb} .bx{fill:#ffffff;stroke:#c3c2b7} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .gt{fill:#c3c2b7}
 @media (prefers-color-scheme:dark){.s{fill:#1a1a19} .bx{fill:#242422;stroke:#383835} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .gt{fill:#383835}}
 .mut{fill:#898781}
 .t{font-size:12px} .tb{font-size:12.5px;font-weight:600} .ts{font-size:10px} .tr{font-size:11.5px;font-weight:600} .h{font-size:15px;font-weight:600} .hh{font-size:11px;font-weight:600;letter-spacing:0.06em}
 </style>
-<rect width="1204" height="902" class="s" rx="6"/>
+<rect width="1290" height="872" class="s" rx="6"/>
 <text x="24" y="27" class="h ink">Thermal Probe  ·  rev C</text>
 <text x="24" y="46" class="t ink2">10 blocks · 4 rails · 4 buses</text>
 <text x="24" y="61" class="ts mut">generated from block-diagram.yaml — edit the spec, not this file</text>
@@ -975,76 +1015,73 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <text x="34.0" y="682.0" class="ts mut">REGULATOR</text>
 <rect x="167.0" y="672.0" width="33.0" height="15" rx="7.5" fill="#e08a1e"/>
 <text x="183.5" y="683.0" class="ts" fill="#ffffff" text-anchor="middle">VBAT</text>
-<rect x="274.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
-<text x="284.0" y="336.0" class="tb ink">U3 · MCU</text>
-<text x="284.0" y="352.0" class="t ink2">STM32L071KBU6</text>
-<text x="284.0" y="370.0" class="ts mut">MCU</text>
-<rect x="417.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
-<text x="433.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
-<rect x="524.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
-<text x="534.0" y="336.0" class="tb ink">U5 · Log flash, 16 Mbit</text>
-<text x="534.0" y="352.0" class="t ink2">W25Q16JVUXIQ</text>
-<text x="534.0" y="370.0" class="ts mut">MEMORY</text>
-<rect x="667.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
-<text x="683.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
-<rect x="524.0" y="420.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
-<text x="534.0" y="440.0" class="tb ink">DS1 · Segment LCD module</text>
-<text x="534.0" y="456.0" class="t ink2">VIM-878-DP-RC-S-LV</text>
-<text x="534.0" y="474.0" class="ts mut">INTERFACE</text>
-<rect x="667.0" y="464.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
-<text x="683.5" y="475.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
-<rect x="524.0" y="524.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
-<text x="534.0" y="544.0" class="tb ink">RT1 · Probe thermistor, NTC 10</text>
-<text x="534.0" y="560.0" class="t ink2">NTCLE100E3103JB0</text>
-<text x="534.0" y="578.0" class="ts mut">SENSOR</text>
-<rect x="667.0" y="568.0" width="33.0" height="15" rx="7.5" fill="#2a78d6"/>
-<text x="683.5" y="579.0" class="ts" fill="#ffffff" text-anchor="middle">VREF</text>
-<rect x="524.0" y="628.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
-<text x="534.0" y="648.0" class="tb ink">SW1 · Wake button</text>
-<text x="534.0" y="664.0" class="t ink2">TL3305AF160QG</text>
-<text x="534.0" y="682.0" class="ts mut">INTERFACE</text>
-<rect x="774.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
-<text x="784.0" y="336.0" class="tb ink">U4 · Voltage reference</text>
-<text x="784.0" y="352.0" class="t ink2">REF3025AIDBZR</text>
-<text x="784.0" y="370.0" class="ts mut">ANALOG</text>
-<rect x="917.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
-<text x="933.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
-<line x1="472.0" y1="738.0" x2="722.0" y2="738.0" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M460.0,339.0 H472.0 V738.0" fill="none" stroke="#8b5cf6" stroke-width="1.6"/>
-<path d="M-4.5,-5 L4.5,-5 L0,3.5 z" transform="translate(472.0,734.0)" fill="#8b5cf6"/>
-<circle cx="460.0" cy="339.0" r="2.4" fill="#8b5cf6"/>
-<path d="M710.0,339.0 H722.0 V738.0" fill="none" stroke="#8b5cf6" stroke-width="1.6"/>
-<circle cx="722.0" cy="738.0" r="3.2" fill="#8b5cf6"/>
-<circle cx="710.0" cy="339.0" r="2.4" fill="#8b5cf6"/>
-<path d="M710.0,443.0 H722.0 V738.0" fill="none" stroke="#8b5cf6" stroke-width="1.6"/>
-<circle cx="722.0" cy="738.0" r="3.2" fill="#8b5cf6"/>
-<circle cx="710.0" cy="443.0" r="2.4" fill="#8b5cf6"/>
-<text x="732.0" y="742.0" class="ts" fill="#8b5cf6">SPI1 · SPI · 8 MHz, two chip selects. Flash and LCD share the bus.</text>
-<line x1="483.0" y1="768.0" x2="733.0" y2="768.0" stroke="#d03b3b" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M710.0,559.0 H733.0 V768.0" fill="none" stroke="#d03b3b" stroke-width="1.6"/>
-<circle cx="733.0" cy="768.0" r="3.2" fill="#d03b3b"/>
-<circle cx="710.0" cy="559.0" r="2.4" fill="#d03b3b"/>
-<path d="M460.0,351.0 H483.0 V768.0" fill="none" stroke="#d03b3b" stroke-width="1.6"/>
-<circle cx="483.0" cy="768.0" r="3.2" fill="#d03b3b"/>
-<circle cx="460.0" cy="351.0" r="2.4" fill="#d03b3b"/>
-<text x="743.0" y="772.0" class="ts" fill="#d03b3b">ADC1 · ANALOG · Ratiometric against VREF, 12-bit, 16x oversampled</text>
-<line x1="244.0" y1="798.0" x2="494.0" y2="798.0" stroke="#64748b" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M460.0,363.0 H494.0 V798.0" fill="none" stroke="#64748b" stroke-width="1.6"/>
-<circle cx="494.0" cy="798.0" r="3.2" fill="#64748b"/>
-<circle cx="460.0" cy="363.0" r="2.4" fill="#64748b"/>
-<path d="M210.0,363.0 H244.0 V798.0" fill="none" stroke="#64748b" stroke-width="1.6"/>
-<circle cx="244.0" cy="798.0" r="3.2" fill="#64748b"/>
-<circle cx="210.0" cy="363.0" r="2.4" fill="#64748b"/>
-<text x="504.0" y="802.0" class="ts" fill="#64748b">SWD1 · SWD · Debug on the USB-C sideband pins via a test fixture</text>
-<line x1="505.0" y1="828.0" x2="755.0" y2="828.0" stroke="#6b7280" stroke-width="2.2" stroke-linecap="round"/>
-<path d="M710.0,651.0 H755.0 V828.0" fill="none" stroke="#6b7280" stroke-width="1.6"/>
-<circle cx="755.0" cy="828.0" r="3.2" fill="#6b7280"/>
-<circle cx="710.0" cy="651.0" r="2.4" fill="#6b7280"/>
-<path d="M460.0,339.0 H505.0 V828.0" fill="none" stroke="#6b7280" stroke-width="1.6"/>
-<circle cx="505.0" cy="828.0" r="3.2" fill="#6b7280"/>
-<circle cx="460.0" cy="339.0" r="2.4" fill="#6b7280"/>
-<text x="765.0" y="832.0" class="ts" fill="#6b7280">GPIO1 · GPIO · Wake interrupt, pulled up internally</text>
-<text x="24" y="886" class="ts mut">▼ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
+<rect x="306.0" y="472.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="316.0" y="492.0" class="tb ink">U3 · MCU</text>
+<text x="316.0" y="508.0" class="t ink2">STM32L071KBU6</text>
+<text x="316.0" y="526.0" class="ts mut">MCU</text>
+<rect x="449.0" y="516.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="465.5" y="527.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="588.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="598.0" y="336.0" class="tb ink">U5 · Log flash, 16 Mbit</text>
+<text x="598.0" y="352.0" class="t ink2">W25Q16JVUXIQ</text>
+<text x="598.0" y="370.0" class="ts mut">MEMORY</text>
+<rect x="731.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="747.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="588.0" y="420.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="598.0" y="440.0" class="tb ink">DS1 · Segment LCD module</text>
+<text x="598.0" y="456.0" class="t ink2">VIM-878-DP-RC-S-LV</text>
+<text x="598.0" y="474.0" class="ts mut">INTERFACE</text>
+<rect x="731.0" y="464.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="747.5" y="475.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="588.0" y="524.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="598.0" y="544.0" class="tb ink">RT1 · Probe thermistor, NTC 10</text>
+<text x="598.0" y="560.0" class="t ink2">NTCLE100E3103JB0</text>
+<text x="598.0" y="578.0" class="ts mut">SENSOR</text>
+<rect x="731.0" y="568.0" width="33.0" height="15" rx="7.5" fill="#2a78d6"/>
+<text x="747.5" y="579.0" class="ts" fill="#ffffff" text-anchor="middle">VREF</text>
+<rect x="588.0" y="628.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="598.0" y="648.0" class="tb ink">SW1 · Wake button</text>
+<text x="598.0" y="664.0" class="t ink2">TL3305AF160QG</text>
+<text x="598.0" y="682.0" class="ts mut">INTERFACE</text>
+<rect x="870.0" y="472.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="880.0" y="492.0" class="tb ink">U4 · Voltage reference</text>
+<text x="880.0" y="508.0" class="t ink2">REF3025AIDBZR</text>
+<text x="880.0" y="526.0" class="ts mut">ANALOG</text>
+<rect x="1013.0" y="516.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="1029.5" y="527.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<path d="M492.0,507.0 H540.0 V559.0 H584.0" fill="none" stroke="#d03b3b" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="492.0" cy="507.0" r="2.6" fill="#d03b3b"/>
+<circle cx="585.0" cy="559.0" r="3" fill="#d03b3b"/>
+<text x="545" y="536" class="ts" fill="#d03b3b" text-anchor="start">ADC1</text>
+<path d="M210.0,351.0 H258.0 V507.0 H302.0" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="210.0" cy="351.0" r="2.6" fill="#64748b"/>
+<circle cx="303.0" cy="507.0" r="3" fill="#64748b"/>
+<text x="263" y="432" class="ts" fill="#64748b" text-anchor="start">SWD1</text>
+<path d="M492.0,507.0 H540.0 V663.0 H584.0" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="492.0" cy="507.0" r="2.6" fill="#6b7280"/>
+<circle cx="585.0" cy="663.0" r="3" fill="#6b7280"/>
+<text x="545" y="588" class="ts" fill="#6b7280" text-anchor="start">GPIO1</text>
+<line x1="518.0" y1="351.0" x2="518.0" y2="507.0" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round"/>
+<text x="523.0" y="342.0" class="ts" fill="#8b5cf6">SPI1</text>
+<line x1="492.0" y1="507.0" x2="518.0" y2="507.0" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="492.0" cy="507.0" r="2.6" fill="#8b5cf6"/>
+<rect x="514.0" y="503.0" width="8" height="8" rx="1.5" fill="#8b5cf6"/>
+<line x1="588.0" y1="351.0" x2="518.0" y2="351.0" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="588.0" cy="351.0" r="2.6" fill="#8b5cf6"/>
+<circle cx="518.0" cy="351.0" r="3.2" fill="#8b5cf6"/>
+<line x1="588.0" y1="455.0" x2="518.0" y2="455.0" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="588.0" cy="455.0" r="2.6" fill="#8b5cf6"/>
+<circle cx="518.0" cy="455.0" r="3.2" fill="#8b5cf6"/>
+<text x="24" y="724.0" class="tb ink2">DATA BUSES</text>
+<line x1="24" y1="744.0" x2="46" y2="744.0" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="748.0" class="ts ink2">SPI1 · SPI — 8 MHz, two chip selects. Flash and LCD share the bus.</text>
+<line x1="24" y1="766.0" x2="46" y2="766.0" stroke="#d03b3b" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="770.0" class="ts ink2">ADC1 · ANALOG — Ratiometric against VREF, 12-bit, 16x oversampled</text>
+<line x1="24" y1="788.0" x2="46" y2="788.0" stroke="#64748b" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="792.0" class="ts ink2">SWD1 · SWD — Debug on the USB-C sideband pins via a test fixture</text>
+<line x1="24" y1="810.0" x2="46" y2="810.0" stroke="#6b7280" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="814.0" class="ts ink2">GPIO1 · GPIO — Wake interrupt, pulled up internally</text>
+<text x="24" y="856" class="ts mut">■ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
 </svg></div>
 <figcaption>Power tree with a budget gauge per rail, then the functional blocks and the buses between them.</figcaption></figure>
 <div class="scroll"><table><thead><tr>
@@ -1054,13 +1091,12 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <th>Max</th>
 <th>Limit</th>
 <th>Used</th>
+<th>Largest load</th>
 <th>State</th></tr></thead><tbody>
 <tr>
 <td>VBUS
 </td>
 <td class="num">5.0 V
-<div class="detail">USB-C sink, 5 V @ 500 mA default. Charging only; not a run rail.</div>
-<div class="paths"><code>U1 450 mA</code></div>
 </td>
 <td class="num">100 mA
 </td>
@@ -1070,13 +1106,13 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 </td>
 <td class="num">90%
 </td>
+<td>U1
+</td>
 <td class="state t-wait">tight</td></tr>
 <tr>
 <td>VBAT
 </td>
 <td class="num">3.7 V
-<div class="detail">900 mAh LiPo, 3.0-4.2 V. Limit is the cell&#x27;s 1C discharge rating, not a regulator. Peak is set by the display backlight inrush.</div>
-<div class="paths"><code>V3P3 11 mA</code><code>U2 0 mA</code></div>
 </td>
 <td class="num">4 mA
 </td>
@@ -1086,13 +1122,13 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 </td>
 <td class="num">1%
 </td>
+<td>V3P3
+</td>
 <td class="state t-ok">ok</td></tr>
 <tr>
 <td>V3P3
 </td>
 <td class="num">3.3 V
-<div class="detail">MCP1700 LDO, 250 mA. Always-on rail; the 40 uA standby budget lives here.</div>
-<div class="paths"><code>U3 8 mA</code><code>U5 4 mA</code><code>VREF 0 mA</code><code>U4 0 mA</code><code>DS1 0 mA</code></div>
 </td>
 <td class="num">4 mA
 </td>
@@ -1102,13 +1138,13 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 </td>
 <td class="num">5%
 </td>
+<td>U3
+</td>
 <td class="state t-ok">ok</td></tr>
 <tr>
 <td>VREF
 </td>
 <td class="num">2.5 V
-<div class="detail">REF3025 reference for the thermistor divider. Gated off in standby.</div>
-<div class="paths"><code>RT1 0 mA</code></div>
 </td>
 <td class="num">0 mA
 </td>
@@ -1118,6 +1154,8 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 </td>
 <td class="num">2%
 </td>
+<td>RT1
+</td>
 <td class="state t-ok">ok</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
@@ -1126,11 +1164,108 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <li>U4: on no bus — is it really unconnected?</li>
 </ul></div>
 </section>
+<section class="panel" role="tabpanel" id="p-cad" aria-labelledby="t-cad" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 5 · mechanical</span>
+<h2>Enclosure, rev C</h2></div>
+<span class="pill t-ok">Approved</span></div>
+<p class="summary">Envelope frozen from the agreed wand concept. The board outline is
+published as an interface at 33.4 x 96 mm and the electrical side is now working
+to it, so moving it is expensive from here.</p>
+<blockquote>Yes to both. Move the seam to 45% if the tooling allows it, but do not
+hold the schematic for it.<span class="who">harrison · 2026-08-31</span></blockquote>
+<figure>
+<div class="sheet" style="max-width:674px"><img src="data:image/png;base64,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" alt="Exploded view, rendered from the parametric model. Lid, board and cell at their modelled positions."></div>
+<figcaption>Exploded view, rendered from the parametric model. Lid, board and cell at their modelled positions.</figcaption></figure>
+<figure>
+<div class="sheet" style="max-width:464px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 190" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Cross-section of the enclosure stack" preserveAspectRatio="xMidYMid meet"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><text x="20" y="26" class="h ink">Section A–A — internal stack</text>
+<text x="20" y="44" class="ts mut">through the cell pocket, looking up the long axis</text>
+<rect x="90" y="90" width="98.8" height="57.2" fill="none" stroke="#0b0b0b" stroke-width="1.6"/>
+<rect x="94.68" y="94.68" width="89.44" height="47.84" fill="none" stroke="#52514e" stroke-width="1"/>
+<rect x="100.4" y="132.64" width="78.0" height="9.879999999999999" fill="#2a78d6" opacity="0.75"/>
+<rect x="95.97999999999999" y="122.47999999999999" width="86.84" height="4.16" fill="#0f9b8e" opacity="0.85"/>
+<line x1="194.8" y1="100" x2="210.8" y2="100" stroke="#898781" stroke-width="0.7"/>
+<text x="216.8" y="104" class="ts ink2">1.8 mm wall</text>
+<line x1="194.8" y1="116.63999999999999" x2="210.8" y2="116.63999999999999" stroke="#898781" stroke-width="0.7"/>
+<text x="216.8" y="120.63999999999999" class="ts ink2">PCB, 1.6 mm</text>
+<line x1="194.8" y1="137.57999999999998" x2="210.8" y2="137.57999999999998" stroke="#898781" stroke-width="0.7"/>
+<text x="216.8" y="141.57999999999998" class="ts ink2">cell, 3.8 mm</text>
+<text x="90" y="169.2" class="num mut">clearance board→lid 8.4 mm · board→cell 6.0 mm</text></svg></div>
+<figcaption>Section through the cell pocket — wall thicknesses and the two clearances the display depends on.</figcaption></figure>
+</section>
 <section class="panel" role="tabpanel" id="p-schematic" aria-labelledby="t-schematic" hidden>
 <div class="phase-head"><div>
-<span class="eyebrow">Stage 5</span>
+<span class="eyebrow">Stage 5 · electrical</span>
 <h2>Schematic</h2></div>
 <span class="pill t-idle">Not yet submitted</span></div>
+<figure>
+<div class="sheet" style="max-width:934px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 470" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Schematic sheet 1: power input and regulation" preserveAspectRatio="xMidYMid meet"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><rect x="10" y="10" width="880" height="450" fill="none" stroke="#c3c2b7" stroke-width="1"/>
+<text x="26" y="38" class="h ink">Power input and regulation</text>
+<text x="26" y="56" class="ts mut">Thermal Probe · sheet 1 of 2 · rev C · ERC 0 errors, 2 warnings</text>
+<text x="40" y="114" class="num ink">VBUS</text>
+<line x1="36" y1="120" x2="84" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<rect x="150" y="96" width="96" height="76" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="198.0" y="80" class="tb ink" text-anchor="middle">U1</text>
+<text x="198.0" y="92" class="num ink2" text-anchor="middle">MCP73831</text>
+<line x1="150" y1="120" x2="134" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="156" y="124" class="ts ink2" text-anchor="start">VDD</text>
+<line x1="150" y1="152" x2="134" y2="152" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="156" y="156" class="ts ink2" text-anchor="start">PROG</text>
+<line x1="246" y1="120" x2="262" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="240" y="124" class="ts ink2" text-anchor="end">VBAT</text>
+<line x1="246" y1="152" x2="262" y2="152" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="240" y="156" class="ts ink2" text-anchor="end">STAT</text>
+<path d="M84,120 L134,120" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<path d="M262,120 L330,120" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="330" y="114" class="num ink">VBAT</text>
+<line x1="326" y1="120" x2="374" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<circle cx="330" cy="120" r="2.6" fill="#0b0b0b"/>
+<path d="M330,120 L330,190" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="330" y1="190" x2="330" y2="200" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="321" y1="200" x2="339" y2="200" stroke="#0b0b0b" stroke-width="1.8"/>
+<line x1="321" y1="205" x2="339" y2="205" stroke="#0b0b0b" stroke-width="1.8"/>
+<line x1="330" y1="205" x2="330" y2="215" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="343" y="199" class="num ink2">C1</text>
+<text x="343" y="211" class="num mut">4.7u</text>
+<line x1="330" y1="215" x2="330" y2="223" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="319" y1="223" x2="341" y2="223" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="323" y1="227" x2="337" y2="227" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="327" y1="231" x2="333" y2="231" stroke="#0b0b0b" stroke-width="1.4"/>
+<rect x="470" y="96" width="96" height="76" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="518.0" y="80" class="tb ink" text-anchor="middle">U2</text>
+<text x="518.0" y="92" class="num ink2" text-anchor="middle">MCP1700-3302</text>
+<line x1="470" y1="120" x2="454" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="476" y="124" class="ts ink2" text-anchor="start">VIN</text>
+<line x1="470" y1="152" x2="454" y2="152" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="476" y="156" class="ts ink2" text-anchor="start">GND</text>
+<line x1="566" y1="120" x2="582" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="560" y="124" class="ts ink2" text-anchor="end">VOUT</text>
+<path d="M374,120 L454,120" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<path d="M582,120 L660,120" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="660" y="114" class="num ink">V3P3</text>
+<line x1="656" y1="120" x2="704" y2="120" stroke="#0b0b0b" stroke-width="1.4"/>
+<circle cx="660" cy="120" r="2.6" fill="#0b0b0b"/>
+<path d="M660,120 L660,190" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="660" y1="190" x2="660" y2="200" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="651" y1="200" x2="669" y2="200" stroke="#0b0b0b" stroke-width="1.8"/>
+<line x1="651" y1="205" x2="669" y2="205" stroke="#0b0b0b" stroke-width="1.8"/>
+<line x1="660" y1="205" x2="660" y2="215" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="673" y="199" class="num ink2">C2</text>
+<text x="673" y="211" class="num mut">1u</text>
+<line x1="660" y1="215" x2="660" y2="223" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="649" y1="223" x2="671" y2="223" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="653" y1="227" x2="667" y2="227" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="657" y1="231" x2="663" y2="231" stroke="#0b0b0b" stroke-width="1.4"/>
+<path d="M454,152 L440,152 L440,200" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="440" y1="200" x2="440" y2="208" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="429" y1="208" x2="451" y2="208" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="433" y1="212" x2="447" y2="212" stroke="#0b0b0b" stroke-width="1.4"/>
+<line x1="437" y1="216" x2="443" y2="216" stroke="#0b0b0b" stroke-width="1.4"/>
+<rect x="150" y="290" width="600" height="52" fill="none" stroke="#d03b3b" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="164" y="310" class="tb" fill="#d03b3b">ERC warning ×2</text>
+<text x="164" y="328" class="ts ink2">U1 STAT and U2 GND-sense are unconnected. Intentional — the LED was dropped at the vision review — but they need no-connect flags.</text>
+<text x="26" y="448" class="ts mut">generated by kicad-cli sch export svg — the .kicad_sch is the source</text></svg></div>
+<figcaption>Sheet 1 of 2 — USB-C in, charger, cell and the 3.3 V regulator. ERC is clean apart from two deliberate no-connects.</figcaption></figure>
 <div class="prose"><h3>Status</h3>
 <p>Accepted — 2026-08-14</p>
 <h3>Context</h3>
@@ -1173,6 +1308,42 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <span class="eyebrow">Stage 6</span>
 <h2>Simulation</h2></div>
 <span class="pill t-idle">Not yet submitted</span></div>
+<figure>
+<div class="sheet" style="max-width:694px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 320" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Standby current at four corners against the 40 microamp limit" preserveAspectRatio="xMidYMid meet"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><text x="20" y="28" class="h ink">Standby current by corner</text>
+<text x="20" y="46" class="ts mut">ngspice · sim/standby/standby.cir · run 2026-08-27 · cross-checked against the closed-form leakage sum</text>
+<line x1="168.0" y1="88" x2="168.0" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="168.0" y="82" class="ts mut" text-anchor="middle">0</text>
+<line x1="232.6" y1="88" x2="232.6" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="232.6" y="82" class="ts mut" text-anchor="middle">10</text>
+<line x1="297.1" y1="88" x2="297.1" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="297.1" y="82" class="ts mut" text-anchor="middle">20</text>
+<line x1="361.7" y1="88" x2="361.7" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="361.7" y="82" class="ts mut" text-anchor="middle">30</text>
+<line x1="426.3" y1="88" x2="426.3" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="426.3" y="82" class="ts mut" text-anchor="middle">40</text>
+<line x1="490.9" y1="88" x2="490.9" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="490.9" y="82" class="ts mut" text-anchor="middle">50</text>
+<line x1="555.4" y1="88" x2="555.4" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="555.4" y="82" class="ts mut" text-anchor="middle">60</text>
+<line x1="620.0" y1="88" x2="620.0" y2="272" stroke="#c3c2b7" stroke-width="1" opacity="0.45"/>
+<text x="620.0" y="82" class="ts mut" text-anchor="middle">70</text>
+<text x="168" y="60" class="lbl mut">STANDBY CURRENT, MICROAMPS</text>
+<line x1="426.3" y1="88" x2="426.3" y2="272" stroke="#52514e" stroke-width="1.6" stroke-dasharray="5 3"/>
+<text x="432.3" y="288" class="ts ink2">ELE-001 limit — 40 µA</text>
+<text x="154" y="113.0" class="t ink2" text-anchor="end">25 °C, 3.7 V nom</text>
+<rect x="168" y="96" width="80.1" height="26" rx="4" fill="#0ca30c"/>
+<text x="257.1" y="113.0" class="num" fill="#52514e" font-weight="400">12.4 µA</text>
+<text x="154" y="157.0" class="t ink2" text-anchor="end">−30 °C, 4.2 V max</text>
+<rect x="168" y="140" width="58.8" height="26" rx="4" fill="#0ca30c"/>
+<text x="235.8" y="157.0" class="num" fill="#52514e" font-weight="400">9.1 µA</text>
+<text x="154" y="201.0" class="t ink2" text-anchor="end">+40 °C, 3.5 V min</text>
+<rect x="168" y="184" width="205.3" height="26" rx="4" fill="#0ca30c"/>
+<text x="382.3" y="201.0" class="num" fill="#52514e" font-weight="400">31.8 µA</text>
+<text x="154" y="245.0" class="t ink2" text-anchor="end">+60 °C, 4.2 V max</text>
+<rect x="168" y="228" width="375.8" height="26" rx="4" fill="#d03b3b"/>
+<text x="552.8" y="245.0" class="num" fill="#d03b3b" font-weight="600">58.2 µA   ✕ FAIL</text>
+<text x="20" y="300" class="ts mut">The +60 °C corner is outside the SYS-002 range of −30 to +40 °C and is shown for information.</text></svg></div>
+<figcaption>Standby current at four corners against the 40 uA cap in ELE-001. The failing corner is outside the specified temperature range.</figcaption></figure>
 <div class="prose"><p>ngspice, deck at <code>sim/standby/standby.cir</code>, run 2026-08-27.</p>
 <p>Cross-checked against the closed-form leakage sum (1.6 + 42 + 1 + 12 uA typ).</p>
 <div class="scroll"><table><thead><tr><th>Corner</th><th>Measured</th><th>Required</th><th>Margin</th></tr></thead><tbody>
@@ -1191,7 +1362,261 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <p><code>observations</code> was empty on all four runs — no singular-matrix or</p>
 <p>convergence warnings.</p></div>
 </section>
-<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>21f6347</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
+<section class="panel" role="tabpanel" id="p-fea" aria-labelledby="t-fea" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 6</span>
+<h2>Thermal FEA</h2></div>
+<span class="pill t-idle">Not yet submitted</span></div>
+<figure>
+<div class="sheet" style="max-width:654px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 330" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Board temperature rise contour map" preserveAspectRatio="xMidYMid meet"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><text x="20" y="28" class="h ink">Board temperature rise, steady state</text>
+<text x="20" y="46" class="ts mut">CalculiX · 21 °C ambient, still air, 12 mA continuous · peak 14.2 K over ambient at U2</text>
+<rect x="40.0" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="74.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="83.4" y="74.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="90.7" y="74.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="97.9" y="74.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="105.1" y="74.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="112.4" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="74.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="80.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="80.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="80.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="80.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="80.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="80.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="83.4" y="80.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="90.7" y="80.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="97.9" y="80.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="105.1" y="80.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="112.4" y="80.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="80.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="87.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="87.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="87.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="87.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="87.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="87.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="83.4" y="87.0" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="90.7" y="87.0" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="97.9" y="87.0" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="105.1" y="87.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="112.4" y="87.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="87.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="93.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="93.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="93.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="93.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="93.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="93.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="83.4" y="93.5" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="90.7" y="93.5" width="7.8" height="7.1" fill="#a8460d"/>
+<rect x="97.9" y="93.5" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="105.1" y="93.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="112.4" y="93.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="93.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="100.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="100.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="100.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="100.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="100.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="100.0" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="83.4" y="100.0" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="90.7" y="100.0" width="7.8" height="7.1" fill="#a8460d"/>
+<rect x="97.9" y="100.0" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="105.1" y="100.0" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="112.4" y="100.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="100.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="106.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="106.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="106.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="106.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="106.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="106.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="83.4" y="106.5" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="90.7" y="106.5" width="7.8" height="7.1" fill="#a8460d"/>
+<rect x="97.9" y="106.5" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="105.1" y="106.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="112.4" y="106.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="106.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="113.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="113.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="113.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="113.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="113.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="113.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="83.4" y="113.0" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="90.7" y="113.0" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="97.9" y="113.0" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="105.1" y="113.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="112.4" y="113.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="113.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="119.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="119.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="119.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="119.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="119.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="119.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="83.4" y="119.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="90.7" y="119.5" width="7.8" height="7.1" fill="#d1691f"/>
+<rect x="97.9" y="119.5" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="105.1" y="119.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="112.4" y="119.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="119.6" y="119.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="126.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="126.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="126.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="126.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="126.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="76.2" y="126.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="83.4" y="126.0" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="90.7" y="126.0" width="7.8" height="7.1" fill="#e89440"/>
+<rect x="97.9" y="126.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="105.1" y="126.0" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="112.4" y="126.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="126.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="132.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="83.4" y="132.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="90.7" y="132.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="97.9" y="132.5" width="7.8" height="7.1" fill="#f5bd6d"/>
+<rect x="105.1" y="132.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="112.4" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="132.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="139.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="83.4" y="139.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="90.7" y="139.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="97.9" y="139.0" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="105.1" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="112.4" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="139.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="83.4" y="145.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="90.7" y="145.5" width="7.8" height="7.1" fill="#fadCA0"/>
+<rect x="97.9" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="105.1" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="112.4" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="145.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="83.4" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="90.7" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="97.9" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="105.1" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="112.4" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="152.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="83.4" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="90.7" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="97.9" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="105.1" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="112.4" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="158.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="83.4" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="90.7" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="97.9" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="105.1" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="112.4" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="165.0" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40.0" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="47.2" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="54.5" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="61.7" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="68.9" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="76.2" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="83.4" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="90.7" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="97.9" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="105.1" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="112.4" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="119.6" y="171.5" width="7.8" height="7.1" fill="#fdf0d5"/>
+<rect x="40" y="74" width="86.8" height="104.0" fill="none" stroke="#0b0b0b" stroke-width="1.2"/>
+<circle cx="93.8" cy="105.2" r="5" fill="none" stroke="#0b0b0b" stroke-width="1.4"/>
+<text x="103.8" y="109.2" class="ts ink">U2 · 14.2 K</text>
+<rect x="400" y="160.7" width="26" height="17.8" fill="#fdf0d5"/>
+<rect x="400" y="143.3" width="26" height="17.8" fill="#fadCA0"/>
+<rect x="400" y="126.0" width="26" height="17.8" fill="#f5bd6d"/>
+<rect x="400" y="108.7" width="26" height="17.8" fill="#e89440"/>
+<rect x="400" y="91.3" width="26" height="17.8" fill="#d1691f"/>
+<rect x="400" y="74.0" width="26" height="17.8" fill="#a8460d"/>
+<rect x="400" y="74" width="26" height="104.0" fill="none" stroke="#c3c2b7" stroke-width="1"/>
+<text x="433" y="182.0" class="num mut">0.0</text>
+<text x="433" y="164.7" class="num mut">2.5</text>
+<text x="433" y="147.3" class="num mut">5.0</text>
+<text x="433" y="130.0" class="num mut">7.5</text>
+<text x="433" y="112.7" class="num mut">10.0</text>
+<text x="433" y="95.3" class="num mut">12.5</text>
+<text x="433" y="78.0" class="num mut">15.0</text>
+<text x="400" y="62" class="lbl mut">K OVER AMBIENT</text>
+<text x="20" y="310" class="ts mut">MEC-004 caps the case at 20 K over ambient. Margin 5.8 K, at the still-air corner.</text></svg></div>
+<figcaption>Steady-state rise over ambient. The hot spot is the LDO, which is the part ADR-0002 accepted the efficiency penalty on.</figcaption></figure>
+</section>
+<section class="panel" role="tabpanel" id="p-mfg" aria-labelledby="t-mfg" hidden>
+<div class="phase-head"><div>
+<span class="eyebrow">Stage 7</span>
+<h2>Manufacturing</h2></div>
+<span class="pill t-idle">Not yet submitted</span></div>
+<figure>
+<div class="sheet" style="max-width:654px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 300" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Two-layer PCB stackup" preserveAspectRatio="xMidYMid meet"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><text x="20" y="28" class="h ink">Stackup — 2 layer, 1.6 mm</text>
+<text x="20" y="46" class="ts mut">finished 1.62 mm ±10% · ENIG · min track/gap 0.15 mm · min drill 0.30 mm</text>
+<rect x="150" y="80.0" width="260" height="5.0" fill="#0f9b8e" stroke="#0b0b0b" stroke-width="0.7"/>
+<text x="138" y="86.5" class="num ink2" text-anchor="end">F.Mask</text>
+<text x="422" y="83.5" class="ts ink2">0.015 mm</text>
+<text x="422" y="95.5" class="ts mut">soldermask</text>
+<rect x="150" y="87.0" width="260" height="5.0" fill="#c08a2e" stroke="#0b0b0b" stroke-width="0.7"/>
+<text x="138" y="93.5" class="num ink2" text-anchor="end">F.Cu</text>
+<text x="422" y="90.5" class="ts ink2">0.035 mm</text>
+<text x="422" y="102.5" class="ts mut">1 oz copper</text>
+<rect x="150" y="94.0" width="260" height="166.1" fill="#d9d6cc" stroke="#0b0b0b" stroke-width="0.7"/>
+<text x="138" y="181.1" class="num ink2" text-anchor="end">Core</text>
+<text x="422" y="178.1" class="ts ink2">1.510 mm</text>
+<text x="422" y="190.1" class="ts mut">FR-4 TG150</text>
+<rect x="150" y="262.1" width="260" height="5.0" fill="#c08a2e" stroke="#0b0b0b" stroke-width="0.7"/>
+<text x="138" y="268.6" class="num ink2" text-anchor="end">B.Cu</text>
+<text x="422" y="265.6" class="ts ink2">0.035 mm</text>
+<text x="422" y="277.6" class="ts mut">1 oz copper</text>
+<rect x="150" y="269.1" width="260" height="5.0" fill="#0f9b8e" stroke="#0b0b0b" stroke-width="0.7"/>
+<text x="138" y="275.6" class="num ink2" text-anchor="end">B.Mask</text>
+<text x="422" y="272.6" class="ts ink2">0.015 mm</text>
+<text x="422" y="284.6" class="ts mut">soldermask</text>
+<line x1="104" y1="80" x2="104" y2="274.1" stroke="#898781" stroke-width="0.8"/>
+<text x="98" y="178.1" class="num mut" text-anchor="middle" transform="rotate(-90 98 178.1)">1.610 mm</text>
+<text x="20" y="280" class="ts mut">Not to scale in Z — copper is drawn at a floor so it stays visible.</text></svg></div>
+<figcaption>Two-layer stackup as it will be quoted. Finished thickness and the minimum feature sizes the fab needs to confirm.</figcaption></figure>
+</section>
+<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>cb4b78a</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
 </div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];

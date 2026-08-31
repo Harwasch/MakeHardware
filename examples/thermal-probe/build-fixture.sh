@@ -22,12 +22,18 @@ echo "== 1. vision renders and requirements export =="
 "${PY}" build-fixture.py || exit 1
 
 echo
-echo "== 2. block diagram and power budget =="
-block >/dev/null 2>&1
+echo "== 2. design-stage artefacts (CAD, schematic, plots) =="
+"${PY}" build-design-fixtures.py || exit 1
+
+echo
+echo "== 3. block diagram and power budget =="
+# --relayout, or the previous run's hand-placed positions are read back and
+# the layout under test never changes.
+block --relayout >/dev/null 2>&1
 block --summary 2>/dev/null | head -8
 
 echo
-echo "== 3. plan chart and scope document =="
+echo "== 4. plan chart and scope document =="
 # The plan gate refuses a `done` chunk whose review is unsigned, and the plan
 # review needs docs/plan.md to exist — so render once with the claims relaxed,
 # exactly as a real project does before its first review, then restore.
@@ -44,7 +50,7 @@ plan >/dev/null 2>&1
 mv .plan.yaml.bak plan.yaml
 
 echo
-echo "== 4. the review ledger =="
+echo "== 5. the review ledger =="
 rm -f docs/review/reviews.yaml
 
 # Approved, and still valid.
@@ -108,9 +114,27 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget." \
     --question "SPI1 shares flash and LCD on one bus — acceptable, or separate them?" \
     --question "Is charging at 450 mA off a 500 mA port too close?" >/dev/null
 
+# Approved, and still valid — a design stage, not one of the four milestones.
+review open cad --title "Enclosure, rev C" \
+    --summary "Envelope frozen from the agreed wand concept. The board outline is
+published as an interface at 33.4 x 96 mm and the electrical side is now working
+to it, so moving it is expensive from here." \
+    --artifact docs/design/cad/enclosure-render.png \
+    --artifact docs/design/cad/enclosure-section.svg \
+    --reference cad/enclosure.py \
+    --question "Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?" \
+    --question "Split line at 40% depth puts the seam on the grip. Acceptable?" >/dev/null
+review sign cad --approve --by harrison \
+    --note "Yes to both. Move the seam to 45% if the tooling allows it, but do not
+hold the schematic for it." >/dev/null
+
 echo
-echo "== 5. re-render the plan, now that the reviews exist =="
+echo "== 6. re-render the plan, now that the reviews exist =="
 plan --check && plan >/dev/null && echo "  plan renders clean"
+
+echo
+echo "== 7. the review page =="
+"${PY}" "${S}/review_artifact.py"
 
 echo
 review list

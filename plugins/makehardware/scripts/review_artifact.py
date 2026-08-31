@@ -156,21 +156,30 @@ def inline_svg(path: str) -> tuple[str | None, float]:
     return text.replace(head, new, 1).strip(), intrinsic
 
 
-def inline_raster(path: str) -> tuple[str | None, str | None]:
-    """(data-uri, warning). Big rasters are linked rather than embedded."""
+def png_width(blob: bytes) -> float:
+    """Pixel width from the IHDR chunk. No image library needed for this."""
+    if blob[:8] == b"\x89PNG\r\n\x1a\n" and blob[12:16] == b"IHDR":
+        return float(int.from_bytes(blob[16:20], "big"))
+    return 0.0
+
+
+def inline_raster(path: str) -> tuple[str | None, str | None, float]:
+    """(data-uri, warning, intrinsic width). Big rasters are reported, not embedded."""
     if not os.path.isfile(path):
-        return None, None
+        return None, None, 0.0
     size = os.path.getsize(path)
     if size > RASTER_BUDGET:
         return None, (f"{path} is {size // 1024} kB — too large to embed. "
-                      f"Downscale it for review, or link it.")
+                      f"Downscale it for review, or link it."), 0.0
     mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
             ".gif": "image/gif", ".webp": "image/webp"}.get(
                 os.path.splitext(path)[1].lower())
     if not mime:
-        return None, None
+        return None, None, 0.0
     with open(path, "rb") as fh:
-        return f"data:{mime};base64,{base64.b64encode(fh.read()).decode()}", None
+        blob = fh.read()
+    return (f"data:{mime};base64,{base64.b64encode(blob).decode()}", None,
+            png_width(blob))
 
 
 def markdown_to_html(text: str, strip_h1: bool = True) -> str:
@@ -269,9 +278,9 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
     svg, width = inline_svg(full) if full.lower().endswith(".svg") else (None, 0.0)
     if svg:
         return {"svg": svg, "caption": caption, "path": path, "w": width}
-    uri, warn = inline_raster(full)
+    uri, warn, rw = inline_raster(full)
     if uri:
-        return {"uri": uri, "caption": caption, "path": path}
+        return {"uri": uri, "caption": caption, "path": path, "w": rw}
     if warn:
         return {"warn": warn, "caption": caption, "path": path}
     return None
@@ -340,7 +349,7 @@ def phase_plan(root: str) -> Phase | None:
             "review": c.get("review"),
         })
     p.add("chunks", {"headers": ["Chunk", "Title", "Discipline", "Needs first", "Est."],
-                     "rows": rows})
+                     "rows": rows, "detail_col": 1})
     if plan_render:
         claims = plan_render.check_claims(plan)
         p.notes = claims
@@ -395,7 +404,7 @@ def phase_requirements(root: str) -> Phase | None:
                      "detail": "", "outputs": r.get("files") or [], "crit": False,
                      "review": None})
     p.add("chunks", {"headers": ["UID", "Requirement", "Method", "Budget", "Refines"],
-                     "rows": rows})
+                     "rows": rows, "detail_col": 1})
     for kind, items in (findings or {}).items():
         p.notes.extend(items)
     return p
@@ -428,31 +437,40 @@ def phase_architecture(root: str) -> Phase | None:
             limit = r["limit"]
             pct = f'{100 * r["max"] / limit:.0f}%' if limit else "—"
             tone = "stop" if r["over"] else ("wait" if r["tight"] else "ok")
+            head = max(r["loads"], key=lambda l: l[3])[0] if r["loads"] else "—"
             brows.append({
                 "cells": [r["id"], f'{r["voltage"]} V',
                           block_diagram._amps(r["typ"]),
                           block_diagram._amps(r["max"]),
-                          block_diagram._amps(limit) if limit else "—", pct],
+                          block_diagram._amps(limit) if limit else "—", pct,
+                          head],
                 "tone": tone,
                 "state": "over budget" if r["over"] else ("tight" if r["tight"] else "ok"),
-                "detail": r.get("notes") or "",
-                "outputs": [f'{bid} {block_diagram._amps(mx)}'
-                            for bid, _n, _t, mx in
-                            sorted(r["loads"], key=lambda l: -l[3])[:5]],
-                "crit": False, "review": None,
+                "detail": "", "outputs": [], "crit": False, "review": None,
             })
-        p.add("chunks", {"headers": ["Rail", "V", "Typ", "Max", "Limit", "Used"],
-                         "rows": brows})
+        # No detail column: a power budget is numbers, and the rail's notes
+        # belong in the spec and the summary, not wrapped inside a cell.
+        p.add("chunks", {"headers": ["Rail", "V", "Typ", "Max", "Limit",
+                                     "Used", "Largest load"],
+                         "rows": brows, "detail_col": None})
         _errors, warnings = block_diagram.validate(spec)
         p.notes = warnings
     return p
 
 
+def _humanise(path: str) -> str:
+    """`sheet-1-power.svg` -> `Sheet 1 power`. Better than shouting the filename."""
+    stem = os.path.splitext(os.path.basename(path))[0]
+    return stem.replace("-", " ").replace("_", " ").strip().capitalize()
+
+
 def phase_from_config(root: str, cfg: dict) -> Phase | None:
     p = Phase(cfg["id"], cfg.get("title", cfg["id"].title()), cfg.get("eyebrow", ""))
     figs = []
+    captions = cfg.get("captions") or {}
     for path in cfg.get("images") or []:
-        fig = figure(root, path)
+        cap = captions.get(path) or _humanise(path)
+        fig = figure(root, path, cap)
         if fig:
             figs.append(fig)
     p.add("figures", figs)
@@ -605,8 +623,7 @@ figure{margin:0 0 24px;min-width:0}
   overflow-x:auto}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
-figcaption{font-family:var(--cond);font-size:11px;letter-spacing:0.07em;
-  text-transform:uppercase;color:var(--muted);margin-top:7px}
+figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:70ch}
 
 /* ---- tables ---- */
 .scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel);
@@ -807,12 +824,13 @@ def render_phase(p: Phase) -> str:
                     cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
                     a(f'<div class="sheet"{cap_w}>{f["svg"]}</div>')
                 elif f.get("uri"):
-                    a(f'<div class="sheet"><img src="{f["uri"]}" '
+                    cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
+                    a(f'<div class="sheet"{cap_w}><img src="{f["uri"]}" '
                       f'alt="{esc(f.get("caption") or f["path"])}"></div>')
                 elif f.get("warn"):
                     a(f'<div class="notes calm"><h3>Not embedded</h3>'
                       f'<ul><li>{esc(f["warn"])}</li></ul></div>')
-                cap = f.get("caption") or os.path.basename(f["path"])
+                cap = f.get("caption") or _humanise(f["path"])
                 a(f"<figcaption>{esc(cap)}</figcaption></figure>")
             if grid:
                 a("</div>")
@@ -837,6 +855,15 @@ def render_phase(p: Phase) -> str:
 
 
 def render_table(t: dict) -> str:
+    """A data table. `detail_col` says which column carries the prose, if any.
+
+    It used to be hardcoded to column 1, which is the title on the plan and
+    requirements tables and the *voltage* on the power table — so a rail's
+    notes were rendered under a number, took the column's whole width and
+    pushed the rest of the row out of line. A table of numbers should be a
+    table of numbers.
+    """
+    detail_col = t.get("detail_col")
     o = ['<div class="scroll"><table><thead><tr>']
     for h in t["headers"]:
         o.append(f"<th>{esc(h)}</th>")
@@ -848,12 +875,13 @@ def render_table(t: dict) -> str:
             num = ' class="num"' if j and re.fullmatch(
                 r"[\d.,+\-—%]+ ?\w{0,3}", str(cell)) else ""
             o.append(f"<td{num}>{esc(cell)}")
-            if j == 1 and row.get("detail"):
-                o.append(f'<div class="detail">{esc(row["detail"])}</div>')
-            if j == 1 and row.get("outputs"):
-                o.append('<div class="paths">'
-                         + "".join(f"<code>{esc(p)}</code>"
-                                   for p in row["outputs"][:5]) + "</div>")
+            if j == detail_col:
+                if row.get("detail"):
+                    o.append(f'<div class="detail">{esc(row["detail"])}</div>')
+                if row.get("outputs"):
+                    o.append('<div class="paths">'
+                             + "".join(f"<code>{esc(p)}</code>"
+                                       for p in row["outputs"][:5]) + "</div>")
             o.append("</td>")
         o.append(f'<td class="state t-{row.get("tone", "idle")}">'
                  f'{esc(row.get("state", ""))}</td></tr>')

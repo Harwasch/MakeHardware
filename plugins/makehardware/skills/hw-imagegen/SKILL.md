@@ -35,9 +35,25 @@ image-capable MCP server before anything else.
   Always `view_parameters` on a space before `invoke` — the schemas differ.
 
   If `invoke` returns *"disabled because gradio=none is set"*, Space invocation
-  is switched off on the connector rather than unavailable. Tell the human to
-  change that in their claude.ai connector settings; do not try to route
-  around it.
+  is switched off on the connector rather than unavailable. `discover` and
+  `view_parameters` keep working, which makes it look like a transient failure;
+  it is not, and no amount of retrying or picking a different Space changes it.
+  Two things have to happen, in this order:
+
+  1. **The connector has to stop sending `gradio=none`.** That parameter is on
+     the Hugging Face MCP endpoint the connector was added with, and which
+     Spaces are exposed is chosen at
+     [huggingface.co/settings/mcp](https://huggingface.co/settings/mcp). Adding
+     Spaces there does not by itself clear a `gradio=none` that is pinned on
+     the connector's URL — check the URL in claude.ai → Settings → Connectors.
+  2. **Start a new session.** A running session negotiated its tool list at
+     startup, so reconnecting a connector mid-session changes nothing you can
+     see: the tool list, and `gradio=none` with it, are fixed until the next
+     session. If `discover` still lists exactly what it listed before the
+     reconnect, that is the tell.
+
+  Say both of these to the human rather than only the first, and do not try to
+  route around it.
 
 * **Any other MCP server** exposing image generation works the same way. This
   ladder is about capability, not about a particular vendor.

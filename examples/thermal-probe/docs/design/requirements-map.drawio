@@ -1,6 +1,6 @@
 <mxfile host="MakeHardware" type="device">
   <diagram name="Requirements map" id="requirements-map">
-    <mxGraphModel dx="1048" dy="912" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1048" pageHeight="912" math="0" shadow="0">
+    <mxGraphModel dx="1048" dy="1010" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1048" pageHeight="1010" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
@@ -20,46 +20,46 @@
           <mxGeometry x="760" y="78" width="264" height="18" as="geometry"/>
         </mxCell>
         <mxCell id="VIS-001" value="&lt;b&gt;VIS-001&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;A week in a freezer on one charge&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Inspection · refined by 2&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="24.0" y="312.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="24.0" y="340.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="VIS-002" value="&lt;b&gt;VIS-002&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Readable and operable wearing freezer gloves&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Inspection · refined by 1&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="24.0" y="528.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="24.0" y="584.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="VIS-003" value="&lt;b&gt;VIS-003&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Survives being dropped on a concrete floor&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Test · refined by 1&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="24.0" y="690.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="24.0" y="767.0" width="264" height="104" as="geometry"/>
         </mxCell>
-        <mxCell id="SYS-001" value="&lt;b&gt;SYS-001&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Battery life &amp;gt;= 7 d logging at 1 min…&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Analysis · budget 7 d · refined by 3&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="392.0" y="204.0" width="264" height="90" as="geometry"/>
+        <mxCell id="SYS-001" value="&lt;b&gt;SYS-001&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Battery life &amp;gt;= 7 d logging at 1 min intervals&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Analysis · budget 7 d · refined by 3&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="392.0" y="218.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="SYS-002" value="&lt;b&gt;SYS-002&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Operating range -30 to +40 degC&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Test · refined by 1&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="392.0" y="420.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="392.0" y="462.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="SYS-003" value="&lt;b&gt;SYS-003&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Display legible at 500 mm in 50 lx&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Inspection · refined by 1&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="392.0" y="528.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="392.0" y="584.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="SYS-004" value="&lt;b&gt;SYS-004&lt;/b&gt;  &lt;font color=&quot;#2a78d6&quot;&gt;= Agreed&lt;/font&gt;&lt;br/&gt;Survives 1.2 m drop onto concrete, 6 faces&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Test · budget 1.2 m · refined by 2&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="392.0" y="690.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="392.0" y="767.0" width="264" height="104" as="geometry"/>
         </mxCell>
-        <mxCell id="ELE-001" value="&lt;b&gt;ELE-001&lt;/b&gt;  &lt;font color=&quot;#e08a1e&quot;&gt;▶ Implemented&lt;/font&gt;&lt;br/&gt;Standby current &amp;lt;= 40 uA on the always-on…&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Simulation · budget 40 uA · NO EVIDENCE · artefact&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="96.0" width="264" height="90" as="geometry"/>
+        <mxCell id="ELE-001" value="&lt;b&gt;ELE-001&lt;/b&gt;  &lt;font color=&quot;#e08a1e&quot;&gt;▶ Implemented&lt;/font&gt;&lt;br/&gt;Standby current &amp;lt;= 40 uA on the always-on rail&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Simulation · budget 40 uA · NO EVIDENCE · artefact&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
+          <mxGeometry x="760.0" y="96.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="ELE-002" value="&lt;b&gt;ELE-002&lt;/b&gt;  &lt;font color=&quot;#898781&quot;&gt;· Draft&lt;/font&gt;&lt;br/&gt;Logging-cycle charge &amp;lt;= 180 uAh per sample&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Simulation · budget 180 uAh · NO EVIDENCE · NO ARTEFACT&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence, no design artefact&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="204.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="760.0" y="218.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="ELE-003" value="&lt;b&gt;ELE-003&lt;/b&gt;  &lt;font color=&quot;#898781&quot;&gt;· Draft&lt;/font&gt;&lt;br/&gt;ADC error &amp;lt;= 0.2 degC over -30 to +40 degC&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Test · budget 0.2 degC · NO EVIDENCE · NO ARTEFACT&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence, no design artefact&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="420.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="760.0" y="462.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="MEC-001" value="&lt;b&gt;MEC-001&lt;/b&gt;  &lt;font color=&quot;#0ca30c&quot;&gt;✓ Verified&lt;/font&gt;&lt;br/&gt;Envelope &amp;lt;= 38 x 164 x 22 mm&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Inspection · evidence · artefact&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#c3c2b7;strokeWidth=1;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="636.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="760.0" y="706.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="MEC-002" value="&lt;b&gt;MEC-002&lt;/b&gt;  &lt;font color=&quot;#898781&quot;&gt;· Draft&lt;/font&gt;&lt;br/&gt;Enclosure withstands 1.2 m drop, 6 faces&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Test · NO EVIDENCE · NO ARTEFACT&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence, no design artefact&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="744.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="760.0" y="828.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="MEC-003" value="&lt;b&gt;MEC-003&lt;/b&gt;  &lt;font color=&quot;#898781&quot;&gt;· Draft&lt;/font&gt;&lt;br/&gt;Display window transmits &amp;gt;= 88% at 550 nm&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Inspection · budget 88% · NO EVIDENCE · NO ARTEFACT&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence, no design artefact&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="528.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="760.0" y="584.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="FW-001" value="&lt;b&gt;FW-001&lt;/b&gt;  &lt;font color=&quot;#898781&quot;&gt;· Draft&lt;/font&gt;&lt;br/&gt;Sleep between samples, wake on RTC only&lt;br/&gt;&lt;font color=&quot;#898781&quot; style=&quot;font-size:9px&quot;&gt;Test · NO EVIDENCE · NO ARTEFACT&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#d03b3b&quot; style=&quot;font-size:9px&quot;&gt;no evidence, no design artefact&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d03b3b;strokeWidth=2;align=left;spacingLeft=8;verticalAlign=middle;fontSize=11;arcSize=8;" parent="1" vertex="1">
-          <mxGeometry x="760.0" y="312.0" width="264" height="90" as="geometry"/>
+          <mxGeometry x="760.0" y="340.0" width="264" height="104" as="geometry"/>
         </mxCell>
         <mxCell id="VIS-001--SYS-001" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#898781;strokeWidth=1.2;endArrow=block;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" edge="1" source="VIS-001" target="SYS-001">
           <mxGeometry relative="1" as="geometry"/>

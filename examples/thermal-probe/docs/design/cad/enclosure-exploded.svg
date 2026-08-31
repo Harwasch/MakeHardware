@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="440" viewBox="0 0 640 440" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Exploded isometric view of the enclosure, board and cell"><style>.ink{fill:#0b0b0b} .ink2{fill:#52514e} .mut{fill:#898781}.t{font-size:11.5px} .ts{font-size:10px} .tb{font-size:12px;font-weight:600} .h{font-size:15px;font-weight:600} .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){.ink{fill:#ffffff} .ink2{fill:#c3c2b7}}</style><rect width="640" height="470" fill="none"/>
+<text x="20" y="26" class="h ink">Enclosure, rev C — exploded</text>
+<text x="20" y="44" class="ts mut">from cad/enclosure.py · 38 × 164 × 22 mm envelope · components shown at their modelled positions</text>
+<g opacity="1.0">
+<polygon points="51.3,356.5 51.3,353.5 2.0,325.0 2.0,328.0" fill="#666560" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="2.0,328.0 2.0,325.0 215.0,202.0 215.0,205.0" fill="#7a7973" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="215.0,202.0 264.4,230.5 51.3,353.5 2.0,325.0" fill="#8f8d86" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+</g>
+<g opacity="1.0">
+<polygon points="126.7,283.0 126.7,277.3 87.7,254.8 87.7,260.5" fill="#1e569a" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="87.7,260.5 87.7,254.8 152.6,217.3 152.6,223.0" fill="#2467b8" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="152.6,217.3 191.6,239.8 126.7,277.3 87.7,254.8" fill="#2a78d6" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+</g>
+<g opacity="1.0">
+<polygon points="92.5,278.3 92.5,275.9 49.1,250.8 49.1,253.2" fill="#0a6f66" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="49.1,253.2 49.1,250.8 173.8,178.8 173.8,181.2" fill="#0c857a" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="173.8,178.8 217.2,203.9 92.5,275.9 49.1,250.8" fill="#0f9b8e" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+</g>
+<g opacity="0.92">
+<polygon points="51.3,275.5 51.3,272.5 2.0,244.0 2.0,247.0" fill="#908f89" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="2.0,247.0 2.0,244.0 215.0,121.0 215.0,124.0" fill="#acaba4" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+<polygon points="215.0,121.0 264.4,149.5 51.3,272.5 2.0,244.0" fill="#c9c7bf" stroke="#0b0b0b" stroke-width="0.7" stroke-linejoin="round"/>
+</g>
+<rect x="452" y="87" width="11" height="11" rx="2" fill="#c9c7bf" stroke="#0b0b0b" stroke-width="0.6"/>
+<text x="470" y="96" class="tb ink">Lid</text>
+<text x="470" y="110" class="ts mut">with display window</text>
+<rect x="452" y="127" width="11" height="11" rx="2" fill="#0f9b8e" stroke="#0b0b0b" stroke-width="0.6"/>
+<text x="470" y="136" class="tb ink">PCB</text>
+<text x="470" y="150" class="ts mut">33.4 × 96 mm</text>
+<rect x="452" y="167" width="11" height="11" rx="2" fill="#2a78d6" stroke="#0b0b0b" stroke-width="0.6"/>
+<text x="470" y="176" class="tb ink">Cell</text>
+<text x="470" y="190" class="ts mut">LP503035, 900 mAh</text>
+<rect x="452" y="207" width="11" height="11" rx="2" fill="#8f8d86" stroke="#0b0b0b" stroke-width="0.6"/>
+<text x="470" y="216" class="tb ink">Base</text>
+<text x="470" y="230" class="ts mut">1.8 mm wall</text>
+<text x="452" y="262" class="ts mut">split line at 40% depth</text></svg>

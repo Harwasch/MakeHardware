@@ -7,6 +7,6 @@ Example project used to develop the MakeHardware review artifact.
 
 ![Project plan](docs/plan.svg)
 
-**5/11 chunks complete** · 10 sessions on the critical path · [editable version](docs/plan.drawio)
+**0/11 chunks complete** · 10 sessions on the critical path · [editable version](docs/plan.drawio)
 
 <!-- PLAN:END -->

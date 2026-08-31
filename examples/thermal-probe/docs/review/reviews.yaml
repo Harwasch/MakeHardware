@@ -26,14 +26,14 @@ reviews:
   - path: docs/design/vision/concept_b/elevation.svg
     sha256: a1e368103887f426
   requested: '2026-08-31'
-  requested_commit: 21f6347
+  requested_commit: cb4b78a
   status: approved
   packet: docs/review/vision.md
   note: 'The wand. A freezer walk is one-handed and you are already carrying
 
     a clipboard — the bench version solves a problem we do not have.'
   decided: '2026-08-31'
-  decided_commit: 21f6347
+  decided_commit: cb4b78a
   reviewer: harrison
 - id: plan
   title: Project plan
@@ -54,14 +54,14 @@ reviews:
   - docs/plan.svg
   - plan.yaml
   requested: '2026-08-31'
-  requested_commit: 21f6347
+  requested_commit: cb4b78a
   status: approved
   packet: docs/review/plan.md
   note: 'Add the drop test earlier if the enclosure is printed rather than
 
     moulded. Otherwise the order is right.'
   decided: '2026-08-31'
-  decided_commit: 21f6347
+  decided_commit: cb4b78a
   reviewer: harrison
 - id: requirements
   title: Requirements tree
@@ -76,14 +76,18 @@ reviews:
   - Is anything here that nobody asked for?
   artifacts:
   - path: docs/design/requirements-map.svg
-    sha256: 8905fe37548c4101
+    sha256: 16283c1f6496aa11
+  references:
+  - requirements/00-vision.sdoc
+  - requirements/10-system.sdoc
+  - requirements/hardware.sgra
   requested: '2026-08-31'
-  requested_commit: 21f6347
+  requested_commit: cb4b78a
   status: approved
   packet: docs/review/requirements.md
   note: 7 days. A week means Friday-to-Friday and nobody has to think.
   decided: '2026-08-31'
-  decided_commit: 21f6347
+  decided_commit: cb4b78a
   reviewer: harrison
 - id: architecture
   title: Block diagram, power tree and buses
@@ -99,11 +103,39 @@ reviews:
   - Is charging at 450 mA off a 500 mA port too close?
   artifacts:
   - path: docs/design/block-diagram.svg
-    sha256: 430f29de29d240ca
+    sha256: 7835c62602dd2ba6
   references:
   - hw/block-diagram.drawio
   - hw/block-diagram.yaml
   requested: '2026-08-31'
-  requested_commit: 21f6347
+  requested_commit: cb4b78a
   status: requested
   packet: docs/review/architecture.md
+- id: cad
+  title: Enclosure, rev C
+  stage: cad
+  summary: 'Envelope frozen from the agreed wand concept. The board outline is
+
+    published as an interface at 33.4 x 96 mm and the electrical side is now working
+
+    to it, so moving it is expensive from here.'
+  questions:
+  - Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?
+  - Split line at 40% depth puts the seam on the grip. Acceptable?
+  artifacts:
+  - path: docs/design/cad/enclosure-render.png
+    sha256: b9141199ad3c789a
+  - path: docs/design/cad/enclosure-section.svg
+    sha256: 46ab7b9a747b6741
+  references:
+  - cad/enclosure.py
+  requested: '2026-08-31'
+  requested_commit: cb4b78a
+  status: approved
+  packet: docs/review/cad.md
+  note: 'Yes to both. Move the seam to 45% if the tooling allows it, but do not
+
+    hold the schematic for it.'
+  decided: '2026-08-31'
+  decided_commit: cb4b78a
+  reviewer: harrison

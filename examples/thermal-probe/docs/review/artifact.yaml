@@ -6,14 +6,59 @@ subtitle: >-
   through a glove.
 
 phases:
+  - id: cad
+    title: CAD
+    eyebrow: Stage 5 · mechanical
+    after: architecture
+    images:
+      - docs/design/cad/enclosure-render.png
+      - docs/design/cad/enclosure-section.svg
+    captions:
+      docs/design/cad/enclosure-render.png: >-
+        Exploded view, rendered from the parametric model. Lid, board and cell
+        at their modelled positions.
+      docs/design/cad/enclosure-section.svg: >-
+        Section through the cell pocket — wall thicknesses and the two
+        clearances the display depends on.
+
   - id: schematic
     title: Schematic
-    eyebrow: Stage 5
-    after: architecture
+    eyebrow: Stage 5 · electrical
+    after: cad
+    images: [docs/design/schematic/sheet-1-power.svg]
+    captions:
+      docs/design/schematic/sheet-1-power.svg: >-
+        Sheet 1 of 2 — USB-C in, charger, cell and the 3.3 V regulator.
+        ERC is clean apart from two deliberate no-connects.
     docs: [docs/design/adr-0002-power.md]
 
   - id: simulation
     title: Simulation
     eyebrow: Stage 6
     after: schematic
+    images: [docs/design/standby-corners.svg]
+    captions:
+      docs/design/standby-corners.svg: >-
+        Standby current at four corners against the 40 uA cap in ELE-001.
+        The failing corner is outside the specified temperature range.
     docs: [docs/design/standby-results.md]
+
+  - id: fea
+    title: Thermal FEA
+    eyebrow: Stage 6
+    after: simulation
+    images: [docs/design/thermal-map.svg]
+    captions:
+      docs/design/thermal-map.svg: >-
+        Steady-state rise over ambient. The hot spot is the LDO, which is
+        the part ADR-0002 accepted the efficiency penalty on.
+
+  - id: mfg
+    title: Manufacturing
+    eyebrow: Stage 7
+    after: fea
+    images: [docs/design/stackup.svg]
+    captions:
+      docs/design/stackup.svg: >-
+        Two-layer stackup as it will be quoted. Finished thickness and the
+        minimum feature sizes the fab needs to confirm.

@@ -12,6 +12,16 @@ about.
 
 ![requirements-map.svg](../design/requirements-map.svg)
 
+## For context
+
+Sources and working files. Not part of the agreement — these change as work goes on, and changing them does not invalidate your sign-off.
+
+| File | Opens in |
+|---|---|
+| [requirements/00-vision.sdoc](https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/requirements/00-vision.sdoc) | StrictDoc source |
+| [requirements/10-system.sdoc](https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/requirements/10-system.sdoc) | StrictDoc source |
+| [requirements/hardware.sgra](https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/requirements/hardware.sgra) | download |
+
 ## What we need decided
 
 1. Is 7 days the right target, or is 5 with a smaller cell better?
