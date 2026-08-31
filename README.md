@@ -72,6 +72,14 @@ is unanswered, or while an artefact has changed since it was signed off. A
 chunk in `plan.yaml` cannot be marked `done` until its review is signed and its
 declared outputs exist on disk.
 
+Alongside the repo there is **one review page per project** — `review-artifact`
+builds `docs/review/artifact.html` from the repo and it is published as a
+Claude Artifact: a tab per phase, every figure and number read from the file
+that owns it, and the human comments on it in place. GitHub is the record; the
+page is the thing they actually read. `review-artifact --init` writes its
+config, and `--url` records where it was published so every later session
+updates that page rather than making a second one.
+
 The rule behind it: **an artefact the human has not seen is not a deliverable.**
 
 ## What the plugin provides
@@ -80,6 +88,7 @@ The rule behind it: **an artefact the human has not seen is not a deliverable.**
 |---|---|
 | **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-block-diagram`, `hw-review`, `hw-sourcing`, `hw-simulation`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
 | **Commands** | `/hw-new-project`, `/hw-status`, `/hw-review`, `/hw-retro` |
+| **Tools** | `hw-doctor`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `review-gate`, `review-artifact`, `imagegen` |
 | **Tools on PATH** | `hw-doctor`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `review-gate`, `imagegen` |
 | **MCP servers** | `konnect` (KiCad), `spice` (ngspice/LTspice), `build123d` |
 | **Practices** | House standards for sourcing, connectors and passives — edited over time to steer the agent |
@@ -128,14 +137,15 @@ plugins/makehardware/
 ├── skills/                       the workflow stages
 ├── commands/                     /hw-new-project, /hw-status, /hw-review, /hw-retro
 ├── bin/                          hw-doctor, plan-render, req-trace, block-diagram,
-│                                 vision-board, review-gate, imagegen
+│                                 vision-board, review-gate, review-artifact, imagegen
 ├── scripts/                      their implementations
-├── templates/project/            what /hw-new-project scaffolds
 └── .mcp.json                     konnect, spice, build123d
 templates/github-repo/            contents of the GitHub template repository
+examples/thermal-probe/           a worked project, part-way through — see below
 env/                              cloud environment configuration
 docs/                             stack rationale, environment, workflow
 tests/smoke.sh                    scaffolds a throwaway project and drives the gates
+tests/real-tool-output.sh         what the review page does with real exporter output
 ```
 
 `tests/smoke.sh` needs only `python3` with `pyyaml`. It scaffolds a project
@@ -143,6 +153,27 @@ from the template and checks the things that used to have nothing behind them:
 a `done` chunk whose outputs are missing, a `done` chunk whose review is
 unsigned, an artefact edited after sign-off, and the power budget's voltage
 referral.
+
+`tests/real-tool-output.sh` covers the other half: what the review page does
+when it is handed what the real tools emit rather than what we would write by
+hand. Page size in millimetres, a `<style>` block whose selectors are global
+once inlined, KiCad 10's layer-named ids colliding between sheets, a
+megabyte-and-a-half render, a PDF, and an export that silently did not happen.
+
+## The worked example
+
+[`examples/thermal-probe/`](examples/thermal-probe) is a project caught
+part-way through: one milestone approved, one awaiting an answer, one gone
+stale because an artefact moved underneath it, and one never requested. It is
+what the review page is developed against.
+
+```bash
+cd examples/thermal-probe && ./build-fixture.sh
+```
+
+rebuilds every artefact from its spec — including the schematic sheets, which
+are genuine `kicad-cli sch export svg` output where `kicad-cli` is installed,
+because what a plotter emits is nothing like what you would draw by hand.
 
 ## Docs
 

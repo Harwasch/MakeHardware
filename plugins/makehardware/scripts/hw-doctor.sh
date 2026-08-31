@@ -135,6 +135,8 @@ chk strictdoc      "${VENV}/bin/strictdoc" version
 chk pyyaml         "${VENV}/bin/python" -c "import yaml;print('pyyaml',yaml.__version__)"
 chk review-gate    "${VENV}/bin/python" \
     "$(dirname "$(readlink -f "$0")")/review_gate.py" --help
+chk review-artifact "${VENV}/bin/python" \
+    "$(dirname "$(readlink -f "$0")")/review_artifact.py" --help
 
 echo
 echo "Display (needed only for live KiCad):"

@@ -170,6 +170,59 @@ PYEOF
 [ $? -eq 0 ] && pass "requirements map renders valid SVG and draw.io" \
              || fail "requirements map failed"
 
+# ---------------------------------------------------------------------------
+# The review page's two once-per-project setup steps. Both are easy to skip and
+# expensive to skip: without `--init` no design stage ever appears on the page,
+# and without `--url` every session publishes a *second* page, so the human
+# ends up reading whichever one they bookmarked.
+# ---------------------------------------------------------------------------
+echo
+echo "review page setup"
+
+INITDIR="${WORK}/initproj"
+mkdir -p "${INITDIR}/docs/design/cad"
+( cd "${INITDIR}" && git init -q . \
+  && git remote add origin https://github.com/Harwasch/smoke-widget.git \
+  && printf 'project: Smoke Widget\nchunks: []\n' > plan.yaml \
+  && printf '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" \
+viewBox="0 0 80 40"><rect width="80" height="40" fill="none"/></svg>\n' \
+     > docs/design/cad/enclosure-section.svg ) >/dev/null 2>&1
+
+says "wrote docs/review/artifact.yaml" \
+    "${PY}" "${S}/review_artifact.py" --project "${INITDIR}" --init \
+    && pass "--init writes a starter config" \
+    || fail "--init wrote nothing"
+
+# A phase whose artefacts exist is live; the rest arrive commented, so nobody
+# has to remember that a `layout` phase was ever an option.
+CFG="${INITDIR}/docs/review/artifact.yaml"
+grep -qE '^  - id: cad'    "${CFG}" && pass "a stage with artefacts is enabled" \
+                                    || fail "cad should have been enabled"
+grep -qE '^#   - id: layout' "${CFG}" && pass "a stage without them is commented" \
+                                      || fail "layout should have been commented"
+"${PY}" -c "import yaml,sys; d=yaml.safe_load(open('${CFG}'))
+assert [p['id'] for p in d['phases']] == ['cad','mfg'], d
+assert len(d['phases'][-1]['links']) == 10" \
+    && pass "the generated config parses and carries the mfg checklist" \
+    || fail "generated config is not valid"
+
+says "already exists" \
+    "${PY}" "${S}/review_artifact.py" --project "${INITDIR}" --init \
+    && pass "--init refuses to overwrite" || fail "--init clobbered the config"
+
+says "does not look like" \
+    "${PY}" "${S}/review_artifact.py" --project "${INITDIR}" \
+    --url "http://evil.example/x" \
+    && pass "--url rejects a non-artifact URL" || fail "--url accepted junk"
+
+U="https://claude.ai/code/artifact/ef071485-7196-44c0-81b3-e65facefc4cb"
+"${PY}" "${S}/review_artifact.py" --project "${INITDIR}" --url "${U}" \
+    >/dev/null 2>&1
+says "updates in place" \
+    "${PY}" "${S}/review_artifact.py" --project "${INITDIR}" \
+    && pass "a recorded URL is played back for the next publish" \
+    || fail "the recorded artifact URL was not read back"
+
 echo
 if [ "${fails}" -eq 0 ]; then
     echo "all checks passed"

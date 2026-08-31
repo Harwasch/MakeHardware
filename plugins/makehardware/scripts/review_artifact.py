@@ -1655,6 +1655,154 @@ def render_table(t: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
+# The design-stage phases a hardware project grows, in the order they happen.
+# `--init` writes all of them: the ones with artefacts already on disk wired up,
+# the rest present but commented, because a phase nobody remembers to add is a
+# phase that never appears on the page. Each carries the paths the toolbox
+# actually writes, so the common case is uncommenting three lines.
+INIT_STAGES = [
+    ("cad", "CAD", "Stage 5 · mechanical", "architecture",
+     ["docs/design/cad/enclosure-render.png",
+      "docs/design/cad/enclosure-section.svg"], []),
+    ("schematic", "Schematic", "Stage 5 · electrical", "cad",
+     ["docs/design/schematic/sheet-1.svg"], ["docs/design/adr-0001.md"]),
+    ("layout", "PCB layout", "Stage 5 · electrical", "schematic",
+     ["docs/design/pcb-top.png", "docs/design/stackup.svg"], []),
+    ("simulation", "Simulation", "Stage 6", "layout",
+     ["docs/design/sim-results.svg"], ["docs/design/sim-results.md"]),
+    ("mfg", "Manufacturing", "Stage 7", "simulation", [], []),
+]
+
+MFG_CHECKLIST = [
+    ("Fabrication", "docs/design/pcb-fab.zip", "Gerbers and drill files",
+     "RS-274X plus the drill schedule"),
+    ("Fabrication", "docs/design/mfg/fab-drawing.svg", "Fabrication drawing",
+     "Outline, hole schedule and tolerances"),
+    ("Fabrication", "docs/design/stackup.svg", "Stackup drawing",
+     "What the fab quotes against"),
+    ("Fabrication", "docs/design/mfg/fab-notes.md", "Fabrication notes",
+     "Material, finish, class, panelisation"),
+    ("Assembly", "docs/design/mfg/assembly-drawing.svg", "Assembly drawing",
+     "Placement, orientation and polarity"),
+    ("Assembly", "docs/design/pcb-pos.csv", "Pick and place",
+     "Centroid file"),
+    ("Assembly", "docs/design/bom-summary.csv", "BOM",
+     "Purchasing and the assembly house"),
+    ("Assembly", "docs/design/mfg/assembly-process.md",
+     "Assembly and test process", "The traveller, then the test sequence"),
+    ("Commercial", "docs/design/mfg/quotes.csv", "Quotes",
+     "Supplier, quantity, tooling, lead time and the date each was given"),
+    ("Commercial", "docs/design/mfg/supplier-decision.md",
+     "Supplier decision", "Which quote was taken and why"),
+]
+
+
+def init_config(root: str, out: str) -> int:
+    """Write a starter `docs/review/artifact.yaml` shaped by what is here.
+
+    Without this file only the four standard milestones appear, so every
+    design stage a project actually does — the schematic, the layout, the
+    enclosure, the simulation campaign, the release — is invisible on the
+    review page. Nobody writes that config from a blank file, so generate it:
+    phases whose artefacts exist are live, the rest are commented out with the
+    paths the toolbox writes, and turning one on is uncommenting three lines.
+    """
+    if os.path.exists(out):
+        print(f"{os.path.relpath(out, root)} already exists — not overwriting.")
+        print("Delete it first if you want a fresh one.")
+        return 1
+
+    plan = read_yaml(os.path.join(root, "plan.yaml")) or {}
+    title = plan.get("project") or os.path.basename(root).replace("-", " ").title()
+
+    o = [
+        "# Which phases the review page shows, and what goes in each.",
+        "#",
+        "# Vision, plan, requirements and architecture are built automatically",
+        "# from the repo and need nothing here. Everything below is a design",
+        "# stage: it appears on the page only if it is listed.",
+        "#",
+        "# Regenerate the page with `review-artifact`, and check it with",
+        "# `review-artifact --check` before you publish it.",
+        f"title: {title}",
+        "subtitle: >-",
+        "  One or two lines on what this is and who it is for.",
+        "",
+        "phases:",
+    ]
+
+    for pid, ptitle, eyebrow, after, images, docs in INIT_STAGES:
+        live = [i for i in images if os.path.exists(os.path.join(root, i))]
+        have = bool(live) or (pid == "mfg")
+        c = "" if have else "# "
+        o.append(f"{c}  - id: {pid}")
+        o.append(f"{c}    title: {ptitle}")
+        o.append(f"{c}    eyebrow: {eyebrow}")
+        o.append(f"{c}    after: {after}")
+        if pid == "mfg":
+            o.append(f"{c}    links_title: Release checklist")
+            o.append(f"{c}    links_note: >-")
+            o.append(f"{c}      Everything a fab, an assembler and a purchaser "
+                     f"need in order to")
+            o.append(f"{c}      quote and build. Rows still to produce are the "
+                     f"answer to \"can we")
+            o.append(f"{c}      release?\" — leave them listed.")
+            o.append(f"{c}    links:")
+            for group, path, label, why in MFG_CHECKLIST:
+                o.append(f"{c}      - {{group: {group}, path: {path},")
+                o.append(f"{c}         label: {label}, why: \"{why}\"}}")
+        else:
+            o.append(f"{c}    images:")
+            for i in (live or images):
+                o.append(f"{c}      - {i}")
+            o.append(f"{c}    captions:")
+            for i in (live or images):
+                o.append(f"{c}      {i}: >-")
+                o.append(f"{c}        What this shows, and the thing you want "
+                         f"looked at.")
+            if docs:
+                o.append(f"{c}    docs: [{', '.join(docs)}]")
+        o.append("")
+
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    with open(out, "w") as fh:
+        fh.write("\n".join(o).rstrip() + "\n")
+
+    rel = os.path.relpath(out, root)
+    live = [st[0] for st in INIT_STAGES
+            if st[0] == "mfg" or any(os.path.exists(os.path.join(root, i))
+                                     for i in st[4])]
+    print(f"wrote {rel}")
+    print(f"  live now:   {', '.join(live) or 'none'}")
+    print(f"  commented:  {', '.join(st[0] for st in INIT_STAGES if st[0] not in live)}")
+    print()
+    print("Uncomment a phase once its artefacts exist, then run "
+          "`review-artifact`.")
+    return 0
+
+
+def record_url(root: str, url: str) -> int:
+    """Remember where this project's review page lives."""
+    if not re.match(r"https://claude\.ai/[\w/-]*artifact/[0-9a-f-]{16,}",
+                    url.strip()):
+        print(f"That does not look like an artifact URL: {url}")
+        print("Expected something like "
+              "https://claude.ai/code/artifact/<id>")
+        return 1
+    path = os.path.join(root, review_gate.LEDGER)
+    data = review_gate.load(path)
+    was = data.get("artifact_url")
+    data["artifact_url"] = url.strip()
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    review_gate.save(data, path)
+    print(f"{'replaced' if was else 'recorded'} in {review_gate.LEDGER}:")
+    if was:
+        print(f"  was  {was}")
+    print(f"  now  {url.strip()}")
+    print("\nCommit it — the next session reads this to republish in place.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1664,7 +1812,23 @@ def main() -> int:
     ap.add_argument("--check", action="store_true",
                     help="report artefacts that cannot be shown; write nothing. "
                          "Exit 1 if any. Run this before publishing.")
+    ap.add_argument("--url", metavar="URL",
+                    help="record the published artifact's URL in the ledger, "
+                         "so every later session republishes to that page "
+                         "rather than creating a second one. Then stop.")
+    ap.add_argument("--init", action="store_true",
+                    help="write a starter docs/review/artifact.yaml shaped by "
+                         "what this repo already contains, then stop. Run once "
+                         "per project.")
     args = ap.parse_args()
+
+    if args.init:
+        return init_config(os.path.abspath(args.project),
+                           os.path.join(os.path.abspath(args.project),
+                                        "docs/review/artifact.yaml"))
+
+    if args.url:
+        return record_url(os.path.abspath(args.project), args.url)
 
     global _inlined
     _inlined = 0                    # --check and the write are separate runs
@@ -1747,8 +1911,21 @@ def main() -> int:
     if size > 6 * 1024 * 1024:
         print(f"\n  WARNING: {size // 1024 // 1024} MB of a 16 MB cap. "
               f"Downscale rasters before adding more phases.")
-    print("\nPublish it with the Artifact tool, then record the URL in "
-          f"{review_gate.LEDGER} so the next session updates the same page.")
+    # One project, one page. A session that publishes without the existing URL
+    # creates a *second* artifact, and now there are two review pages with
+    # different content and the human is reading whichever one they happened to
+    # bookmark. So the URL lives in the ledger, and this says which case it is.
+    url = (read_yaml(os.path.join(root, review_gate.LEDGER)) or {}).get("artifact_url")
+    print()
+    if url:
+        print("Publish with the Artifact tool, passing this as `url` so it "
+              "updates in place:")
+        print(f"  {url}")
+    else:
+        print("Publish it with the Artifact tool, then record the URL so the "
+              "next session updates the same page instead of making a second "
+              "one:")
+        print("  review-artifact --url <the artifact URL>")
     return 0
 
 
