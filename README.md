@@ -146,6 +146,9 @@ env/                              cloud environment configuration
 docs/                             stack rationale, environment, workflow
 tests/smoke.sh                    scaffolds a throwaway project and drives the gates
 tests/real-tool-output.sh         what the review page does with real exporter output
+tests/version-bump.sh             refuses a plugin change that did not bump the version
+CHANGELOG.md                      what changed, per version
+CLAUDE.md                         house rules for working on this repo
 ```
 
 `tests/smoke.sh` needs only `python3` with `pyyaml`. It scaffolds a project
@@ -159,6 +162,23 @@ when it is handed what the real tools emit rather than what we would write by
 hand. Page size in millimetres, a `<style>` block whose selectors are global
 once inlined, KiCad 10's layer-named ids colliding between sheets, a
 megabyte-and-a-half render, a PDF, and an export that silently did not happen.
+
+## Releasing
+
+Any change under `plugins/makehardware/` must bump the version in **both**
+`.claude-plugin/marketplace.json` and
+`plugins/makehardware/.claude-plugin/plugin.json`, with a `CHANGELOG.md` entry
+in the same commit.
+
+This is not housekeeping. `claude plugin install` treats an already-installed
+plugin at the same version as nothing to do, so a version that does not move
+means a user who runs `claude plugin marketplace update makehardware` fetches
+the new source, sees a version they already have and **keeps running the old
+code**. `tests/version-bump.sh` fails the build when it happens.
+
+Users on an existing cloud environment pick up a release either by rebuilding
+the environment — `env/setup.sh` installs the plugin at container build — or
+with `claude plugin marketplace update makehardware` in a live session.
 
 ## The worked example
 
