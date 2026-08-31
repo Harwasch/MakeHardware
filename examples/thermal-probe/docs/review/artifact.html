@@ -113,6 +113,11 @@ figure{margin:0 0 24px;min-width:0}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
 figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:70ch}
+.acts{display:block;margin-top:5px;font-size:12px}
+.tally{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+tr.grp td{font-family:var(--cond);font-size:11.5px;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);padding-top:16px;border-bottom:1px solid var(--rule)}
+a.alt{font-size:11.5px;white-space:nowrap;margin-left:8px}
+.acts a{margin-right:2px}
 
 /* ---- tables ---- */
 .scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel);
@@ -203,7 +208,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <h1>Thermal Probe</h1>
 <p>A handheld logger for walk-in freezers. A week on one charge, readable through a glove.</p>
 </div><div class='fields'>
-<div class="field"><span class="k">Revision</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/commit/73c0575" target="_blank" rel="noopener">73c0575 ↗</a></span></div>
+<div class="field"><span class="k">Revision</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/commit/db3273e" target="_blank" rel="noopener">db3273e ↗</a></span></div>
 <div class="field"><span class="k">Branch</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/tree/claude/makehardware-human-review-xo14y4" target="_blank" rel="noopener">claude/makehardware-human-review-xo14y4 ↗</a></span></div>
 <div class="field"><span class="k">Generated</span><span class="v">2026-08-31</span></div>
 <div class="field"><span class="k">Phases</span><span class="v">9</span></div>
@@ -236,7 +241,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <h3 class="sec">History</h3>
 <ol class="timeline">
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Two concepts that differ in a nameable way: a one-handed wand
 with the probe on a lead, and a bench instrument that lives on a shelf. Both
 envelopes are measured off real geometry.</p>
@@ -244,12 +249,12 @@ envelopes are measured off real geometry.</p>
 <ul class="asks"><li>Which concept, and what made you pick it?</li><li>Is 164 mm too long to hold comfortably in a glove?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">The wand. A freezer walk is one-handed and you are already carrying
 a clipboard — the bench version solves a problem we do not have.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Eleven chunks, nine sessions on the critical path. Layout is
 blocked on the enclosure envelope, which is the dependency I am least sure
 about.</p>
@@ -257,12 +262,12 @@ about.</p>
 <ul class="asks"><li>Is this all the work?</li><li>Is the order right — do you know a lead time we do not?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Add the drop test earlier if the enclosure is printed rather than
 moulded. Otherwise the order is right.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Fifteen requirements. SYS-001 moved from 12 h to 7 d after the
 logging interval was settled at one minute, which is the number worth arguing
 about.</p>
@@ -270,11 +275,11 @@ about.</p>
 <ul class="asks"><li>Is 7 days the right target, or is 5 with a smaller cell better?</li><li>Is anything here that nobody asked for?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">7 days. A week means Friday-to-Friday and nobody has to think.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-architecture" data-goto="architecture">Architecture</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-architecture" data-goto="architecture">Architecture</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Four rails. VBUS is the tight one at 90% of the USB-C default
 500 mA while charging, which is fine because it is a charge-only rail — but it
 is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
@@ -282,7 +287,7 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <ul class="asks"><li>Is a rail or a part missing?</li><li>SPI1 shares flash and LCD on one bus — acceptable, or separate them?</li><li>Is charging at 450 mA off a 500 mA port too close?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Envelope frozen from the agreed wand concept. The board outline is
 published as an interface at 33.4 x 96 mm and the electrical side is now working
 to it, so moving it is expensive from here.</p>
@@ -290,7 +295,7 @@ to it, so moving it is expensive from here.</p>
 <ul class="asks"><li>Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?</li><li>Split line at 40% depth puts the seam on the grip. Acceptable?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>73c0575</code></div>
+<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-08-31</span> <code>db3273e</code></div>
 <p class="evnote">Yes to both. Move the seam to 45% if the tooling allows it, but do not
 hold the schematic for it.</p>
 </div></li>
@@ -341,7 +346,8 @@ a clipboard — the bench version solves a problem we do not have.<span class="w
 <text x="54" y="38" class="lbl">FRONT</text>
 <text x="183.6" y="38" class="lbl">SIDE</text>
 </svg></span></div>
-<figcaption>concept a — elevation</figcaption></figure>
+<figcaption>concept a — elevation
+</figcaption></figure>
 <figure>
 <div class="sheet" style="max-width:505px"><span id="g92abeb6" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 471 402" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Bench instrument: 92 by 118 by 34 millimetres" preserveAspectRatio="xMidYMid meet">
 <style>#g92abeb6 .o{fill:none;stroke:#0b0b0b;stroke-width:1.6}#g92abeb6 .f{fill:none;stroke:#52514e;stroke-width:1}#g92abeb6 .d{stroke:#898781;stroke-width:0.7}#g92abeb6 .t{font-size:10px;fill:#898781}#g92abeb6 .lbl{font-size:10.5px;fill:#52514e;font-weight:600;letter-spacing:0.06em}</style>
@@ -360,7 +366,8 @@ a clipboard — the bench version solves a problem we do not have.<span class="w
 <text x="54" y="38" class="lbl">FRONT</text>
 <text x="302.4" y="38" class="lbl">SIDE</text>
 </svg></span></div>
-<figcaption>concept b — elevation</figcaption></figure>
+<figcaption>concept b — elevation
+</figcaption></figure>
 </div>
 </section>
 <section class="panel" role="tabpanel" id="p-plan" aria-labelledby="t-plan" hidden>
@@ -472,7 +479,9 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</
 <text x="311.4" y="622" class="ts ink2">○ To do</text>
 <text x="377.4" y="622" class="ts mut">outlined bars = critical path</text>
 </svg></span></div>
-<figcaption>Dependency chart — one column per session, scheduled by longest path. Outlined bars are the critical path.</figcaption></figure>
+<figcaption>Dependency chart — one column per session, scheduled by longest path. Outlined bars are the critical path.
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fmakehardware-human-review-xo14y4%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/plan.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+</figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>Chunk</th><th>State</th>
 <th>Title</th>
@@ -624,10 +633,10 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-08-31</
 </td>
 </tr>
 </tbody></table></div>
-<h3 class="sec">Documents a run needs</h3>
+<h3 class="sec">The editable originals</h3>
+<p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/plan.drawio" target="_blank" rel="noopener">Plan chart (draw.io) ↗</a><div class="paths"><code>docs/plan.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — move a bar to re-plan</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/plan.svg" target="_blank" rel="noopener">Plan chart (SVG) ↗</a><div class="paths"><code>docs/plan.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/plan.drawio" target="_blank" rel="noopener">Plan chart (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fmakehardware-human-review-xo14y4%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/plan.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — move a bar to re-plan</td></tr>
 <tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/plan.yaml" target="_blank" rel="noopener">Plan source ↗</a><div class="paths"><code>plan.yaml</code></div></td><td class="state t-ok">Ready</td><td>What both charts are generated from</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
@@ -834,7 +843,9 @@ about.</p>
 <rect x="479.4" y="971" width="10" height="10" rx="2" fill="none" stroke="#d03b3b" stroke-width="2"/>
 <text x="494.4" y="980" class="ts ink2">red border = a gap the gate is failing on</text>
 </svg></span></div>
-<figcaption>Requirement tree — an arrow points from a requirement to the one that refines it. Red borders are gaps the gate is failing on.</figcaption></figure>
+<figcaption>Requirement tree — an arrow points from a requirement to the one that refines it. Red borders are gaps the gate is failing on.
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fmakehardware-human-review-xo14y4%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+</figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>UID</th><th>State</th>
 <th>Requirement</th>
@@ -999,10 +1010,10 @@ about.</p>
 </td>
 </tr>
 </tbody></table></div>
-<h3 class="sec">Documents a run needs</h3>
+<h3 class="sec">The editable originals</h3>
+<p class="tally">1 of 1 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Requirements map (draw.io) ↗</a><div class="paths"><code>docs/design/requirements-map.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/requirements-map.svg" target="_blank" rel="noopener">Requirements map (SVG) ↗</a><div class="paths"><code>docs/design/requirements-map.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Requirements map (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fmakehardware-human-review-xo14y4%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/design/requirements-map.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>ELE-001 (Standby current &lt;= 40 uA on the always-on rail) has no EVIDENCE for its Simulation verification</li>
@@ -1160,7 +1171,9 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <text x="54" y="814.0" class="ts ink2">GPIO1 · GPIO — Wake interrupt, pulled up internally</text>
 <text x="24" y="856" class="ts mut">■ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
 </svg></span></div>
-<figcaption>Power tree with a budget gauge per rail, then the functional blocks and the buses between them.</figcaption></figure>
+<figcaption>Power tree with a budget gauge per rail, then the functional blocks and the buses between them.
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fmakehardware-human-review-xo14y4%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/hw/block-diagram.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+</figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>Rail</th><th>State</th>
 <th>V</th>
@@ -1231,9 +1244,10 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 </td>
 </tr>
 </tbody></table></div>
-<h3 class="sec">Documents a run needs</h3>
+<h3 class="sec">The editable originals</h3>
+<p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/hw/block-diagram.drawio" target="_blank" rel="noopener">Block diagram (draw.io) ↗</a><div class="paths"><code>hw/block-diagram.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — drag the file onto the canvas</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/hw/block-diagram.drawio" target="_blank" rel="noopener">Block diagram (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fmakehardware-human-review-xo14y4%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>hw/block-diagram.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — drag the file onto the canvas</td></tr>
 <tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/hw/block-diagram.yaml" target="_blank" rel="noopener">Block diagram source ↗</a><div class="paths"><code>hw/block-diagram.yaml</code></div></td><td class="state t-ok">Ready</td><td>The spec both files are generated from</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
@@ -1254,7 +1268,8 @@ to it, so moving it is expensive from here.</p>
 hold the schematic for it.<span class="who">harrison · 2026-08-31</span></blockquote>
 <figure>
 <div class="sheet" style="max-width:674px"><img src="data:image/png;base64,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" alt="Exploded view, rendered from the parametric model. Lid, board and cell at their modelled positions."></div>
-<figcaption>Exploded view, rendered from the parametric model. Lid, board and cell at their modelled positions.</figcaption></figure>
+<figcaption>Exploded view, rendered from the parametric model. Lid, board and cell at their modelled positions.
+</figcaption></figure>
 <figure>
 <div class="sheet" style="max-width:464px"><span id="g4c8db64" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 190" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Cross-section of the enclosure stack" preserveAspectRatio="xMidYMid meet"><style>#g4c8db64 .ink{fill:#0b0b0b}#g4c8db64 .ink2{fill:#52514e}#g4c8db64 .mut{fill:#898781}#g4c8db64 .t{font-size:11.5px}#g4c8db64 .ts{font-size:10px}#g4c8db64 .tb{font-size:12px;font-weight:600}#g4c8db64 .h{font-size:15px;font-weight:600}#g4c8db64 .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}#g4c8db64 .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #g4c8db64 .ink{fill:#ffffff}:root:not([data-theme="light"]) #g4c8db64 .ink2{fill:#c3c2b7}}:root[data-theme="dark"] #g4c8db64 .ink{fill:#ffffff}:root[data-theme="dark"] #g4c8db64 .ink2{fill:#c3c2b7}</style><text x="20" y="26" class="h ink">Section A–A — internal stack</text>
 <text x="20" y="44" class="ts mut">through the cell pocket, looking up the long axis</text>
@@ -1269,7 +1284,8 @@ hold the schematic for it.<span class="who">harrison · 2026-08-31</span></block
 <line x1="194.8" y1="137.57999999999998" x2="210.8" y2="137.57999999999998" stroke="#898781" stroke-width="0.7"/>
 <text x="216.8" y="141.57999999999998" class="ts ink2">cell, 3.8 mm</text>
 <text x="90" y="169.2" class="num mut">clearance board→lid 8.4 mm · board→cell 6.0 mm</text></svg></span></div>
-<figcaption>Section through the cell pocket — wall thicknesses and the two clearances the display depends on.</figcaption></figure>
+<figcaption>Section through the cell pocket — wall thicknesses and the two clearances the display depends on.
+</figcaption></figure>
 </section>
 <section class="panel" role="tabpanel" id="p-schematic" aria-labelledby="t-schematic" hidden>
 <div class="phase-head"><div>
@@ -1283,7 +1299,7 @@ hold the schematic for it.<span class="who">harrison · 2026-08-31</span></block
   xmlns:xlink="http://www.w3.org/1999/xlink"
   version="1.1"
   viewBox="0.0000 0.0000 297.0022 210.0072" preserveAspectRatio="xMidYMid meet">
-<title>SVG Image created as pic_programmer-pic_sockets.svg date 2026/08/31 17:44:47 </title>
+<title>SVG Image created as pic_programmer-pic_sockets.svg date 2026/08/31 18:05:56 </title>
   <desc>Image generated by Eeschema-SVG </desc>
 <g style="fill:#000000; fill-opacity:1.0000;stroke:#000000; stroke-opacity:1.0000;
 stroke-linecap:round; stroke-linejoin:round;"
@@ -57255,10 +57271,12 @@ stroke-linecap:round; stroke-linejoin:round;">
 <circle cx="259.0800" cy="119.3800" r="0.5080" /> 
 </g> 
 </svg></span></div>
-<figcaption>Real kicad-cli output, not a drawing of one. This fixture container has no probe schematic to plot, so both sheets here are KiCad&#x27;s own pic_programmer demo put through `kicad-cli sch export svg` — which is the point: it is what the exporter actually emits, page size in millimetres and all.</figcaption></figure>
+<figcaption>Real kicad-cli output, not a drawing of one. This fixture container has no probe schematic to plot, so both sheets here are KiCad&#x27;s own pic_programmer demo put through `kicad-cli sch export svg` — which is the point: it is what the exporter actually emits, page size in millimetres and all.
+</figcaption></figure>
 <figure>
 <div class="notes"><h3>Not shown here</h3><ul><li>sheet-1-main.svg is 3034 kB, past the 1500 kB limit for one figure. It still renders on GitHub, so it is linked rather than shown. Plot fewer sheets, or a simplified one, for the review — and export a PDF alongside them for the record. <a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Open on GitHub ↗</a></li></ul></div>
-<figcaption>The main sheet of the same export, and the reason SVG has a budget: 3.0 MB and 61,681 elements, because KiCad&#x27;s plotter writes one path per line segment — every stroke of every character included. Sheets that heavy are linked rather than inlined.</figcaption></figure>
+<figcaption>The main sheet of the same export, and the reason SVG has a budget: 3.0 MB and 61,681 elements, because KiCad&#x27;s plotter writes one path per line segment — every stroke of every character included. Sheets that heavy are linked rather than inlined.
+</figcaption></figure>
 <div class="prose"><h3>Status</h3>
 <p>Accepted — 2026-08-14</p>
 <h3>Context</h3>
@@ -57277,6 +57295,7 @@ stroke-linecap:round; stroke-linejoin:round;">
 <li><strong>Direct from VBAT, no regulator</strong>: the ADC reference would then move with the cell, and <code>ELE-003</code> asks for 0.2 degC over the range. Ratiometric measurement against a gated REF3025 was cheaper than a regulator good enough to be a reference.</li>
 </ul></div>
 <h3 class="sec">Documents a run needs</h3>
+<p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
 <tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/hw/kicad-demo/pic_programmer.kicad_sch" target="_blank" rel="noopener">KiCad schematic (source) ↗</a><div class="paths"><code>hw/kicad-demo/pic_programmer.kicad_sch</code></div></td><td class="state t-ok">Ready</td><td>Opens in KiCad — the editable original</td></tr>
 <tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Sheet 1, main ↗</a><div class="paths"><code>docs/design/schematic/sheet-1-main.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub at full size</td></tr>
@@ -57322,7 +57341,8 @@ stroke-linecap:round; stroke-linejoin:round;">
 <rect x="168" y="228" width="375.8" height="26" rx="4" fill="#d03b3b"/>
 <text x="552.8" y="245.0" class="num" fill="#d03b3b" font-weight="600">58.2 µA   ✕ FAIL</text>
 <text x="20" y="300" class="ts mut">The +60 °C corner is outside the SYS-002 range of −30 to +40 °C and is shown for information.</text></svg></span></div>
-<figcaption>Standby current at four corners against the 40 uA cap in ELE-001. The failing corner is outside the specified temperature range.</figcaption></figure>
+<figcaption>Standby current at four corners against the 40 uA cap in ELE-001. The failing corner is outside the specified temperature range.
+</figcaption></figure>
 <div class="prose"><p>ngspice, deck at <code>sim/standby/standby.cir</code>, run 2026-08-27. Cross-checked against the closed-form leakage sum (1.6 + 42 + 1 + 12 uA typ).</p>
 <div class="scroll"><table><thead><tr><th>Corner</th><th>Measured</th><th>Required</th><th>Margin</th></tr></thead><tbody>
 <tr><td>25 °C, 3.7 V nom</td><td>12.4 µA</td><td>≤ 40 µA</td><td>+69%</td></tr>
@@ -57553,446 +57573,36 @@ stroke-linecap:round; stroke-linejoin:round;">
 <text x="433" y="78.0" class="num mut">15.0</text>
 <text x="400" y="62" class="lbl mut">K OVER AMBIENT</text>
 <text x="20" y="310" class="ts mut">MEC-004 caps the case at 20 K over ambient. Margin 5.8 K, at the still-air corner.</text></svg></span></div>
-<figcaption>Steady-state rise over ambient. The hot spot is the LDO, which is the part ADR-0002 accepted the efficiency penalty on.</figcaption></figure>
+<figcaption>Steady-state rise over ambient. The hot spot is the LDO, which is the part ADR-0002 accepted the efficiency penalty on.
+</figcaption></figure>
 </section>
 <section class="panel" role="tabpanel" id="p-mfg" aria-labelledby="t-mfg" hidden>
 <div class="phase-head"><div>
 <span class="eyebrow">Stage 7</span>
 <h2>Manufacturing</h2></div>
 <span class="pill t-idle">Not yet submitted</span></div>
-<figure>
-<div class="sheet" style="max-width:654px"><span id="gaeefa3b" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 464" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Fabrication drawing" preserveAspectRatio="xMidYMid meet"><style>#gaeefa3b .ink{fill:#0b0b0b}#gaeefa3b .ink2{fill:#52514e}#gaeefa3b .mut{fill:#898781}#gaeefa3b .t{font-size:11.5px}#gaeefa3b .ts{font-size:10px}#gaeefa3b .tb{font-size:12px;font-weight:600}#gaeefa3b .h{font-size:15px;font-weight:600}#gaeefa3b .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}#gaeefa3b .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #gaeefa3b .ink{fill:#ffffff}:root:not([data-theme="light"]) #gaeefa3b .ink2{fill:#c3c2b7}}:root[data-theme="dark"] #gaeefa3b .ink{fill:#ffffff}:root[data-theme="dark"] #gaeefa3b .ink2{fill:#c3c2b7}</style><defs><marker id="gaeefa3b-ab" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,3.5 L7,1 L7,6 z" fill="#898781"/></marker></defs><text x="20" y="28" class="h ink">Fabrication drawing</text>
-<text x="20" y="46" class="ts mut">Dimensions in mm. Outline tolerance ±0.15. Drill sizes are finished.</text>
-<rect x="62" y="74" width="496.0" height="272.0" fill="none" stroke="#0b0b0b" stroke-width="1.6" rx="6"/>
-<g><title>M3 mount — ⌀3.2 mm</title><circle cx="94.0" cy="106.0" r="12.8" fill="none" stroke="#52514e" stroke-width="1"/><line x1="77.2" y1="106.0" x2="110.8" y2="106.0" stroke="#898781" stroke-width="0.5"/><line x1="94.0" y1="89.2" x2="94.0" y2="122.8" stroke="#898781" stroke-width="0.5"/></g>
-<g><title>M3 mount — ⌀3.2 mm</title><circle cx="526.0" cy="106.0" r="12.8" fill="none" stroke="#52514e" stroke-width="1"/><line x1="509.2" y1="106.0" x2="542.8" y2="106.0" stroke="#898781" stroke-width="0.5"/><line x1="526.0" y1="89.2" x2="526.0" y2="122.8" stroke="#898781" stroke-width="0.5"/></g>
-<g><title>M3 mount — ⌀3.2 mm</title><circle cx="94.0" cy="314.0" r="12.8" fill="none" stroke="#52514e" stroke-width="1"/><line x1="77.2" y1="314.0" x2="110.8" y2="314.0" stroke="#898781" stroke-width="0.5"/><line x1="94.0" y1="297.2" x2="94.0" y2="330.8" stroke="#898781" stroke-width="0.5"/></g>
-<g><title>M3 mount — ⌀3.2 mm</title><circle cx="526.0" cy="314.0" r="12.8" fill="none" stroke="#52514e" stroke-width="1"/><line x1="509.2" y1="314.0" x2="542.8" y2="314.0" stroke="#898781" stroke-width="0.5"/><line x1="526.0" y1="297.2" x2="526.0" y2="330.8" stroke="#898781" stroke-width="0.5"/></g>
-<g><title>test point — ⌀1.0 mm</title><circle cx="310.0" cy="318.0" r="4.0" fill="none" stroke="#52514e" stroke-width="1"/><line x1="302.0" y1="318.0" x2="318.0" y2="318.0" stroke="#898781" stroke-width="0.5"/><line x1="310.0" y1="310.0" x2="310.0" y2="326.0" stroke="#898781" stroke-width="0.5"/></g>
-<line x1="62" y1="368.0" x2="558.0" y2="368.0" stroke="#898781" stroke-width="0.8" marker-start="url(#gaeefa3b-ab)" marker-end="url(#gaeefa3b-ab)"/>
-<text x="310.0" y="362.0" class="num mut" text-anchor="middle">62.0</text>
-<line x1="40" y1="74" x2="40" y2="346.0" stroke="#898781" stroke-width="0.8" marker-start="url(#gaeefa3b-ab)" marker-end="url(#gaeefa3b-ab)"/>
-<text x="34" y="210.0" class="num mut" text-anchor="middle" transform="rotate(-90 34 210.0)">34.0</text>
-<text x="20" y="396.0" class="ts ink2">4 x ⌀3.20 mm plated — M3 clearance, on a 54 x 26 mm pattern</text>
-<text x="20" y="412.0" class="ts ink2">1 x ⌀1.00 mm plated — VREF test point</text>
-<text x="20" y="428.0" class="ts ink2">Min track / gap 0.15 mm  ·  min annular ring 0.13 mm</text>
-<text x="20" y="444.0" class="ts ink2">ENIG finish, IPC-A-600 class 2, electrical test 100%</text></svg></span></div>
-<figcaption>Outline, hole schedule and the tolerances every quote below is priced against. Change one of these and the prices stop being valid.</figcaption></figure>
-<figure>
-<div class="sheet" style="max-width:642px"><span id="gd374fc0" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 608 442" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Assembly drawing, top side" preserveAspectRatio="xMidYMid meet"><style>#gd374fc0 .ink{fill:#0b0b0b}#gd374fc0 .ink2{fill:#52514e}#gd374fc0 .mut{fill:#898781}#gd374fc0 .t{font-size:11.5px}#gd374fc0 .ts{font-size:10px}#gd374fc0 .tb{font-size:12px;font-weight:600}#gd374fc0 .h{font-size:15px;font-weight:600}#gd374fc0 .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}#gd374fc0 .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #gd374fc0 .ink{fill:#ffffff}:root:not([data-theme="light"]) #gd374fc0 .ink2{fill:#c3c2b7}}:root[data-theme="dark"] #gd374fc0 .ink{fill:#ffffff}:root[data-theme="dark"] #gd374fc0 .ink2{fill:#c3c2b7}#gd374fc0 .board{fill:#fcfcfb}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #gd374fc0 .board{fill:#191917}}:root[data-theme="dark"] #gd374fc0 .board{fill:#191917}</style><defs><marker id="gd374fc0-aa" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto"><path d="M0,3.5 L7,1 L7,6 z" fill="#898781"/></marker></defs><text x="20" y="28" class="h ink">Assembly drawing — top side</text>
-<text x="20" y="46" class="ts mut">62 x 34 mm · 10 placements · pin 1 and polarity marked · not to scale</text>
-<rect x="56" y="74" width="496.0" height="272.0" class="board" stroke="#0b0b0b" stroke-width="1.2" rx="6"/>
-<line x1="56.0" y1="74" x2="56.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<line x1="136.0" y1="74" x2="136.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<line x1="216.0" y1="74" x2="216.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<line x1="296.0" y1="74" x2="296.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<line x1="376.0" y1="74" x2="376.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<line x1="456.0" y1="74" x2="456.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<line x1="536.0" y1="74" x2="536.0" y2="346.0" stroke="#c3c2b7" stroke-width="0.4" stroke-dasharray="2 4"/>
-<g><title>U1 — STM32L0, 0°</title><rect x="128.0" y="130.0" width="80.0" height="48.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="133.0" cy="173.0" r="2.6" fill="#d03b3b"/>
-<text x="168.0" y="157.5" class="num ink" text-anchor="middle">U1</text></g>
-<g><title>U2 — MCP1700, 0°</title><rect x="272.0" y="126.0" width="40.0" height="40.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="277.0" cy="161.0" r="2.6" fill="#d03b3b"/>
-<text x="292.0" y="149.5" class="num ink" text-anchor="middle">U2</text></g>
-<g><title>U3 — REF3025, 0°</title><rect x="272.0" y="234.0" width="35.2" height="24.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="277.0" cy="253.0" r="2.6" fill="#d03b3b"/>
-<text x="289.6" y="249.5" class="num ink" text-anchor="middle">U3</text></g>
-<g><title>U4 — MAX31865, 0°</title><rect x="408.0" y="134.0" width="48.0" height="32.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="413.0" cy="161.0" r="2.6" fill="#d03b3b"/>
-<text x="432.0" y="153.5" class="num ink" text-anchor="middle">U4</text></g>
-<g><title>J1 — USB-C, 90°</title><rect x="80.0" y="250.0" width="60.0" height="72.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<text x="110.0" y="289.5" class="num ink" text-anchor="middle">J1</text></g>
-<g><title>J2 — Probe 4-pin, 90°</title><rect x="496.0" y="170.0" width="80.0" height="40.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="501.0" cy="205.0" r="2.6" fill="#d03b3b"/>
-<text x="536.0" y="193.5" class="num ink" text-anchor="middle">J2</text></g>
-<g><title>DS1 — LCD 128x64, 0°</title><rect x="376.0" y="250.0" width="128.0" height="72.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="381.0" cy="317.0" r="2.6" fill="#d03b3b"/>
-<text x="440.0" y="289.5" class="num ink" text-anchor="middle">DS1</text></g>
-<g><title>BT1 — 18650 clip, 0°</title><rect x="176.0" y="234.0" width="136.0" height="88.0" fill="none" stroke="#52514e" stroke-width="1"/>
-<circle cx="181.0" cy="317.0" r="2.6" fill="#d03b3b"/>
-<text x="244.0" y="281.5" class="num ink" text-anchor="middle">BT1</text></g>
-<g><title>C6 — 100 nF, 0°</title><rect x="232.0" y="178.0" width="16.0" height="9.6" fill="none" stroke="#52514e" stroke-width="1"/>
-<text x="240.0" y="186.3" class="num ink" text-anchor="middle">C6</text></g>
-<g><title>C7 — 100 nF, 0°</title><rect x="328.0" y="178.0" width="16.0" height="9.6" fill="none" stroke="#52514e" stroke-width="1"/>
-<text x="336.0" y="186.3" class="num ink" text-anchor="middle">C7</text></g>
-<line x1="56" y1="368.0" x2="552.0" y2="368.0" stroke="#898781" stroke-width="0.8" marker-start="url(#gd374fc0-aa)" marker-end="url(#gd374fc0-aa)"/>
-<text x="304.0" y="362.0" class="num mut" text-anchor="middle">62.0 mm</text>
-<circle cx="26" cy="394.0" r="2.6" fill="#d03b3b"/><text x="36" y="398.0" class="ts ink2">Red dot marks pin 1 / anode / positive. Seven of the ten placements are polarised.</text></svg></span></div>
-<figcaption>Top-side placement and orientation. Seven of the ten parts are polarised; pin 1 is the red dot.</figcaption></figure>
-<figure>
-<div class="sheet" style="max-width:654px"><span id="g984dfec" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 392" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Two-layer PCB stackup" preserveAspectRatio="xMidYMid meet"><style>#g984dfec .ink{fill:#0b0b0b}#g984dfec .ink2{fill:#52514e}#g984dfec .mut{fill:#898781}#g984dfec .t{font-size:11.5px}#g984dfec .ts{font-size:10px}#g984dfec .tb{font-size:12px;font-weight:600}#g984dfec .h{font-size:15px;font-weight:600}#g984dfec .lbl{font-size:10px;letter-spacing:0.09em;font-weight:600}#g984dfec .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #g984dfec .ink{fill:#ffffff}:root:not([data-theme="light"]) #g984dfec .ink2{fill:#c3c2b7}}:root[data-theme="dark"] #g984dfec .ink{fill:#ffffff}:root[data-theme="dark"] #g984dfec .ink2{fill:#c3c2b7}</style><text x="20" y="28" class="h ink">Stackup — 2 layer, 1.6 mm</text>
-<text x="20" y="46" class="ts mut">finished 1.62 mm ±10% · ENIG · min track/gap 0.15 mm · min drill 0.30 mm</text>
-<rect x="150" y="80.0" width="260" height="5.0" fill="#0f9b8e" stroke="#0b0b0b" stroke-width="0.7"/>
-<text x="138" y="86.5" class="num ink2" text-anchor="end">F.Mask</text>
-<text x="424" y="86.5" class="ts ink2">0.015 mm  ·  soldermask</text>
-<line x1="410" y1="82.5" x2="420" y2="82.5" stroke="#898781" stroke-width="0.6"/>
-<rect x="150" y="99.0" width="260" height="5.0" fill="#c08a2e" stroke="#0b0b0b" stroke-width="0.7"/>
-<text x="138" y="105.5" class="num ink2" text-anchor="end">F.Cu</text>
-<text x="424" y="105.5" class="ts ink2">0.035 mm  ·  1 oz copper</text>
-<line x1="410" y1="101.5" x2="420" y2="101.5" stroke="#898781" stroke-width="0.6"/>
-<rect x="150" y="118.0" width="260" height="166.1" fill="#d9d6cc" stroke="#0b0b0b" stroke-width="0.7"/>
-<text x="138" y="205.1" class="num ink2" text-anchor="end">Core</text>
-<text x="424" y="205.1" class="ts ink2">1.510 mm  ·  FR-4 TG150</text>
-<line x1="410" y1="201.1" x2="420" y2="201.1" stroke="#898781" stroke-width="0.6"/>
-<rect x="150" y="298.1" width="260" height="5.0" fill="#c08a2e" stroke="#0b0b0b" stroke-width="0.7"/>
-<text x="138" y="304.6" class="num ink2" text-anchor="end">B.Cu</text>
-<text x="424" y="304.6" class="ts ink2">0.035 mm  ·  1 oz copper</text>
-<line x1="410" y1="300.6" x2="420" y2="300.6" stroke="#898781" stroke-width="0.6"/>
-<rect x="150" y="317.1" width="260" height="5.0" fill="#0f9b8e" stroke="#0b0b0b" stroke-width="0.7"/>
-<text x="138" y="323.6" class="num ink2" text-anchor="end">B.Mask</text>
-<text x="424" y="323.6" class="ts ink2">0.015 mm  ·  soldermask</text>
-<line x1="410" y1="319.6" x2="420" y2="319.6" stroke="#898781" stroke-width="0.6"/>
-<line x1="104" y1="80" x2="104" y2="334.1" stroke="#898781" stroke-width="0.8"/>
-<text x="98" y="208.1" class="num mut" text-anchor="middle" transform="rotate(-90 98 208.1)">1.610 mm</text>
-<text x="20" y="372" class="ts mut">Not to scale in Z — copper is drawn at a floor so it stays visible.</text></svg></span></div>
-<figcaption>Two-layer stackup as it will be quoted. Finished thickness and the minimum feature sizes the fab has to confirm.</figcaption></figure>
-<div class="prose"><p>What the fab needs in writing, beyond the gerbers. Everything here is quoted against, so a change to any of it invalidates the prices in <code>quotes.csv</code>.</p>
-<h3>Board</h3>
-<div class="scroll"><table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
-<tr><td>Layers</td><td>2</td></tr>
-<tr><td>Material</td><td>FR-4 TG150</td></tr>
-<tr><td>Finished thickness</td><td>1.62 mm ±10%</td></tr>
-<tr><td>Copper</td><td>1 oz both sides</td></tr>
-<tr><td>Finish</td><td>ENIG</td></tr>
-<tr><td>Soldermask</td><td>Green, both sides</td></tr>
-<tr><td>Silkscreen</td><td>White, top only</td></tr>
-<tr><td>Outline tolerance</td><td>±0.15 mm</td></tr>
-<tr><td>Min track / gap</td><td>0.15 mm</td></tr>
-<tr><td>Min drill, finished</td><td>0.30 mm</td></tr>
-<tr><td>Min annular ring</td><td>0.13 mm</td></tr>
-<tr><td>Electrical test</td><td>100% netlist</td></tr>
-<tr><td>Acceptance</td><td>IPC-A-600 class 2</td></tr>
-</tbody></table></div>
-<h3>Panelisation</h3>
-<p>Ship as singles at 25 off. At 100 off, a 2 x 3 panel on 3 mm tab routing with breakaway rails — the assembler&#x27;s conveyor needs 3 mm of clearance on the long edges and the current outline does not leave it.</p>
-<h3>Things a fab has queried before</h3>
-<ul>
-<li><strong>ENIG at 25 off.</strong> Two of the three quotes carry a surcharge below 50 pieces. It is priced in above; if the run grows to 50 the unit cost drops more than the quantity alone suggests.</li>
-<li><strong>The 1.00 mm test point</strong> is the smallest hole on the board and the only one not on the M3 pattern. It is deliberate and it is plated.</li>
-<li><strong>No impedance control is specified.</strong> Nothing on this board is a transmission line at the speeds involved, and asking for it adds a coupon and about 30% to the fab cost.</li>
-</ul></div>
-<div class="prose"><p>For a first article run of 25. Written so someone who has not seen the board can run it, because at 25 pieces that is who will.</p>
-<h3>Assembly</h3>
-<ol>
-<li><strong>Solder paste</strong>, top side only, from the supplied stencil. 0.12 mm stainless, 1:1 apertures except <code>DS1</code>, which is reduced to 90% — the display frame bridged on the prototype at 1:1.</li>
-<li><strong>Place</strong> the ten top-side parts. Seven are polarised; the assembly drawing marks pin 1 with a red dot and the position file carries the rotations.</li>
-<li><strong>Reflow</strong> to the paste manufacturer&#x27;s SAC305 profile. Peak 245 °C, time above liquidus 60–90 s.</li>
-<li><strong>Hand-fit</strong> <code>BT1</code> and the probe lead after reflow. The cell clip is through-hole and the lead is a crimp.</li>
-<li><strong>Clean</strong> — no-clean paste, so this is a rinse only where flux sits under <code>DS1</code>.</li>
-</ol>
-<h3>Test, in this order</h3>
-<p>Each step gates the next. A board that fails one does not move on.</p>
-<ol>
-<li><strong>Shorts.</strong> VBUS to GND and V3P3 to GND, both above 10 kΩ, before power is applied. A short here is a paste defect and the board goes back.</li>
-<li><strong>Rails, unloaded.</strong> VBUS 5.0 V ±5%, V3P3 3.30 V ±2%, VREF 2.500 V ±0.1%. VREF is the one that matters — it is the measurement reference and <code>ELE-003</code> depends on it.</li>
-<li><strong>Standby current.</strong> Under 40 µA at 3.3 V with the display off, which is the <code>ELE-001</code> budget. Expect 32–36 µA; anything above 40 µA is a fail and is nearly always <code>U3</code> fitted in the wrong orientation.</li>
-<li><strong>Probe channel.</strong> A 100 Ω precision resistor in place of the probe should read 0.00 °C ±0.20 °C. That is <code>ELE-003</code> end to end.</li>
-<li><strong>Two-point calibration</strong> at 0 °C and 60 °C, written to EEPROM. Record both raw readings against the serial number.</li>
-<li><strong>Soak.</strong> Four hours at −25 °C, then repeat step 4. The freezer is the product&#x27;s whole environment and the first prototype passed at bench temperature and failed cold.</li>
-</ol>
-<h3>What is not decided yet</h3>
-<ul>
-<li><strong>The test fixture.</strong> Steps 1–4 need a bed of nails and there is no layout to build one against. Estimated at £400 and not quoted.</li>
-<li><strong>Who calibrates.</strong> Step 5 needs a stirred bath the assembly house does not have. Either it comes back in house or the process needs rewriting around a dry block.</li>
-</ul></div>
-<h3 class="sec">Quotes</h3>
-<p class="tnote">Everything is in GBP and everything has a date, because a quote without one is a guess. Two lines are unsourced and carry an estimate instead of a price — those are the ones to look at.</p>
-<div class="notes"><h3>2 price(s) are not quoted</h3><ul><li>Rows marked in red carry an estimate, not a checked price. Treat the roll-up as indicative until they are quoted — a BOM cost built on guesses is the number that gets committed to.</li></ul></div>
-<div class="scroll"><table><thead><tr>
-<th>Scope</th>
-<th>Supplier</th>
-<th>Qty</th>
-<th>Unit GBP</th>
-<th>Tooling GBP</th>
-<th>Lead time</th>
-<th>Quoted</th>
-<th>Valid until</th>
-<th>Basis</th>
-</tr></thead><tbody>
-<tr>
-<td>PCB fab, 2 layer ENIG</td>
-<td>JLCPCB</td>
-<td class="num">25</td>
-<td class="num">4.12</td>
-<td class="num">0</td>
-<td>8 working days</td>
-<td>2026-08-26</td>
-<td>2026-09-25</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>PCB fab, 2 layer ENIG</td>
-<td>Eurocircuits</td>
-<td class="num">25</td>
-<td class="num">11.80</td>
-<td class="num">0</td>
-<td>5 working days</td>
-<td>2026-08-26</td>
-<td>2026-09-26</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>PCB fab, 2 layer ENIG</td>
-<td>JLCPCB</td>
-<td class="num">100</td>
-<td class="num">1.94</td>
-<td class="num">0</td>
-<td>8 working days</td>
-<td>2026-08-26</td>
-<td>2026-09-25</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>Assembly, top side only</td>
-<td>JLCPCB</td>
-<td class="num">25</td>
-<td class="num">3.60</td>
-<td class="num">6.40</td>
-<td>+3 working days</td>
-<td>2026-08-26</td>
-<td>2026-09-25</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>Assembly, top side only</td>
-<td>Aisler</td>
-<td class="num">25</td>
-<td class="num">9.10</td>
-<td class="num">0</td>
-<td>+7 working days</td>
-<td>2026-08-27</td>
-<td>2026-09-10</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>Enclosure, SLS nylon</td>
-<td>Protolabs</td>
-<td class="num">25</td>
-<td class="num">14.70</td>
-<td class="num">0</td>
-<td>7 working days</td>
-<td>2026-08-27</td>
-<td>2026-09-26</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>Enclosure, injection moulded</td>
-<td>Protolabs</td>
-<td class="num">100</td>
-<td class="num">2.85</td>
-<td class="num">4820.00</td>
-<td>25 working days</td>
-<td>2026-08-28</td>
-<td>2026-10-12</td>
-<td class="t-ok">Quoted</td>
-<td> engineer reviewed</td>
-</tr>
-<tr>
-<td>Enclosure, injection moulded</td>
-<td>Xometry</td>
-<td class="num">100</td>
-<td class="num">3.10</td>
-<td class="num">3950.00</td>
-<td>30 working days</td>
-<td>2026-08-28</td>
-<td>2026-09-28</td>
-<td class="t-ok">Quoted online</td>
-</tr>
-<tr>
-<td>Probe lead, moulded 4-pin 1 m</td>
-<td>Unsourced</td>
-<td class="num">25</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td class="t-stop">Estimated at 6.00 from a similar part</td>
-</tr>
-<tr>
-<td>Test fixture, bed of nails</td>
-<td>Unsourced</td>
-<td class="num">1</td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td></td>
-<td class="t-stop">Estimated at 400 from the last project</td>
-</tr>
-</tbody></table></div>
-<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/quotes.csv" target="_blank" rel="noopener"><code>docs/design/mfg/quotes.csv</code> ↗</a></p>
-<h3 class="sec">BOM summary at volume breaks</h3>
-<p class="tnote">Unit cost in GBP. Every line says where its price came from; rows whose basis is an estimate are marked, and the total says how many.</p>
-<div class="notes"><h3>4 price(s) are not quoted</h3><ul><li>Rows marked in red carry an estimate, not a checked price. Treat the roll-up as indicative until they are quoted — a BOM cost built on guesses is the number that gets committed to.</li></ul></div>
-<div class="scroll"><table><thead><tr>
-<th>Ref</th>
-<th>Part</th>
-<th>MPN</th>
-<th>Qty</th>
-<th>@1</th>
-<th>@100</th>
-<th>@1k</th>
-<th>Basis</th>
-</tr></thead><tbody>
-<tr>
-<td>U1</td>
-<td>Battery charger</td>
-<td>MCP73831T-2ACI/OT</td>
-<td class="num">1</td>
-<td class="num">0.71</td>
-<td class="num">0.52</td>
-<td class="num">0.41</td>
-<td class="t-ok">Quoted — Digi-Key, 8140 in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>U2</td>
-<td>3.3 V LDO</td>
-<td>MCP1700T-3302E/TT</td>
-<td class="num">1</td>
-<td class="num">0.48</td>
-<td class="num">0.34</td>
-<td class="num">0.27</td>
-<td class="t-ok">Quoted — Digi-Key, 21k in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>U3</td>
-<td>MCU</td>
-<td>STM32L071KBU6</td>
-<td class="num">1</td>
-<td class="num">3.62</td>
-<td class="num">3.11</td>
-<td class="num">2.68</td>
-<td class="t-ok">Quoted — Mouser, 1204 in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>U4</td>
-<td>Voltage reference</td>
-<td>REF3025AIDBZR</td>
-<td class="num">1</td>
-<td class="num">1.94</td>
-<td class="num">1.55</td>
-<td class="num">1.28</td>
-<td class="t-ok">Quoted — Mouser, 640 in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>U5</td>
-<td>Log flash 16 Mbit</td>
-<td>W25Q16JVUXIQ</td>
-<td class="num">1</td>
-<td class="num">0.63</td>
-<td class="num">0.44</td>
-<td class="num">0.36</td>
-<td class="t-ok">Quoted — LCSC, 30k in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>DS1</td>
-<td>Segment LCD</td>
-<td>VIM-878-DP-RC-S-LV</td>
-<td class="num">1</td>
-<td class="num">4.10</td>
-<td class="num">3.40</td>
-<td class="num">2.90</td>
-<td class="t-stop">ESTIMATE — no distributor stock, factory quote requested 2026-08-29</td>
-</tr>
-<tr>
-<td>BT1</td>
-<td>LiPo cell 900 mAh</td>
-<td>LP503035</td>
-<td class="num">1</td>
-<td class="num">3.80</td>
-<td class="num">3.20</td>
-<td class="num">2.60</td>
-<td class="t-stop">ESTIMATE — cell pricing moves with lithium; no quote yet</td>
-</tr>
-<tr>
-<td>RT1</td>
-<td>NTC thermistor</td>
-<td>NTCLE100E3103JB0</td>
-<td class="num">1</td>
-<td class="num">0.34</td>
-<td class="num">0.21</td>
-<td class="num">0.16</td>
-<td class="t-ok">Quoted — Digi-Key, 46k in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>J1</td>
-<td>USB-C receptacle</td>
-<td>TYPE-C-31-M-12</td>
-<td class="num">1</td>
-<td class="num">0.29</td>
-<td class="num">0.16</td>
-<td class="num">0.11</td>
-<td class="t-ok">Quoted — LCSC, 120k in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>SW1</td>
-<td>Wake button</td>
-<td>TL3305AF160QG</td>
-<td class="num">1</td>
-<td class="num">0.22</td>
-<td class="num">0.14</td>
-<td class="num">0.10</td>
-<td class="t-ok">Quoted — Digi-Key, 90k in stock, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>—</td>
-<td>Passives (24 parts)</td>
-<td>various</td>
-<td class="num">24</td>
-<td class="num">1.90</td>
-<td class="num">0.95</td>
-<td class="num">0.62</td>
-<td class="t-ok">Quoted — LCSC basket, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>—</td>
-<td>PCB 2-layer ENIG</td>
-<td>—</td>
-<td class="num">1</td>
-<td class="num">12.40</td>
-<td class="num">2.10</td>
-<td class="num">0.94</td>
-<td class="t-ok">Quoted — JLCPCB, 5-day, checked 2026-08-28</td>
-</tr>
-<tr>
-<td>—</td>
-<td>Enclosure</td>
-<td>—</td>
-<td class="num">1</td>
-<td class="num">18.00</td>
-<td class="num">6.50</td>
-<td class="num">2.20</td>
-<td class="t-stop">ESTIMATE — printed at 1-100; injection tooling not quoted</td>
-</tr>
-<tr>
-<td>—</td>
-<td>BOARD TOTAL</td>
-<td>—</td>
-<td class="num">1</td>
-<td class="num">52.43</td>
-<td class="num">24.62</td>
-<td class="num">15.63</td>
-<td class="t-stop">Mixed — 3 lines estimated</td>
-</tr>
-</tbody></table></div>
-<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/bom-summary.csv" target="_blank" rel="noopener"><code>docs/design/bom-summary.csv</code> ↗</a></p>
-<h3 class="sec">Documents a run needs</h3>
+<h3 class="sec">Release checklist</h3>
+<p class="lead">Everything a fab, an assembler and a purchaser need in order to quote and build. This is a completeness check, not a reading list — the documents themselves are one click away, and the rows still to produce are the answer to &quot;can we release?&quot;.</p>
+<p class="tally">7 of 12 present · <span class="t-stop">5 still to produce</span></p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/fab-drawing.svg" target="_blank" rel="noopener">Fabrication drawing ↗</a><div class="paths"><code>docs/design/mfg/fab-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Goes to the fab with the gerbers</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/assembly-drawing.svg" target="_blank" rel="noopener">Assembly drawing ↗</a><div class="paths"><code>docs/design/mfg/assembly-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Placement, orientation and polarity for the assembler</td></tr>
+<tr class="grp"><td colspan="3">Fabrication</td></tr>
+<tr><td>Gerbers and drill files<div class="paths"><code>docs/design/pcb-fab.zip</code></div></td><td class="state t-stop">Not produced</td><td>RS-274X plus the drill schedule. Not generated until layout is frozen</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/fab-drawing.svg" target="_blank" rel="noopener">Fabrication drawing ↗</a><div class="paths"><code>docs/design/mfg/fab-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Outline, hole schedule and tolerances. Travels with the gerbers</td></tr>
 <tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/stackup.svg" target="_blank" rel="noopener">Stackup drawing ↗</a><div class="paths"><code>docs/design/stackup.svg</code></div></td><td class="state t-ok">Ready</td><td>What the fab quotes against</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/quotes.csv" target="_blank" rel="noopener">Quotes ↗</a><div class="paths"><code>docs/design/mfg/quotes.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing, and the source of every price on this tab</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/bom-summary.csv" target="_blank" rel="noopener">BOM ↗</a><div class="paths"><code>docs/design/bom-summary.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing and the assembly house</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/fab-notes.md" target="_blank" rel="noopener">Fabrication notes ↗</a><div class="paths"><code>docs/design/mfg/fab-notes.md</code></div></td><td class="state t-ok">Ready</td><td>The written spec that travels with the gerbers</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/assembly-process.md" target="_blank" rel="noopener">Assembly and test process ↗</a><div class="paths"><code>docs/design/mfg/assembly-process.md</code></div></td><td class="state t-ok">Ready</td><td>The traveller for the first article run</td></tr>
-<tr><td>Gerbers and drill<div class="paths"><code>docs/design/pcb-fab.zip</code></div></td><td class="state t-stop">Not produced</td><td>Fabrication — not generated until the layout is frozen</td></tr>
-<tr><td>Pick and place<div class="paths"><code>docs/design/pcb-pos.csv</code></div></td><td class="state t-stop">Not produced</td><td>Assembly — needs the layout</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/fab-notes.md" target="_blank" rel="noopener">Fabrication notes ↗</a><div class="paths"><code>docs/design/mfg/fab-notes.md</code></div></td><td class="state t-ok">Ready</td><td>Material, finish, class, panelisation — the written half of the spec</td></tr>
 <tr><td>Layer plots<div class="paths"><code>docs/design/pcb-layers.pdf</code></div></td><td class="state t-stop">Not produced</td><td>Incoming inspection and any fab query</td></tr>
+<tr class="grp"><td colspan="3">Assembly</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/assembly-drawing.svg" target="_blank" rel="noopener">Assembly drawing ↗</a><div class="paths"><code>docs/design/mfg/assembly-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Placement, orientation and polarity for the assembler</td></tr>
+<tr><td>Pick and place<div class="paths"><code>docs/design/pcb-pos.csv</code></div></td><td class="state t-stop">Not produced</td><td>Centroid file. Needs the layout</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/bom-summary.csv" target="_blank" rel="noopener">BOM ↗</a><div class="paths"><code>docs/design/bom-summary.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing and the assembly house</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/assembly-process.md" target="_blank" rel="noopener">Assembly and test process ↗</a><div class="paths"><code>docs/design/mfg/assembly-process.md</code></div></td><td class="state t-ok">Ready</td><td>The traveller — paste, placement, reflow, then the test sequence</td></tr>
+<tr><td>Test fixture definition<div class="paths"><code>docs/design/mfg/test-fixture.md</code></div></td><td class="state t-stop">Not produced</td><td>Bed of nails for the first four test steps. Needs the layout</td></tr>
+<tr class="grp"><td colspan="3">Commercial</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/makehardware-human-review-xo14y4/docs/design/mfg/quotes.csv" target="_blank" rel="noopener">Quotes ↗</a><div class="paths"><code>docs/design/mfg/quotes.csv</code></div></td><td class="state t-ok">Ready</td><td>Supplier, quantity, tooling, lead time and the date each was given</td></tr>
+<tr><td>Supplier decision<div class="paths"><code>docs/design/mfg/supplier-decision.md</code></div></td><td class="state t-stop">Not produced</td><td>Which quote was taken and why. Not made yet</td></tr>
 </tbody></table></div>
 </section>
-<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>73c0575</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
+<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>db3273e</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
 </div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];

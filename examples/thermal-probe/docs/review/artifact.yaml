@@ -74,63 +74,58 @@ phases:
     title: Manufacturing
     eyebrow: Stage 7
     after: fea
-    images:
-      - docs/design/mfg/fab-drawing.svg
-      - docs/design/mfg/assembly-drawing.svg
-      - docs/design/stackup.svg
-    captions:
-      docs/design/mfg/fab-drawing.svg: >-
-        Outline, hole schedule and the tolerances every quote below is priced
-        against. Change one of these and the prices stop being valid.
-      docs/design/mfg/assembly-drawing.svg: >-
-        Top-side placement and orientation. Seven of the ten parts are
-        polarised; pin 1 is the red dot.
-      docs/design/stackup.svg: >-
-        Two-layer stackup as it will be quoted. Finished thickness and the
-        minimum feature sizes the fab has to confirm.
-    docs:
-      - docs/design/mfg/fab-notes.md
-      - docs/design/mfg/assembly-process.md
-    tables:
-      - title: Quotes
-        csv: docs/design/mfg/quotes.csv
-        note: >-
-          Everything is in GBP and everything has a date, because a quote
-          without one is a guess. Two lines are unsourced and carry an
-          estimate instead of a price — those are the ones to look at.
-      - title: BOM summary at volume breaks
-        csv: docs/design/bom-summary.csv
-        note: >-
-          Unit cost in GBP. Every line says where its price came from; rows
-          whose basis is an estimate are marked, and the total says how many.
+    links_title: Release checklist
+    links_note: >-
+      Everything a fab, an assembler and a purchaser need in order to quote and
+      build. This is a completeness check, not a reading list — the documents
+      themselves are one click away, and the rows still to produce are the
+      answer to "can we release?".
     links:
-      - path: docs/design/mfg/fab-drawing.svg
+      - group: Fabrication
+        path: docs/design/pcb-fab.zip
+        label: Gerbers and drill files
+        why: RS-274X plus the drill schedule. Not generated until layout is frozen
+      - group: Fabrication
+        path: docs/design/mfg/fab-drawing.svg
         label: Fabrication drawing
-        why: Goes to the fab with the gerbers
-      - path: docs/design/mfg/assembly-drawing.svg
-        label: Assembly drawing
-        why: Placement, orientation and polarity for the assembler
-      - path: docs/design/stackup.svg
+        why: Outline, hole schedule and tolerances. Travels with the gerbers
+      - group: Fabrication
+        path: docs/design/stackup.svg
         label: Stackup drawing
         why: What the fab quotes against
-      - path: docs/design/mfg/quotes.csv
-        label: Quotes
-        why: Purchasing, and the source of every price on this tab
-      - path: docs/design/bom-summary.csv
-        label: BOM
-        why: Purchasing and the assembly house
-      - path: docs/design/mfg/fab-notes.md
+      - group: Fabrication
+        path: docs/design/mfg/fab-notes.md
         label: Fabrication notes
-        why: The written spec that travels with the gerbers
-      - path: docs/design/mfg/assembly-process.md
-        label: Assembly and test process
-        why: The traveller for the first article run
-      - path: docs/design/pcb-fab.zip
-        label: Gerbers and drill
-        why: Fabrication — not generated until the layout is frozen
-      - path: docs/design/pcb-pos.csv
-        label: Pick and place
-        why: Assembly — needs the layout
-      - path: docs/design/pcb-layers.pdf
+        why: Material, finish, class, panelisation — the written half of the spec
+      - group: Fabrication
+        path: docs/design/pcb-layers.pdf
         label: Layer plots
         why: Incoming inspection and any fab query
+      - group: Assembly
+        path: docs/design/mfg/assembly-drawing.svg
+        label: Assembly drawing
+        why: Placement, orientation and polarity for the assembler
+      - group: Assembly
+        path: docs/design/pcb-pos.csv
+        label: Pick and place
+        why: Centroid file. Needs the layout
+      - group: Assembly
+        path: docs/design/bom-summary.csv
+        label: BOM
+        why: Purchasing and the assembly house
+      - group: Assembly
+        path: docs/design/mfg/assembly-process.md
+        label: Assembly and test process
+        why: The traveller — paste, placement, reflow, then the test sequence
+      - group: Assembly
+        path: docs/design/mfg/test-fixture.md
+        label: Test fixture definition
+        why: Bed of nails for the first four test steps. Needs the layout
+      - group: Commercial
+        path: docs/design/mfg/quotes.csv
+        label: Quotes
+        why: Supplier, quantity, tooling, lead time and the date each was given
+      - group: Commercial
+        path: docs/design/mfg/supplier-decision.md
+        label: Supplier decision
+        why: Which quote was taken and why. Not made yet

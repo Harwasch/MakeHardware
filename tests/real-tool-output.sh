@@ -140,6 +140,22 @@ open("docs/design/dense-sheet.svg", "w").write(
 PYEOF2
 printf '  (built a %s kB dense sheet)\n' "$(( $(wc -c < docs/design/dense-sheet.svg) / 1024 ))"
 
+# ---- 9: a diagram whose editable source lives in another directory -------
+# `block-diagram` writes hw/block-diagram.drawio and docs/design/block-diagram.svg,
+# so a same-directory lookup finds the plan and the requirements map and misses
+# the block diagram — the one people most want to open, because it is the one
+# they argue with. A missing link is invisible on the page, so assert it.
+mkdir -p hw
+cat > docs/design/block-diagram.svg <<'EOF'
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"
+     viewBox="0 0 600 300"><rect width="600" height="300" fill="none"/>
+<text x="20" y="40">BLOCK DIAGRAM</text></svg>
+EOF
+cat > hw/block-diagram.drawio <<'EOF'
+<mxfile host="MakeHardware"><diagram id="d" name="Page-1"><mxGraphModel>
+<root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>
+EOF
+
 # ---- 5: a PDF, the normal schematic export -------------------------------
 printf '%%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n' \
     > docs/design/schematic.pdf
@@ -157,6 +173,7 @@ phases:
       - docs/design/board-render.png
       - docs/design/never-exported.svg
       - docs/design/dense-sheet.svg
+      - docs/design/block-diagram.svg
 EOF
 
 git add -A >/dev/null 2>&1
@@ -252,6 +269,14 @@ has "${P}" "Open on GitHub" && pass "the PDF links out to where it does render" 
 grep -q 'M0.0000 0.0000' "${P}" \
     && fail "a 40,000-element sheet was inlined — the page will crawl" \
     || pass "dense plotted sheet reported, not inlined"
+
+# 9. the editable original is offered at the picture, across directories
+has "${P}" "app.diagrams.net/?url=" \
+    && pass "a .drawio opens straight in draw.io from its raw URL" \
+    || fail "no draw.io link — the diagram is read-only on the page"
+has "${P}" "hw%2Fblock-diagram.drawio" \
+    && pass "found the .drawio in hw/ for an SVG in docs/design/" \
+    || fail "cross-directory .drawio not found: the block diagram is the case"
 
 sz=$(( $(wc -c < "${P}") / 1024 ))
 [ "${sz}" -lt 500 ] && pass "page stayed small (${sz} kB) — neither the 1.5 MB raster nor the dense sheet was embedded" \

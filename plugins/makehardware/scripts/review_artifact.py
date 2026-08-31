@@ -38,6 +38,7 @@ import io
 import html
 import json
 import os
+import urllib.parse
 import re
 import subprocess
 import sys
@@ -155,6 +156,27 @@ def blob_url(path: str) -> str | None:
         return None
     return (f'https://github.com/{REPO["slug"]}/blob/{REPO["ref"]}/'
             f'{path.lstrip("/")}')
+
+
+def drawio_url(path: str) -> str | None:
+    """Open a `.drawio` straight in the draw.io editor, from its raw URL.
+
+    diagrams.net takes a `?url=` and fetches the file itself, so this is one
+    click to an editable diagram — no download, no import step, and no
+    application to install. Better than handing someone a file, which is why
+    it sits beside every `.drawio` on the page rather than replacing the link
+    to the file itself.
+
+    It fetches anonymously, so it works for a public repository and fails for
+    a private one. That is why the file link stays: on a private repo the
+    human downloads it from GitHub and drops it on the canvas, which is the
+    same two steps they would have had anyway.
+    """
+    if not REPO["slug"] or not path.lower().endswith(".drawio"):
+        return None
+    raw = (f'https://raw.githubusercontent.com/{REPO["slug"]}/'
+           f'{REPO["ref"]}/{path.lstrip("/")}')
+    return f"https://app.diagrams.net/?url={urllib.parse.quote(raw, safe='')}"
 
 
 # ---------------------------------------------------------------------------
@@ -582,6 +604,30 @@ def svg_too_heavy(full: str) -> str | None:
                 f"artifact cap. {advice}")
     return None
 
+# Where a diagram's editable source lives relative to its render. The two are
+# not always siblings: `block-diagram` writes `hw/block-diagram.drawio` and
+# `docs/design/block-diagram.svg`, so a same-directory lookup found the plan
+# and the requirements map and missed the block diagram — the one people most
+# want to open, because it is the one they argue with.
+DRAWIO_DIRS = ["", "hw", "docs/design", "docs"]
+
+
+def find_editable(root: str, path: str) -> str | None:
+    """The `.drawio` a rendered diagram was generated from, if there is one."""
+    if path.lower().endswith(".drawio"):
+        return None
+    stem = os.path.basename(os.path.splitext(path)[0])
+    seen = []
+    for d in [os.path.dirname(path)] + DRAWIO_DIRS:
+        cand = os.path.normpath(os.path.join(d, stem + ".drawio"))
+        if cand in seen:
+            continue
+        seen.append(cand)
+        if os.path.exists(os.path.join(root, cand)):
+            return cand
+    return None
+
+
 def figure(root: str, path: str, caption: str = "") -> dict | None:
     """A figure, or an honest note about why there isn't one.
 
@@ -593,6 +639,12 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
     """
     full = os.path.join(root, path)
     ext = os.path.splitext(path)[1].lower()
+
+    # A rendered diagram is for reading; the `.drawio` beside it is for
+    # disagreeing with. Offer it at the picture, not in a list further down
+    # the page — the moment someone wants to move a block is the moment they
+    # are looking at the block.
+    editable = find_editable(root, path)
 
     if not os.path.exists(full):
         return {"warn": f"{path} does not exist. The export that should have "
@@ -607,14 +659,14 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
         svg, width, sheet = inline_svg(full)
         if svg:
             return {"svg": svg, "caption": caption, "path": path, "w": width,
-                    "mat": sheet}
+                    "mat": sheet, "editable": editable}
         return {"warn": f"{path} is not readable as SVG.",
                 "caption": caption, "path": path}
 
     uri, warn, rw, opaque = inline_raster(full)
     if uri:
         return {"uri": uri, "caption": caption, "path": path, "w": rw,
-                "mat": opaque}
+                "mat": opaque, "editable": editable}
     if warn:
         return {"warn": warn, "caption": caption, "path": path}
 
@@ -643,12 +695,14 @@ def add_sources(root: str, p: "Phase", specs: list[tuple[str, str, str]]) -> Non
     Only files that exist are listed: a project with no `.drawio` should not be
     shown a dead link to one.
     """
-    links = [{"label": label, "path": path, "why": why,
-              "url": blob_url(path), "missing": False}
+    links = [{"label": label, "path": path, "why": why, "group": "",
+              "url": blob_url(path), "drawio": drawio_url(path),
+              "missing": False}
              for path, label, why in specs
              if os.path.exists(os.path.join(root, path))]
     if links:
-        p.add("links", links)
+        p.add("links", {"title": "The editable originals", "note": None,
+                        "rows": links})
 
 
 def phase_vision(root: str) -> Phase | None:
@@ -721,8 +775,6 @@ def phase_plan(root: str) -> Phase | None:
     add_sources(root, p, [
         ('docs/plan.drawio', 'Plan chart (draw.io)',
          'Opens in draw.io or diagrams.net — move a bar to re-plan'),
-        ('docs/plan.svg', 'Plan chart (SVG)',
-         'Renders on GitHub'),
         ('plan.yaml', 'Plan source',
          'What both charts are generated from'),
     ])
@@ -788,8 +840,6 @@ def phase_requirements(root: str) -> Phase | None:
     add_sources(root, p, [
         ('docs/design/requirements-map.drawio', 'Requirements map (draw.io)',
          'Opens in draw.io or diagrams.net'),
-        ('docs/design/requirements-map.svg', 'Requirements map (SVG)',
-         'Renders on GitHub'),
     ])
     return p
 
@@ -841,8 +891,6 @@ def phase_architecture(root: str) -> Phase | None:
     add_sources(root, p, [
         ('hw/block-diagram.drawio', 'Block diagram (draw.io)',
          'Opens in draw.io or diagrams.net — drag the file onto the canvas'),
-        ('hw/block-diagram.svg', 'Block diagram (SVG)',
-         'Renders on GitHub'),
         ('hw/block-diagram.yaml', 'Block diagram source',
          'The spec both files are generated from'),
     ])
@@ -921,10 +969,14 @@ def phase_from_config(root: str, cfg: dict) -> Phase | None:
         path = lk.get("path", "")
         links.append({"label": lk.get("label") or _humanise(path),
                       "path": path, "why": lk.get("why", ""),
+                      "group": lk.get("group", ""),
                       "url": blob_url(path),
+                      "drawio": drawio_url(path),
                       "missing": bool(path) and not os.path.exists(
                           os.path.join(root, path))})
-    p.add("links", links)
+    if links:
+        p.add("links", {"title": cfg.get("links_title") or "Documents a run needs",
+                        "note": cfg.get("links_note"), "rows": links})
 
     return p if (p.blocks or cfg.get("always")) else None
 
@@ -1076,6 +1128,8 @@ figure{margin:0 0 24px;min-width:0}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
 figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:70ch}
+.acts{display:block;margin-top:5px;font-size:12px}\n.tally{font-size:12.5px;color:var(--muted);margin:0 0 10px}\ntr.grp td{font-family:var(--cond);font-size:11.5px;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);padding-top:16px;border-bottom:1px solid var(--rule)}\na.alt{font-size:11.5px;white-space:nowrap;margin-left:8px}
+.acts a{margin-right:2px}
 
 /* ---- tables ---- */
 .scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--panel);
@@ -1438,7 +1492,20 @@ def render_phase(p: Phase) -> str:
                     a(f'<div class="notes"><h3>Not shown here</h3>'
                       f'<ul><li>{esc(f["warn"])}{link}</li></ul></div>')
                 cap = f.get("caption") or _humanise(f["path"])
-                a(f"<figcaption>{esc(cap)}</figcaption></figure>")
+                a(f"<figcaption>{esc(cap)}")
+                if f.get("editable"):
+                    ed, dio = f["editable"], drawio_url(f["editable"])
+                    bits = []
+                    if dio:
+                        bits.append(f'<a href="{esc(dio)}" target="_blank" '
+                                    f'rel="noopener">Open in draw.io ↗</a>')
+                    u = blob_url(ed)
+                    if u:
+                        bits.append(f'<a href="{esc(u)}" target="_blank" '
+                                    f'rel="noopener">Get the .drawio ↗</a>')
+                    if bits:
+                        a(f'<span class="acts">{" · ".join(bits)}</span>')
+                a("</figcaption></figure>")
             if grid:
                 a("</div>")
         elif kind == "chunks":
@@ -1499,20 +1566,47 @@ def render_csv_table(t: dict) -> str:
     return "\n".join(o)
 
 
-def render_links(links: list[dict]) -> str:
-    if not links:
+def render_links(payload: dict) -> str:
+    """The checklist: what a run needs, whether it exists, and where it is.
+
+    This is the whole of the manufacturing tab and the tail of most others.
+    The point is not to show the documents — a fabrication drawing rendered
+    small on a review page tells nobody anything they can act on — it is to
+    show at a glance that the set is complete, and to be one click from any of
+    it. So the state column carries the weight, and a missing row stays in
+    place saying it is missing rather than quietly not being there.
+    """
+    rows = payload.get("rows") or []
+    if not rows:
         return ""
-    o = ['<h3 class="sec">Documents a run needs</h3>',
-         '<div class="scroll"><table><thead><tr><th>Document</th>'
-         '<th>State</th><th>What it is for</th></tr></thead><tbody>']
-    for lk in links:
+    missing = sum(1 for r in rows if r["missing"])
+    o = [f'<h3 class="sec">{esc(payload.get("title") or "Documents a run needs")}</h3>']
+    if payload.get("note"):
+        o.append(f'<p class="lead">{esc(payload["note"])}</p>')
+    o.append(f'<p class="tally">{len(rows) - missing} of {len(rows)} present'
+             + (f' · <span class="t-stop">{missing} still to produce</span>'
+                if missing else " · complete") + "</p>")
+    o.append('<div class="scroll"><table><thead><tr><th>Document</th>'
+             '<th>State</th><th>What it is for</th></tr></thead><tbody>')
+
+    group = object()                       # never equal to a real group name
+    for lk in rows:
+        if lk.get("group", "") != group:
+            group = lk.get("group", "")
+            if group:
+                o.append(f'<tr class="grp"><td colspan="3">{esc(group)}</td></tr>')
         if lk["missing"]:
             state, tone = "Not produced", "stop"
             name = esc(lk["label"])
         else:
             state, tone = "Ready", "ok"
             name = (f'<a href="{esc(lk["url"])}" target="_blank" rel="noopener">'
-                    f'{esc(lk["label"])} ↗</a>' if lk["url"] else esc(lk["label"]))
+                    f'{esc(lk["label"])} \u2197</a>' if lk["url"]
+                    else esc(lk["label"]))
+            if lk.get("drawio"):
+                name += (f' <a class="alt" href="{esc(lk["drawio"])}" '
+                         f'target="_blank" rel="noopener">open in draw.io '
+                         f'\u2197</a>')
         o.append(f'<tr><td>{name}<div class="paths"><code>{esc(lk["path"])}</code>'
                  f'</div></td><td class="state t-{tone}">{state}</td>'
                  f'<td>{esc(lk["why"])}</td></tr>')

@@ -187,10 +187,23 @@ block-diagram                       # writes the .drawio and the .svg
 block-diagram --summary             # the power budget, as text
 ```
 
-The SVG renders on GitHub; the `.drawio` is the editable one. Put the power
-budget table in the review summary — a rail at 95% of its limit is the single
-most useful thing in an architecture review and it is invisible in the
-picture.
+The SVG renders on GitHub; the `.drawio` is the editable one. **Always emit
+both.** The review page finds the `.drawio` that goes with a rendered diagram —
+including across directories, which this pair needs, since the `.drawio` lands
+in `hw/` and the SVG in `docs/design/` — and puts *Open in draw.io* under the
+picture. That link hands diagrams.net the raw URL, so the human is one click
+from an editable diagram with nothing to install and nothing to download. It
+fetches anonymously, so it works on a public repository; on a private one they
+download the file from GitHub and drop it on the canvas instead, and the link
+to the file is there for exactly that.
+
+The rule generalises: **a diagram you generate should have a `.drawio` beside
+it.** A picture someone cannot change is a picture they can only complain
+about.
+
+Put the power budget table in the review summary — a rail at 95% of its limit
+is the single most useful thing in an architecture review and it is invisible
+in the picture.
 
 ## Simulation
 
@@ -209,11 +222,36 @@ reproducible, and state which simulator produced the number.
 
 ## Fabrication output
 
-Before anything is ordered, the human reviews: the gerber render (not the
-gerbers), the drill count and sizes, the stackup, the assembly drawing, and
-the BOM with stock and lead times as of the date you checked. Ordering parts
-is expensive and irreversible; it is exactly the point where an extra
-question is cheap.
+Ordering parts is expensive and irreversible, so this is exactly the point
+where an extra question is cheap. But the review here is **not** a gallery: a
+fabrication drawing shrunk to page width tells nobody anything they can act
+on, and nobody reads an assembly traveller inside a review page.
+
+What the human needs at this stage is a **checklist** — the set of documents a
+run requires, which of them exist, and one click to each. Give the phase a
+`links:` list in `docs/review/artifact.yaml`, grouped with `group:`, and the
+page renders it with a present/missing tally at the top:
+
+```yaml
+  - id: mfg
+    links_title: Release checklist
+    links:
+      - {group: Fabrication, path: docs/design/pcb-fab.zip,
+         label: Gerbers and drill files,
+         why: "RS-274X plus the drill schedule"}
+      - {group: Assembly, path: docs/design/mfg/assembly-process.md,
+         label: Assembly and test process,
+         why: "The traveller — paste, placement, reflow, then the test sequence"}
+```
+
+**List the documents that do not exist yet too.** A row saying *Not produced*
+is the entire value of a checklist; a list of only what you have is a list
+that cannot tell anyone what is missing.
+
+Cover, at least: gerbers and drill, the fabrication drawing, the stackup, the
+written fab notes, the assembly drawing, the pick-and-place, the BOM, the
+assembly and test process, the test fixture, the quotes with their dates, and
+which supplier was chosen and why.
 
 ---
 
