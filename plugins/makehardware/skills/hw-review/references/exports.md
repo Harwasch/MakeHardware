@@ -29,6 +29,15 @@ kicad-cli pcb render hw/probe.kicad_pcb --output docs/design/pcb-top.png \
 ```
 
 For matplotlib, `savefig(..., dpi=110)` on a 7×5 in figure lands around 150 kB.
+
+**Export rasters with a transparent background** where the tool allows it —
+`savefig(..., transparent=True)`, which `vision-board` already does. A render
+exported against white is a bright slab on a dark page; the review page mats
+those deliberately so they read as a mounted photograph, but transparent is
+better. And **never bake a title or a label into a raster**: a bitmap cannot
+follow the reader's theme, so dark text in it stays dark on a dark page. Labels
+belong in the caption or in an SVG overlay.
+
 **Prefer SVG wherever the thing is line art** — a schematic, a plot, a diagram,
 a dimensioned drawing. It inlines as markup, stays crisp at any zoom, themes
 with the page, and has no byte budget at all. Reserve rasters for what is

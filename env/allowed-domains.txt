@@ -45,6 +45,7 @@ ppa.launchpadcontent.net
 #
 # ltspice.analog.com        # only if you set MH_ENABLE_LTSPICE=1
 # fal.run  *.fal.ai  api.bfl.ai   # only for a paid image API
+# api-inference.huggingface.co    # Hugging Face Inference — vision styling
 #
 # ---------------------------------------------------------------------------
 # NOT affected by any of this

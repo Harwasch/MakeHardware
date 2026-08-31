@@ -423,7 +423,7 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
         if cs:
             per_col[min(cs)] = per_col.get(min(cs), 0) + 1
     bus_lanes = max(per_col.values(), default=1)
-    corr = min(max(60 + 16 * bus_lanes, 110), 260)
+    corr = min(max(76 + 20 * bus_lanes, 130), 280)
     pitch = BOX_W + corr
 
     nodes: dict[str, dict] = {}
@@ -510,7 +510,10 @@ def layout(spec: dict, keep: dict[str, tuple[float, float]] | None = None) -> di
     def next_lane(anchor: int) -> float:
         i = lane_of.get(anchor, 0)
         lane_of[anchor] = i + 1
-        return PAD + anchor * pitch + BOX_W + 24 + i * 15
+        # 40 px clear of the block edge, 19 px between lanes: at 24/15 the
+        # first spine sat almost on the block it came from and the next lane
+        # was close enough to read as the same line.
+        return PAD + anchor * pitch + BOX_W + 40 + i * 19
 
     links, spines = [], []
     for item in plan:

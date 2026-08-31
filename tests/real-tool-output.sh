@@ -57,6 +57,7 @@ cat > "docs/design/sheet-${n}.svg" <<EOF
   .t { fill: #ff00ff; font-size: 40px }
   .h { fill: #ff00ff }
   text { fill: #000000 }
+  @media (prefers-color-scheme: dark) { .t { fill: #00ff00 } text { fill: #ffffff } }
 </style>
 <defs>
   <marker id="arrow" markerWidth="6" markerHeight="6"><path d="M0,0 L6,3 L0,6 z"/></marker>
@@ -146,6 +147,26 @@ else
 fi
 has "${P}" 'fill: #ff00ff' && pass "scoped rules keep their declarations" \
     || fail "declarations lost while scoping"
+
+# The @media block is where scoping went wrong before: its first rule kept the
+# `@media (...)` in its prelude, so it was left global while the rules after it
+# were scoped and the braces stopped balancing. That leaked the exporter's dark
+# palette onto the whole page.
+if grep -qE '@media \(prefers-color-scheme:dark\)\{:root:not' "${P}"; then
+    pass "dark-mode rules are scoped and guarded"
+else
+    fail "@media block not scoped — it will leak onto the page"
+fi
+grep -q ':root\[data-theme="dark"\] #g' "${P}" \
+    && pass "an explicit dark toggle reaches the inlined SVG" \
+    || fail "inlined SVG only follows the OS, not the page's theme choice"
+"${PY}" - "${P}" <<'PYEOF'
+import re, sys
+css = "".join(re.findall(r"<style>(.*?)</style>", open(sys.argv[1]).read(), re.S))
+assert css.count("{") == css.count("}"), "unbalanced braces in the page CSS"
+print("  [32mPASS[0m  page CSS braces balance")
+PYEOF
+[ $? -eq 0 ] || fails=$((fails+1))
 
 # 3. id collisions between the two sheets
 ids=$(grep -oE 'id="g[0-9a-f]{7}-arrow"' "${P}" | sort -u | wc -l)

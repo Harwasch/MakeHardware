@@ -60,9 +60,29 @@ image-capable MCP server before anything else.
 
 ### Rung 2 — a keyed API through `imagegen`
 
+**This is the rung to reach for when rung 1 is blocked**, and it usually is:
+Space invocation is off by default on the connector, and a running session
+cannot see a connector change anyway. Rung 2 needs no connector at all.
+
 ```bash
 imagegen --list          # which providers have a key, and what each supports
 ```
+
+Four providers, easiest key first:
+
+| Provider | Key | Why |
+|---|---|---|
+| `hf` | `HF_TOKEN` | **Start here.** A free read token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). No connector, no Space invocation, no billing. |
+| `fal` | `FAL_KEY` | Paid, fast, and the best image-to-image of the four. |
+| `bfl` | `BFL_API_KEY` | Paid. FLUX Kontext, for restyling a render while keeping its proportions. |
+| `openai` | `OPENAI_API_KEY` | Paid, text-to-image only here. |
+
+Put the key in `.env` at the project root (gitignored) or in the environment.
+On a **Custom** network policy the host also has to be reachable — see
+`env/allowed-domains.txt`; on **Full** there is nothing to do.
+
+A cold Hugging Face model returns 503 on the first call while it loads. That is
+normal; wait and retry rather than switching provider.
 
 If one is configured:
 

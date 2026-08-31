@@ -151,6 +151,75 @@ def _svg_length(value: str) -> float:
                 "cm": 96 / 2.54, "in": 96.0}.get(unit, 1.0)
 
 
+def _scope_css(css: str, ns: str) -> str:
+    """Prefix every selector with `#ns`, descending into at-rules correctly.
+
+    Splitting on `}` and prefixing whatever looked like a selector was wrong in
+    the one place it mattered most: an `@media` block's first rule kept the
+    leading `@media (...)` in its prelude, so it was left unscoped while the
+    rules after it were scoped and the braces no longer balanced. Every inlined
+    diagram's dark-mode rules leaked onto the page and its own light-mode rules
+    outranked them, which is why a dark page rendered a light diagram with dark
+    boxes in it.
+
+    Themes are also translated, not just scoped. An exported SVG only knows
+    `prefers-color-scheme`, but this page's theme can be set explicitly by the
+    viewer — so a dark rule is emitted twice: once guarded so an explicit light
+    choice beats a dark OS, and once for the explicit dark toggle.
+    """
+    out: list[str] = []
+    i, n = 0, len(css)
+    while i < n:
+        j = css.find("{", i)
+        if j < 0:
+            break
+        prelude = css[i:j].strip()
+        depth, k = 1, j + 1
+        while k < n and depth:
+            depth += (css[k] == "{") - (css[k] == "}")
+            k += 1
+        body = css[j + 1:k - 1]
+
+        if prelude.startswith("@"):
+            if re.match(r"@media\b.*prefers-color-scheme\s*:\s*dark", prelude, re.I):
+                inner = _scope_css(body, ns)
+                guard = ':root:not([data-theme="light"])'
+                out.append("@media (prefers-color-scheme:dark){"
+                           + _prefix_each(inner, guard) + "}")
+                out.append(_prefix_each(inner, ':root[data-theme="dark"]'))
+            elif re.match(r"@(media|supports|container|layer)\b", prelude, re.I):
+                out.append(f"{prelude}{{{_scope_css(body, ns)}}}")
+            else:
+                out.append(f"{prelude}{{{body}}}")     # @font-face, @keyframes
+        elif prelude:
+            sels = ",".join(f"#{ns} {sel.strip()}"
+                            for sel in prelude.split(",") if sel.strip())
+            out.append(f"{sels}{{{body}}}")
+        i = k
+    return "".join(out)
+
+
+def _prefix_each(css: str, prefix: str) -> str:
+    """Put `prefix` in front of every top-level selector in already-scoped CSS."""
+    out: list[str] = []
+    i, n = 0, len(css)
+    while i < n:
+        j = css.find("{", i)
+        if j < 0:
+            break
+        prelude = css[i:j].strip()
+        depth, k = 1, j + 1
+        while k < n and depth:
+            depth += (css[k] == "{") - (css[k] == "}")
+            k += 1
+        body = css[j + 1:k - 1]
+        sels = ",".join(f"{prefix} {sel.strip()}"
+                        for sel in prelude.split(",") if sel.strip())
+        out.append(f"{sels}{{{body}}}")
+        i = k
+    return "".join(out)
+
+
 def inline_svg(path: str) -> tuple[str | None, float]:
     """SVG goes in as markup: crisp at any zoom, themes with the page, no cap.
 
@@ -184,18 +253,7 @@ def inline_svg(path: str) -> tuple[str | None, float]:
                       rf'\1="#{ns}-{m}"', text)
 
     def scope(block: re.Match) -> str:
-        body = block.group(1)
-        out = []
-        for chunk in re.split(r"(?<=\})", body):
-            if not chunk.strip():
-                continue
-            m = re.match(r"\s*([^{@]+)\{(.*)\}\s*$", chunk, re.S)
-            if not m:
-                out.append(chunk)                     # @media and friends: leave
-                continue
-            sels = ",".join(f"#{ns} {sel.strip()}" for sel in m.group(1).split(","))
-            out.append(f"{sels}{{{m.group(2)}}}")
-        return "<style>" + "".join(out) + "</style>"
+        return "<style>" + _scope_css(block.group(1), ns) + "</style>"
 
     text = re.sub(r"<style[^>]*>(.*?)</style>", scope, text, flags=re.S)
 
@@ -221,23 +279,40 @@ def png_width(blob: bytes) -> float:
     return 0.0
 
 
-def inline_raster(path: str) -> tuple[str | None, str | None, float]:
-    """(data-uri, warning, intrinsic width). Big rasters are reported, not embedded."""
+def png_opaque(blob: bytes) -> bool:
+    """True when the PNG carries no alpha, so it will paint its own background.
+
+    A raster cannot follow the page's theme. One with alpha composites onto the
+    sheet and is fine either way; an opaque one — which is most CAD and board
+    renders, since they are exported against white — becomes a bright slab on a
+    dark page. Those get a deliberate light mat so they read as a mounted
+    photograph rather than a hole in the layout.
+    """
+    if blob[:8] != b"\x89PNG\r\n\x1a\n" or blob[12:16] != b"IHDR":
+        return True
+    colour_type = blob[25]
+    if colour_type in (4, 6):                    # grey+alpha, RGBA
+        return False
+    return b"tRNS" not in blob[:4096]
+
+
+def inline_raster(path: str) -> tuple[str | None, str | None, float, bool]:
+    """(data-uri, warning, width, opaque). Big rasters are reported, not embedded."""
     if not os.path.isfile(path):
-        return None, None, 0.0
+        return None, None, 0.0, True
     size = os.path.getsize(path)
     if size > RASTER_BUDGET:
         return None, (f"{path} is {size // 1024} kB — too large to embed. "
-                      f"Downscale it for review, or link it."), 0.0
+                      f"Downscale it for review, or link it."), 0.0, True
     mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
             ".gif": "image/gif", ".webp": "image/webp"}.get(
                 os.path.splitext(path)[1].lower())
     if not mime:
-        return None, None, 0.0
+        return None, None, 0.0, True
     with open(path, "rb") as fh:
         blob = fh.read()
     return (f"data:{mime};base64,{base64.b64encode(blob).decode()}", None,
-            png_width(blob))
+            png_width(blob), png_opaque(blob))
 
 
 def markdown_to_html(text: str, strip_h1: bool = True) -> str:
@@ -369,9 +444,10 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
         return {"warn": f"{path} is not readable as SVG.",
                 "caption": caption, "path": path}
 
-    uri, warn, rw = inline_raster(full)
+    uri, warn, rw, opaque = inline_raster(full)
     if uri:
-        return {"uri": uri, "caption": caption, "path": path, "w": rw}
+        return {"uri": uri, "caption": caption, "path": path, "w": rw,
+                "mat": opaque}
     if warn:
         return {"warn": warn, "caption": caption, "path": path}
 
@@ -789,6 +865,7 @@ figure{margin:0 0 24px;min-width:0}
   gap:20px;align-items:start}
 .sheet{border:1px solid var(--rule);background:var(--panel);padding:16px;
   overflow-x:auto}
+.sheet.mat{background:#f7f6f3;border-color:var(--rule)}
 .sheet .svgwrap{display:block}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
@@ -1139,7 +1216,8 @@ def render_phase(p: Phase) -> str:
                     a(f'<div class="sheet"{cap_w}>{f["svg"]}</div>')
                 elif f.get("uri"):
                     cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
-                    a(f'<div class="sheet"{cap_w}><img src="{f["uri"]}" '
+                    mat = " mat" if f.get("mat") else ""
+                    a(f'<div class="sheet{mat}"{cap_w}><img src="{f["uri"]}" '
                       f'alt="{esc(f.get("caption") or f["path"])}"></div>')
                 elif f.get("warn"):
                     url = blob_url(f["path"])

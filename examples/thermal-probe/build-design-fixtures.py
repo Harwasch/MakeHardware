@@ -81,14 +81,22 @@ def iso_box(x, y, z, w, d, h, ox, oy, s, hue, alpha=1.0, label=""):
     return "\n".join(o)
 
 
-def cad_exploded() -> str:
-    """The enclosure, its board and its cell, pulled apart along Z."""
+def cad_exploded(bare: bool = False) -> str:
+    """The enclosure, its board and its cell, pulled apart along Z.
+
+    `bare` drops every label, which is what the rasterised copy uses. A real
+    build123d or pcbnew render is geometry and nothing else — and a raster
+    cannot follow the page's theme, so any text baked into one is dark-on-dark
+    the moment the reader is in dark mode. Labels belong in the SVG or the
+    caption, never in the bitmap.
+    """
     s, ox, oy = 1.5, 215, 205
-    body = ['<rect width="640" height="470" fill="none"/>',
-            f'<text x="20" y="26" class="h ink">Enclosure, rev C — exploded</text>',
-            f'<text x="20" y="44" class="ts mut">'
-            f'from cad/enclosure.py · 38 × 164 × 22 mm envelope · '
-            f'components shown at their modelled positions</text>']
+    body = ['<rect width="640" height="470" fill="none"/>']
+    if not bare:
+        body += [f'<text x="20" y="26" class="h ink">Enclosure, rev C — exploded</text>',
+                 f'<text x="20" y="44" class="ts mut">'
+                 f'from cad/enclosure.py · 38 × 164 × 22 mm envelope · '
+                 f'components shown at their modelled positions</text>']
     # Drawn far-to-near so the painter's algorithm resolves correctly.
     parts = [(0, 0, 0, 38, 164, 2.0, "#8f8d86", 1.0, "Base", "1.8 mm wall"),
              (4, 52, 16, 30, 50, 3.8, "#2a78d6", 1.0, "Cell", "LP503035, 900 mAh"),
@@ -101,14 +109,15 @@ def cad_exploded() -> str:
     # puts every part on the same diagonal, so leader text lands on top of the
     # next part down however it is offset.
     ly = 96
-    for _x, _y, _z, _w, _d, _h, hue, _a, name, note in reversed(parts):
+    for _x, _y, _z, _w, _d, _h, hue, _a, name, note in ([] if bare else reversed(parts)):
         body.append(f'<rect x="452" y="{ly - 9}" width="11" height="11" rx="2" '
                     f'fill="{hue}" stroke="{INK}" stroke-width="0.6"/>')
         body.append(f'<text x="470" y="{ly}" class="tb ink">{name}</text>')
         body.append(f'<text x="470" y="{ly + 14}" class="ts mut">{note}</text>')
         ly += 40
-    body.append(f'<text x="452" y="{ly + 6}" class="ts mut">'
-                f'split line at 40% depth</text>')
+    if not bare:
+        body.append(f'<text x="452" y="{ly + 6}" class="ts mut">'
+                    f'split line at 40% depth</text>')
     return svg(640, 440, "\n".join(body),
                "Exploded isometric view of the enclosure, board and cell")
 
@@ -429,11 +438,16 @@ def rasterise(svg_path: str, png_path: str, w: int, h: int) -> bool:
             continue
         wrap = svg_path + ".html"
         with open(wrap, "w") as fh:
-            fh.write(f'<!doctype html><body style="margin:0">'
+            fh.write(f'<!doctype html><body style="margin:0;background:none">'
                      f'<img src="file://{os.path.abspath(svg_path)}" '
                      f'style="display:block"></body>')
         try:
+            # Transparent, so the render composites onto whatever the page's
+            # theme paints behind it. An opaque render exported against white
+            # is a bright slab on a dark page — which is what happens to most
+            # real CAD and board renders, and why the page mats those.
             subprocess.run([chrome, "--headless", "--disable-gpu", "--no-sandbox",
+                            "--default-background-color=00000000",
                             f"--screenshot={png_path}", f"--window-size={w},{h}",
                             "--hide-scrollbars", f"file://{os.path.abspath(wrap)}"],
                            capture_output=True, timeout=90)
@@ -461,8 +475,14 @@ def main() -> int:
             fh.write(text)
         print(f"  wrote docs/design/{rel}  ({len(text) // 1024} kB)")
 
+    # The raster is built from a label-free copy: see cad_exploded(bare=True).
+    bare = os.path.join(OUT, "cad", ".enclosure-bare.svg")
+    with open(bare, "w") as fh:
+        fh.write(cad_exploded(bare=True))
     png = os.path.join(OUT, "cad", "enclosure-render.png")
-    if rasterise(os.path.join(OUT, "cad", "enclosure-exploded.svg"), png, 640, 440):
+    ok = rasterise(bare, png, 640, 440)
+    os.remove(bare)
+    if ok:
         print(f"  wrote docs/design/cad/enclosure-render.png  "
               f"({os.path.getsize(png) // 1024} kB)  [raster path]")
     else:
