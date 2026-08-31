@@ -72,7 +72,7 @@ Four providers, easiest key first:
 
 | Provider | Key | Why |
 |---|---|---|
-| `hf` | `HF_TOKEN` | **Start here.** A free read token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). No connector, no Space invocation, no billing. |
+| `hf` | `HF_TOKEN` or `HF_KEY` | **Start here.** A free read token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). No connector, no Space invocation, no billing. |
 | `fal` | `FAL_KEY` | Paid, fast, and the best image-to-image of the four. |
 | `bfl` | `BFL_API_KEY` | Paid. FLUX Kontext, for restyling a render while keeping its proportions. |
 | `openai` | `OPENAI_API_KEY` | Paid, text-to-image only here. |
@@ -80,6 +80,25 @@ Four providers, easiest key first:
 Put the key in `.env` at the project root (gitignored) or in the environment.
 On a **Custom** network policy the host also has to be reachable — see
 `env/allowed-domains.txt`; on **Full** there is nothing to do.
+
+### Adding a key to a session that is already running
+
+You cannot, and it is worth knowing why before you ask someone to try.
+
+A cloud session's environment variables are read when its **container starts**.
+Adding one in the environment's settings afterwards changes what the *next*
+session gets, not this one — the same is true of connector settings, so
+reconnecting a connector mid-session does not change the tool list either. So
+the sequence is: add the key in the environment's **Environment variables**
+field, then **start a new session**. Both `HF_KEY` and `FAL_KEY` can go in at
+once; `imagegen` picks whichever is present and `--provider` chooses between
+them.
+
+**Never ask the human to paste a key into the chat.** The transcript is stored,
+so a key that arrives that way has to be treated as disclosed and rotated, and
+you will have cost them a credential to save one session's wait. If they offer
+anyway, say that, write it to `.env` rather than anywhere tracked, and tell
+them plainly to rotate it afterwards.
 
 A cold Hugging Face model returns 503 on the first call while it loads. That is
 normal; wait and retry rather than switching provider.

@@ -257,7 +257,9 @@ def _hf_build(prompt, model, init_image, size) -> Call:
 
 PROVIDERS: list[Provider] = [
     Provider(
-        name="hf", env_keys=["HF_TOKEN", "HUGGINGFACE_API_KEY",
+        # HF_KEY is not one of Hugging Face's own names for this, but it is
+        # what people reach for by symmetry with FAL_KEY, so accept it.
+        name="hf", env_keys=["HF_TOKEN", "HF_KEY", "HUGGINGFACE_API_KEY",
                              "HUGGING_FACE_HUB_TOKEN"],
         supports_init_image=True, default_model="black-forest-labs/FLUX.1-schnell",
         build=_hf_build, extract=lambda resp, key: resp, verified=False,
