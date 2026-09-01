@@ -54,6 +54,11 @@ mkdir -p "${PREFIX}" "${LOGDIR}"
 # commit: if the base image ever changes, rebuild and re-publish it.
 : "${MH_ELMER_URL:=https://github.com/Harwasch/MakeHardware/releases/download/elmer-26.2/elmer-26.2-ubuntu2404.tgz}"
 : "${MH_ELMER_REV:=6522661}"
+# Our own hash of the asset, taken once and verified on every build — same
+# arrangement as the Konnect pin below, and for the same reason: upstream
+# publishes no checksum, and an environment that silently installs a
+# different Elmer is worse than one with no Elmer at all.
+MH_ELMER_SHA256="d3b7699438ad50ee93349a58334a311b2d25e5ba9228c094b41304b2a1b71bd6"
 
 # Escape hatch: build Konnect from source instead of installing the upstream
 # release binary. Costs ~4 minutes and the protobuf/cmake toolchain, so it is
@@ -604,6 +609,7 @@ phase_magnetics() {
     # changed base image, pinned to ${MH_ELMER_REV}, never an unpinned clone
     # of the default branch.
     if curl -fsSL --retry 3 "${MH_ELMER_URL}" -o /tmp/elmer.tgz >>"${log}" 2>&1 \
+       && echo "${MH_ELMER_SHA256}  /tmp/elmer.tgz" | sha256sum -c - >>"${log}" 2>&1 \
        && tar xzf /tmp/elmer.tgz -C / >>"${log}" 2>&1; then
         ldconfig
         rm -f /tmp/elmer.tgz
