@@ -123,6 +123,25 @@ chk gmsh           gmsh --version
 chkout calculix    "Version [0-9]" ccx -v
 
 echo
+echo "Magnetics & field simulation:"
+# ElmerSolver prints its banner and then waits for a solver input file, so it
+# is checked on --version alone; ElmerGrid with no arguments prints its usage
+# banner and exits non-zero, hence chkout. FastHenry with no input file says
+# "Unexpected end of file" and still prints its version.
+chkout elmer       "v [0-9]+\.[0-9]" ElmerSolver --version
+chkout elmergrid   "Version: [0-9]" ElmerGrid
+chkout fasthenry   "FastHenry [0-9]" fasthenry
+chk getdp          getdp --version
+if [ -d /opt/elmer-elmag ]; then
+    printf '  \033[32mok\033[0m   %-22s %s worked cases to copy from\n' \
+        "elmer-elmag" "$(find /opt/elmer-elmag -maxdepth 1 -mindepth 1 -type d ! -name '.*' | wc -l)"
+    ok=$((ok+1))
+else
+    printf '  \033[33m--\033[0m   %-22s absent — author a .sif from scratch at your peril\n' \
+        "elmer-elmag"
+fi
+
+echo
 echo "Documentation & datasheets:"
 # The house rule is "never take a number from memory when a datasheet exists",
 # so a missing PDF text extractor is not a cosmetic gap.

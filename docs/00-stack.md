@@ -16,6 +16,7 @@ estimated.
 | Circuit simulation (opt-in) | **LTspice** under Wine | Only for vendor-encrypted ADI models and `.asc` editing. Off by default. |
 | 3D CAD | **build123d** 0.11.1 + **build123d-mcp** | Parametric Python CAD on OCCT. Models are code, so they diff, review and re-render on a changed number. |
 | Meshing / FEA | **gmsh** 4.12.1 + **CalculiX** 2.21 | Both in the Ubuntu archive, both headless. Thermal and structural. |
+| Magnetics | **FastHenry** 3.0.1 + **Elmer** 26.2 + **GetDP** 3.2.0 | SPICE cannot tell you an inductance. FastHenry is PEEC — no air mesh, seconds for L, M, k and R_ac of air-core conductors; Elmer does the cases with ferrite in them. See the `hw-magnetics` skill for which answers what. |
 | Design review | **kicad-happy** (MIT) | Read-only analysers Konnect does not have: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference, distributor search. Pure Python, needs no KiCad install. |
 | Vision renders | **matplotlib** + build123d tessellation | Shaded views and isometric line art from real geometry. |
 | Vision styling | **Hugging Face Spaces** (FLUX Kontext, Qwen) | Restyles a geometry render without inventing new proportions. No API key needed. |
@@ -166,6 +167,8 @@ starting structure, not shared code, so divergence there is correct.
 | Building Konnect from source | Was the default until the 403 finding was retested. ~4 min for something `curl` does in seconds. Still available behind `MH_KONNECT_FROM_SOURCE=1`. |
 | Mirroring Konnect on our own repo | Would work — the proxy serves attached repos — but re-hosting the binary carries an AGPL source-offer obligation, and the upstream asset is directly fetchable anyway. |
 | LTspice as the default | Blocked domain, ~2 GB, and unnecessary — ngspice covers the loop. |
+| NGSolve, Kratos, scikit-fem | Nothing has needed them yet, and every tool in the image is one more thing that can fail the build. Add them when a project needs one. |
+| Elmer from source | ~20 minutes on 1 vCPU, against under a second to extract the prebuilt tarball. Kept as the documented fallback for a changed base image, pinned to a commit — never an unpinned clone of the default branch. |
 | `pip` for the Python stack | `uv` does the same install in **10 s** vs. minutes. |
 | Doorstop, sphinx-needs | Weaker typed grammars and no ReqIF path out. |
 | A template repo instead of a plugin | Copies diverge; a practice learned on one project never reaches the others. |

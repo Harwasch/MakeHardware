@@ -45,6 +45,16 @@ mkdir -p "${PREFIX}" "${LOGDIR}"
 : "${MH_PLUGIN_NAME:=makehardware}"
 : "${MH_PLUGIN_ID:=makehardware@makehardware}"
 
+# Magnetics and field simulation — Elmer, FastHenry, GetDP. Everything it
+# needs is on archive.ubuntu.com or github.com, so no allowlist change.
+# Measured: ~3 minutes, and it runs concurrently with kicad and python.
+: "${MH_ENABLE_MAGNETICS:=1}"
+# Elmer is not in the Ubuntu repos and its PPA is off the allowlist, so it is
+# shipped as a prebuilt tarball. ABI-tied to Ubuntu 24.04 and pinned to a
+# commit: if the base image ever changes, rebuild and re-publish it.
+: "${MH_ELMER_URL:=https://github.com/Harwasch/MakeHardware/releases/download/elmer-26.2/elmer-26.2-ubuntu2404.tgz}"
+: "${MH_ELMER_REV:=6522661}"
+
 # Escape hatch: build Konnect from source instead of installing the upstream
 # release binary. Costs ~4 minutes and the protobuf/cmake toolchain, so it is
 # off — see phase 4.
@@ -569,6 +579,77 @@ phase_plugin() {
 }
 
 # ==========================================================================
+# Phase 7b — magnetics and field simulation (measured ~3 min)
+#
+# SPICE cannot tell you an inductance. This phase is what lets a session answer
+# "what is L, M, k, Q, R_ac" and "what does the ferrite do" — see the
+# hw-magnetics skill for which tool answers which question.
+#
+# gmsh and calculix-ccx are already installed by phase_base; only the three
+# magnetics-specific tools are added here.
+#
+# Nothing in here is on a domain outside the Trusted allowlist.
+# ==========================================================================
+phase_magnetics() {
+    local log="${LOGDIR}/magnetics.log" degraded=0
+    : > "${log}"
+    echo ":: elmer ${MH_ELMER_REV} from ${MH_ELMER_URL}" >>"${log}"
+
+    _apt install -y -q --no-install-recommends \
+        getdp libgfortran5 libopenblas0 gfortran >>"${log}" 2>&1 || return 1
+
+    # --- Elmer, from the prebuilt tarball --------------------------------
+    # Extracting is under a second. Building from source is ~20 min on 1 vCPU,
+    # which does not fit the build budget — keep that as the fallback for a
+    # changed base image, pinned to ${MH_ELMER_REV}, never an unpinned clone
+    # of the default branch.
+    if curl -fsSL --retry 3 "${MH_ELMER_URL}" -o /tmp/elmer.tgz >>"${log}" 2>&1 \
+       && tar xzf /tmp/elmer.tgz -C / >>"${log}" 2>&1; then
+        ldconfig
+        rm -f /tmp/elmer.tgz
+        # Elmer looks for its solver libraries at run time and finds them
+        # nowhere by default. Without this, a bare ElmerSolver in a fresh
+        # shell dies at load with no useful message.
+        grep -q 'elmersolver' /root/.bashrc 2>/dev/null || cat >> /root/.bashrc <<'EOB'
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/elmersolver:$LD_LIBRARY_PATH
+EOB
+        export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/elmersolver:${LD_LIBRARY_PATH:-}
+        ElmerSolver --version >>"${log}" 2>&1 || degraded=1
+    else
+        echo "!! elmer tarball unavailable at ${MH_ELMER_URL}" >>"${log}"
+        degraded=1
+    fi
+
+    # --- FastHenry2 ------------------------------------------------------
+    # 1990s C against GCC >= 10: without -fcommon it dies on
+    # "multiple definition of 'timestuff'". Stale objects mask the fix, so
+    # the tree is cleaned before the flag goes in.
+    if git clone -q --depth 1 https://github.com/ediloren/FastHenry2.git \
+            /opt/FastHenry2 >>"${log}" 2>&1; then
+        (
+            cd /opt/FastHenry2 || exit 1
+            find . -name '*.o' -delete
+            grep -rl "CFLAGS = -O " --include=Makefile . \
+                | xargs -r sed -i 's/^CFLAGS = -O /CFLAGS = -O2 -fcommon /'
+            make all && install -m755 bin/fasthenry /usr/local/bin/fasthenry
+        ) >>"${log}" 2>&1 || degraded=1
+    else
+        degraded=1
+    fi
+
+    # --- worked .sif files ----------------------------------------------
+    # `.sif` is a niche format and the failure mode is a solver that runs
+    # happily and reports zero, so the guidance is to copy a working file
+    # rather than author one. These are those files.
+    git clone -q --depth 1 https://github.com/ElmerCSC/elmer-elmag.git \
+        /opt/elmer-elmag >>"${log}" 2>&1 || degraded=1
+
+    command -v fasthenry >/dev/null || return 1
+    [ "${degraded}" = 1 ] && return 2
+    return 0
+}
+
+# ==========================================================================
 # Phase 8 — finalize. Runs from a trap, so a kill at the time budget still
 # writes the status file and the LTspice wiring instead of leaving neither.
 # ==========================================================================
@@ -644,6 +725,13 @@ if [ "${MH_ENABLE_PLUGIN}" = "1" ]; then
     PID_PLUGIN=$!
 else
     _st plugin SKIP "MH_ENABLE_PLUGIN=0 — install it from the project repo instead"
+fi
+
+if [ "${MH_ENABLE_MAGNETICS}" = "1" ]; then
+    run magnetics phase_magnetics &
+    PID_MAG=$!
+else
+    _st magnetics SKIP "MH_ENABLE_MAGNETICS=0"
 fi
 
 if [ "${MH_ENABLE_LTSPICE}" = "1" ]; then

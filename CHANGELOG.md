@@ -7,6 +7,41 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.3.0
+
+Magnetics. SPICE cannot tell you an inductance; now something can.
+
+### Added
+
+* **`hw-magnetics`** — a skill for field simulation: which of FastHenry,
+  Elmer, GetDP, Gmsh, CalculiX and magpylib answers which question, and the
+  ten or so ways each of them returns a wrong answer without saying so. It is
+  a separate skill from `hw-simulation` on purpose: that skill's triggers are
+  circuit words, and one skill that fires on both "check the bias point" and
+  "what is the coupling coefficient" would be wrong about one of them.
+
+* **`phase_magnetics` in `env/setup.sh`** — Elmer 26.2, FastHenry 3.0.1 and
+  GetDP 3.2.0. Measured at ~3 minutes, run concurrently with the KiCad and
+  Python phases, and needing nothing outside the existing allowlist. Elmer
+  comes from a prebuilt tarball because it is not in the Ubuntu repos and its
+  PPA is off the allowlist; building it from source is ~20 minutes, which does
+  not fit the build budget. `MH_ENABLE_MAGNETICS=0` turns the phase off.
+  Also clones `elmer-elmag`, because `.sif` is a niche format whose failure
+  mode is a solver that runs happily and reports zero — copy a working file.
+
+* **`hw-doctor`** reports the four new tools and whether the worked `.sif`
+  cases are present.
+
+### Notes
+
+Everything above came out of the `wpt-pcb-coils` demo in
+[MakeHardwareDemos](https://github.com/Harwasch/MakeHardwareDemos), which
+reverse-engineers a wireless-power coil from the physical part. Six of the
+gotchas in the skill are silent-wrong-answer paths found there, including
+FastHenry writing `nan` into its output while exiting 0, and an Elmer
+homogenised winding behaving as turns in parallel and reporting an inductance
+33 % low with the mesh fully converged.
+
 ## 0.2.0
 
 Human review, and a review page the human actually reads.
