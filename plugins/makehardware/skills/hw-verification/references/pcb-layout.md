@@ -33,6 +33,16 @@ live or `pcbnew`.**
 
 ## 1. Before you place: check the net classes against the footprints
 
+`pcb-lint --only PCB-TRACKW,PCB-CLEAR` now does both checks below in about a
+second. Read this section anyway — the checks are cheap, and the reason they
+exist is the expensive part.
+
+**The net classes are not in the `.kicad_pcb`.** They live in the sibling
+`.kicad_pro`, under `net_settings.classes`, with assignment through
+`net_settings.netclass_patterns`. Grepping the board file for `net_class` finds
+nothing on any KiCad 9 or 10 board, which reads as "no net classes, nothing to
+check" and is how a whole check quietly becomes a no-op.
+
 Nothing in KiCad warns you when a net class asks for something the parts on
 that net cannot physically accept. It is not an error — it is simply
 unroutable, and it presents as a router that returns almost every connection
@@ -69,6 +79,10 @@ width and leave it there — record in the layout notes what the final widths
 must be, and check them at the end.
 
 ## 2. Run DRC on the placed, unrouted board
+
+`pcb-lint hw/probe.kicad_pcb --gate` first, and DRC second — the linter catches
+the things DRC has no opinion about (an unroutable net class, a via array over
+the wrong copper, a decoupling loop) and it runs without KiCad.
 
 Before there is a single track. It found 721 errors on one board — three of
 them real defects — and every one of those three would otherwise have been
