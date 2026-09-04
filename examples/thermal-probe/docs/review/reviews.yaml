@@ -28,13 +28,13 @@ reviews:
   references:
   - concepts
   requested: '2026-09-04'
-  requested_commit: c3d45a5
+  requested_commit: 44605fc
   status: approved
   packet: docs/review/vision.md
   history:
   - 'on': '2026-09-04'
     action: requested
-    commit: c3d45a5
+    commit: 44605fc
     questions:
     - Which concept, and what made you pick it?
     - Is 164 mm too long to hold comfortably in a glove?
@@ -49,7 +49,7 @@ reviews:
     - docs/design/vision/concept_b/elevation.svg
   - 'on': '2026-09-04'
     action: approved
-    commit: c3d45a5
+    commit: 44605fc
     by: harrison
     note: 'The wand. A freezer walk is one-handed and you are already carrying
 
@@ -58,7 +58,7 @@ reviews:
 
     a clipboard — the bench version solves a problem we do not have.'
   decided: '2026-09-04'
-  decided_commit: c3d45a5
+  decided_commit: 44605fc
   reviewer: harrison
 - id: plan
   title: Project plan
@@ -79,13 +79,13 @@ reviews:
   - docs/plan.svg
   - plan.yaml
   requested: '2026-09-04'
-  requested_commit: c3d45a5
+  requested_commit: 44605fc
   status: approved
   packet: docs/review/plan.md
   history:
   - 'on': '2026-09-04'
     action: requested
-    commit: c3d45a5
+    commit: 44605fc
     questions:
     - Is this all the work?
     - Is the order right — do you know a lead time we do not?
@@ -98,7 +98,7 @@ reviews:
     - docs/plan.md
   - 'on': '2026-09-04'
     action: approved
-    commit: c3d45a5
+    commit: 44605fc
     by: harrison
     note: 'Add the drop test earlier if the enclosure is printed rather than
 
@@ -107,7 +107,7 @@ reviews:
 
     moulded. Otherwise the order is right.'
   decided: '2026-09-04'
-  decided_commit: c3d45a5
+  decided_commit: 44605fc
   reviewer: harrison
 - id: requirements
   title: Requirements tree
@@ -128,13 +128,13 @@ reviews:
   - requirements/10-system.sdoc
   - requirements/hardware.sgra
   requested: '2026-09-04'
-  requested_commit: c3d45a5
+  requested_commit: 44605fc
   status: approved
   packet: docs/review/requirements.md
   history:
   - 'on': '2026-09-04'
     action: requested
-    commit: c3d45a5
+    commit: 44605fc
     questions:
     - Is 7 days the right target, or is 5 with a smaller cell better?
     - Is anything here that nobody asked for?
@@ -147,12 +147,12 @@ reviews:
     - docs/design/requirements-map.svg
   - 'on': '2026-09-04'
     action: approved
-    commit: c3d45a5
+    commit: 44605fc
     by: harrison
     note: 7 days. A week means Friday-to-Friday and nobody has to think.
   note: 7 days. A week means Friday-to-Friday and nobody has to think.
   decided: '2026-09-04'
-  decided_commit: c3d45a5
+  decided_commit: 44605fc
   reviewer: harrison
 - id: architecture
   title: Block diagram, power tree and buses
@@ -173,13 +173,13 @@ reviews:
   - hw/block-diagram.drawio
   - hw/block-diagram.yaml
   requested: '2026-09-04'
-  requested_commit: c3d45a5
+  requested_commit: 44605fc
   status: requested
   packet: docs/review/architecture.md
   history:
   - 'on': '2026-09-04'
     action: requested
-    commit: c3d45a5
+    commit: 44605fc
     questions:
     - Is a rail or a part missing?
     - SPI1 shares flash and LCD on one bus — acceptable, or separate them?
@@ -208,13 +208,13 @@ reviews:
   references:
   - cad/enclosure.py
   requested: '2026-09-04'
-  requested_commit: c3d45a5
+  requested_commit: 44605fc
   status: approved
   packet: docs/review/cad.md
   history:
   - 'on': '2026-09-04'
     action: requested
-    commit: c3d45a5
+    commit: 44605fc
     questions:
     - Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?
     - Split line at 40% depth puts the seam on the grip. Acceptable?
@@ -227,7 +227,7 @@ reviews:
     - docs/design/cad/enclosure-render.png
   - 'on': '2026-09-04'
     action: approved
-    commit: c3d45a5
+    commit: 44605fc
     by: harrison
     note: 'Yes to both. Move the seam to 45% if the tooling allows it, but do not
 
@@ -236,5 +236,5 @@ reviews:
 
     hold the schematic for it.'
   decided: '2026-09-04'
-  decided_commit: c3d45a5
+  decided_commit: 44605fc
   reviewer: harrison

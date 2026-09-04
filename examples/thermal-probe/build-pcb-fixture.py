@@ -26,11 +26,22 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 
 try:
     import pcbnew
 except ImportError:
+    # KiCad's bindings live in whichever interpreter the distribution built
+    # them for, which is usually the system python3 rather than the hardware
+    # toolchain's. Re-exec there once rather than reporting "no pcbnew" on a
+    # machine that has it.
+    import shutil
+    alt = shutil.which("python3")
+    if alt and not os.environ.get("MH_PCB_FIXTURE_REEXEC"):
+        os.environ["MH_PCB_FIXTURE_REEXEC"] = "1"
+        r = subprocess.run([alt, os.path.abspath(__file__)] + sys.argv[1:])
+        sys.exit(r.returncode)
     print("no pcbnew — keeping the committed fixture")
     sys.exit(0)
 

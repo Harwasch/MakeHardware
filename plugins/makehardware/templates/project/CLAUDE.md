@@ -9,8 +9,9 @@ environment build actually managed to install.
 
 ## Stages
 
-`hw-vision` → `hw-planning` → `hw-requirements` → `hw-block-diagram` → design
-→ `hw-simulation` → `hw-verification`, with `hw-review`, `hw-sourcing`,
+`hw-vision` → `hw-planning` → `hw-requirements` → `hw-block-diagram` →
+`hw-schematic` → `hw-pcb-layout` / `hw-cad` → `hw-simulation` →
+`hw-verification`, with `hw-review`, `hw-visuals`, `hw-sourcing`,
 `hw-documentation`, `hw-imagegen` and `hw-retro` throughout.
 
 The block diagram sits between requirements and schematic capture on purpose:
@@ -27,6 +28,9 @@ Three plugins provide KiCad knowledge and they overlap. The division:
 | Job | Use | Why |
 |---|---|---|
 | **Changing** any `.kicad_*` file | **Konnect** MCP tools, always | Direct edits corrupt these files. Konnect's own rules make this mandatory, and they win. |
+| **Deciding where** a symbol or a footprint goes | **`hw-schematic`**, **`hw-pcb-layout`** | Konnect will place a symbol anywhere you tell it to. These say where, and `sch-lint` / `pcb-lint` check it. |
+| **Modelling** anything mechanical | **`hw-cad`** + the `build123d` MCP | Assemblies with labels, colours and joints — not one unnamed solid. |
+| **Drawing** any chart or plot | **`hw-visuals`** (`hw-chart`) | One set of rules, one palette, and the numbers read from the file that owns them. |
 | **Reviewing** a design | **kicad-happy** (`kicad`, `emc`, `bom`) | Deeper read-only analysers: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference. |
 | **Searching for parts** | **kicad-happy** (`digikey`, `mouser`, `lcsc`, `element14`) | Real distributor stock and pricing. |
 | **Deciding** which part | **`hw-sourcing`** | The house philosophy and standards. kicad-happy finds candidates; hw-sourcing picks between them. |
@@ -42,6 +46,10 @@ chose.
 ```bash
 hw-doctor                 # what the toolchain can actually do right now
 imagegen --list           # which image providers have keys
+sch-lint hw/x.kicad_sch   # schematic readability; --gate, --svg, --plan
+pcb-lint hw/x.kicad_pcb   # pre-route board checks; --gate, --svg
+cad-export cad/x.py       # STEP/GLB/STL/3MF/joints/FreeCAD + renders; --check
+hw-chart <kind> data.csv  # the standard engineering plots, as themed SVG
 plan-render               # refresh docs/plan.{svg,md,drawio} and the README
 plan-render --summary     # status, what is ready, what awaits review
 plan-render --check       # exit 1 on a `done` chunk whose outputs or review are missing
@@ -66,6 +74,12 @@ format that renders there — a PDF of the schematic, a PNG of the board, an SVG
 of the diagram. A `.kicad_sch`, a `.step` or a `.drawio` is a download, not a
 review, and a render under `build/` is a render nobody sees.
 
+**Show it, do not describe it.** If a number can be plotted, plot it; if a
+comparison can be drawn, draw it. `hw-chart` covers the standard ones and
+reads from the file that owns the data. Three or four sentences around a
+picture is a review; fifteen paragraphs with a render at the top is a document
+nobody finishes. See `hw-visuals`.
+
 **Get the review, do not assume it.** At the vision, the plan, the
 requirements and the architecture — and at each large design stage — build the
 artefact, commit it, `review-gate open`, then **ask the human directly with
@@ -78,6 +92,26 @@ else, and do not mark a chunk `done` while its review is open or stale. See
 **Keep the plan current.** Update `status` in `plan.yaml` as work completes and
 re-render in the same session. A stale plan is worse than no plan, because
 people trust it.
+
+**A schematic is a document, not a netlist with coordinates.** Its job is to
+let a human find a circuit, follow it and judge it. Everything on the 1.27 mm
+grid, wires orthogonal, signal flowing left to right, rails up and grounds
+down, every net that matters named by a person, decoupling drawn beside the
+pin it serves. `sch-lint --gate` checks the measurable half; `hw-schematic` has
+the rest.
+
+**Check the net classes against the footprints before placing anything.** A
+net class asking for a track wider than the pads on its nets is not an error
+and not a DRC violation — it is simply unroutable, and it presents as a router
+that fails almost every connection with no explanation. `pcb-lint --gate` is a
+second and finds it. Net classes live in the `.kicad_pro`, not the
+`.kicad_pcb`.
+
+**Model mechanical parts as an assembly, positioned by joints.** Every part
+labelled and coloured; never `.move()` a part into place. A joint survives a
+changed dimension and a coordinate does not — raise a wall thickness and a
+hand-placed part quietly ends up inside it. `cad-export --check` fails on a
+part no joint reaches.
 
 **Do not start schematic capture without an agreed block diagram.** The major
 ICs, the power tree and the buses are settled in `hw/block-diagram.yaml` first,
@@ -144,6 +178,21 @@ the number has to move.
 * KiCad's Specctra DSN export writes fractional coordinates into a file it
   declares as integers, and freerouting then routes nothing while blaming the
   maze search. Round-trip and integerise the DSN first.
+* KiCad's page-layout parser is not the one the other S-expression files use:
+  it rejects `;;` comments, and on a parse error `kicad-cli` prints one line to
+  stderr, **still exits 0**, and plots with the built-in frame. A broken
+  `.kicad_wks` therefore yields a good-looking PDF with the wrong sheet on it.
+* **Net classes are not in the `.kicad_pcb`.** They are in the sibling
+  `.kicad_pro` under `net_settings.classes`. Grepping the board file finds
+  nothing, which reads as "no net classes to check".
+* KiCad's autoplacer puts property *text* off-grid on designs that are
+  otherwise perfect. `sch-lint` excludes property positions from the grid check
+  for that reason; do not "fix" them.
+* `Compound(children=[...])` in build123d **reparents**: handing it another
+  compound's children empties that compound, and every export after it writes
+  an empty assembly, silently, as files of a few hundred bytes.
+* GitHub's 3D viewer renders **`.stl` only**, up to 10 MB. Not `.step`, not
+  `.glb`, not `.3mf`. The GLB is for the review page's viewer.
 * `WebFetch` cannot read most datasheet PDFs. Download and extract with
   `pypdf` or `pdftotext`, both installed.
 

@@ -34,6 +34,10 @@
 #   7. KiCad paints a full-page `fill:#F5F4EF` rect and draws in black, all
 #      inline. On a dark page that is either a blinding slab or invisible ink,
 #      and recolouring it would misrepresent the artefact — so it is matted.
+#  10. A 3D model has to travel *inside* the page. The artifact CSP blocks a
+#      fetch of a separate file, so a `.glb` referenced by path is a viewer
+#      nobody sees — and an inlined one has to have a budget of its own, or a
+#      manufacturing-tolerance export walks the page into the 16 MB cap.
 #   8. A plotted sheet is HUGE. KiCad writes one <path> per line segment,
 #      including every stroke of every character: 3.0 MB / 61,681 elements for
 #      one A4 sheet of the pic_programmer demo. Inlining without a budget
@@ -281,6 +285,88 @@ has "${P}" "hw%2Fblock-diagram.drawio" \
 sz=$(( $(wc -c < "${P}") / 1024 ))
 [ "${sz}" -lt 500 ] && pass "page stayed small (${sz} kB) — neither the 1.5 MB raster nor the dense sheet was embedded" \
                     || fail "page ballooned to ${sz} kB"
+
+
+# ---------------------------------------------------------------------------
+# 10-12: the interactive half of the page.
+#
+# Pan/zoom, the 3D viewer and sortable tables are the reason to publish the
+# page at all — a plotted A4 sheet squeezed into a browser column is legible
+# as a shape and unreadable as a document. All three are inert markup until
+# the JS runs, so what is asserted here is that the markup and the script are
+# both present and that the model went in as a data URI: the artifact CSP
+# blocks fetching a separate file, so a model referenced by path is a model
+# nobody sees.
+# ---------------------------------------------------------------------------
+echo
+echo "== the interactive half =="
+
+has "${P}" 'class="zoom"' \
+    && pass "figures are wrapped for pan and zoom" \
+    || fail "no .zoom wrapper — every sheet is a fixed-size picture again"
+has "${P}" "data-z=\"fit\"" \
+    && pass "the zoom controls are on the page" \
+    || fail "no zoom controls"
+has "${P}" "scroll to zoom" \
+    && pass "…and they say what they do" \
+    || fail "the affordance is invisible"
+has "${P}" "cdn.jsdelivr.net/npm/three@" \
+    && pass "the 3D viewer's library is pinned to an exact version" \
+    || fail "three.js is not loaded, or not pinned"
+# A .glb becomes a viewer with the model inlined; an oversized one is reported
+# rather than dropped, the same way an oversized SVG is.
+mkdir -p docs/design/cad
+"${PY}" - <<'MKGLB'
+import base64, json, struct
+# The smallest valid GLB: an empty glTF asset. Enough to prove the pipeline
+# inlines it; the real one is exercised by the example project.
+doc = json.dumps({"asset": {"version": "2.0"}, "scenes": [{"nodes": []}],
+                  "scene": 0}).encode()
+doc += b" " * ((4 - len(doc) % 4) % 4)
+glb = (struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(doc))
+       + struct.pack("<II", len(doc), 0x4E4F534A) + doc)
+open("docs/design/cad/tiny.glb", "wb").write(glb)
+open("docs/design/cad/huge.glb", "wb").write(glb + b"\0" * (3 * 1024 * 1024))
+MKGLB
+
+printf 'Ref,Part,Qty,@1k\nR1,10k 1%%,4,0.01\nU1,MCU,1,1.82\n' \
+    > docs/design/bom.csv
+
+cat > docs/review/artifact.yaml <<'EOF'
+title: Real Tool Test
+phases:
+  - id: cad
+    title: CAD
+    always: true
+    images:
+      - docs/design/cad/tiny.glb
+      - docs/design/cad/huge.glb
+    tables:
+      - csv: docs/design/bom.csv
+        title: BOM
+EOF
+git add -A >/dev/null 2>&1
+git -c user.email=t@t -c user.name=t commit -qm glb >/dev/null 2>&1
+"${PY}" "${S}/review_artifact.py" >/dev/null 2>&1
+
+has "${P}" 'data-model="data:model/gltf-binary;base64,' \
+    && pass "a .glb is inlined as a data URI, which the CSP requires" \
+    || fail "the model is not inlined — the viewer would fetch and be blocked"
+has "${P}" "over the 2500 kB model budget" \
+    && pass "an oversized model is reported, not silently dropped" \
+    || fail "the oversized .glb vanished"
+has "${P}" "coarser tolerance" \
+    && pass "…and the report names the fix" \
+    || fail "the model budget message does not say what to do"
+has "${P}" 'table class="sortable"' \
+    && pass "a CSV table is sortable" || fail "tables are inert"
+has "${P}" 'th class="sortable"' \
+    && pass "…and every heading is the control" || fail "headings are not clickable"
+
+sz=$(( $(wc -c < "${P}") / 1024 ))
+[ "${sz}" -lt 900 ] \
+    && pass "page stayed small (${sz} kB) with the 3 MB model refused" \
+    || fail "page ballooned to ${sz} kB — the model budget did not hold"
 
 echo
 if [ "${fails}" -eq 0 ]; then echo "all checks passed"; else echo "${fails} check(s) failed"; fi

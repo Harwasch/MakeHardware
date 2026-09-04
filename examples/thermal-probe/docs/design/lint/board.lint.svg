@@ -6,10 +6,10 @@
 <rect class="fpF" x="29.24" y="20.69" width="0.56" height="0.62"/>
 <rect class="fpF" x="30.20" y="20.69" width="0.56" height="0.62"/>
 <text class="ref" x="30.00" y="20.60" text-anchor="middle">C2</text>
-<polygon class="fpF" points="1.55,20.15 8.45,20.15 8.45,28.75 1.55,28.75"/>
-<rect class="fpF" x="3.40" y="21.12" width="1.20" height="1.75"/>
-<rect class="fpF" x="5.40" y="21.12" width="1.20" height="1.75"/>
-<text class="ref" x="4.00" y="21.60" text-anchor="middle">J1</text>
+<polygon class="fpF" points="11.09,10.14 12.91,10.14 12.91,11.06 11.09,11.06"/>
+<rect class="fpF" x="11.24" y="10.29" width="0.56" height="0.62"/>
+<rect class="fpF" x="12.20" y="10.29" width="0.56" height="0.62"/>
+<text class="ref" x="12.00" y="10.20" text-anchor="middle">C1</text>
 <polygon class="fpF" points="8.85,11.25 15.15,11.25 15.15,14.75 8.85,14.75"/>
 <rect class="fpF" x="9.10" y="11.83" width="1.57" height="0.40"/>
 <rect class="fpF" x="9.10" y="12.48" width="1.57" height="0.40"/>
@@ -26,10 +26,10 @@
 <rect class="fpF" x="12.30" y="12.10" width="0.50" height="0.50"/>
 <rect class="fpF" x="12.30" y="13.40" width="0.50" height="0.50"/>
 <text class="ref" x="12.00" y="12.60" text-anchor="middle">U1</text>
-<polygon class="fpF" points="11.09,10.14 12.91,10.14 12.91,11.06 11.09,11.06"/>
-<rect class="fpF" x="11.24" y="10.29" width="0.56" height="0.62"/>
-<rect class="fpF" x="12.20" y="10.29" width="0.56" height="0.62"/>
-<text class="ref" x="12.00" y="10.20" text-anchor="middle">C1</text>
+<polygon class="fpF" points="1.55,20.15 8.45,20.15 8.45,28.75 1.55,28.75"/>
+<rect class="fpF" x="3.40" y="21.12" width="1.20" height="1.75"/>
+<rect class="fpF" x="5.40" y="21.12" width="1.20" height="1.75"/>
+<text class="ref" x="4.00" y="21.60" text-anchor="middle">J1</text>
 <polygon class="fpB" points="23.30,5.30 30.70,5.30 30.70,10.70 23.30,10.70"/>
 <rect class="fpB" x="28.50" y="5.79" width="1.95" height="0.60"/>
 <rect class="fpB" x="28.50" y="7.06" width="1.95" height="0.60"/>

@@ -27,13 +27,14 @@ That constraint decides everything about what a review artefact is:
 
 | You made | They can review | So commit |
 |---|---|---|
-| a KiCad schematic | nothing | a **PDF** — `kicad-cli sch export pdf` |
-| a KiCad board | nothing | **PDF** layer plots and a **PNG** 3D render, top and bottom |
-| a build123d model | nothing | **PNG** renders and a dimensioned **SVG** — `vision-board` |
+| a KiCad schematic | nothing | a **PDF** — `kicad-cli sch export pdf` — and the **`sch-lint --svg` overlay**, which is 340 elements against the plot's 60,000 and shows what is wrong |
+| a KiCad board | nothing | **PDF** layer plots, a **PNG** 3D render top and bottom, and the **`pcb-lint --svg`** overlay with the decoupling loops on it |
+| a build123d model | nothing | **`cad-export`**: renders, section, exploded view, an **`.stl`** GitHub shows in its own 3D viewer, and a **`.glb`** the review page orbits |
 | a `.drawio` diagram | nothing | the **SVG** rendered from the same spec |
 | a StrictDoc tree | nothing | the **SVG** requirements map — `req-trace --map` |
-| a SPICE run | nothing | the numbers in a **markdown** table, and a plot **PNG** |
+| a SPICE run | nothing | **`hw-chart corners`** or **`hw-chart bode`**, with the numbers on the chart |
 | a `plan.yaml` | badly | `docs/plan.md` and `docs/plan.svg` — `plan-render` |
+| a budget, a BOM, a coverage report | badly | **`hw-chart`** — `budget`, `waterfall`, `coverage` |
 
 Commit the source too, so anyone who wants to open it in the real application
 can. But the review is over the thing that renders in a browser. **If nothing
@@ -106,6 +107,29 @@ embedded. Both are reported on the page rather than silently dropped — but a
 page with "not shown here" boxes on it is not a review, and the human is the
 most expensive place to discover that. Fix the export, then publish.
 
+### 2c. Publish the page, and lead the request with it
+
+```bash
+review-artifact                      # writes docs/review/artifact.html
+review-artifact --check              # and names anything it could not show
+# publish it with the Artifact tool, then:
+review-artifact --url <the artifact URL>
+```
+
+**The published page is the review; the repository is the archive.** They are
+not the same surface and neither replaces the other:
+
+* On the **page**, a schematic sheet zooms, a 3D assembly orbits, a BOM sorts
+  by price and every value is one hover from its exact number. That is the
+  difference between a picture of a schematic and a schematic.
+* In the **repository** are the committed SVGs, PNGs, PDFs and `.stl` that
+  render on github.com — what the human still has tomorrow, and what a
+  reviewer with no session open can read.
+
+So: commit everything, publish the page, and put the **page** URL in the
+question with the repository link beneath it. Recording the URL matters — the
+next session updates the same page instead of leaving a trail of orphans.
+
 ### 3. Ask them, with the link, and block
 
 Use whatever tool this session has for putting a direct question to the human
@@ -120,6 +144,7 @@ The question must carry:
 
 ```
 Vision is ready for review — two concepts, numbers under each.
+https://claude.ai/.../artifact/...        <- the page: zoom, orbit, sort
 https://github.com/<owner>/<repo>/blob/<branch>/docs/review/vision.md
 
   [ Concept A — the wand ]  [ Concept B — the instrument ]
@@ -208,8 +233,13 @@ Short, specific, and answerable without opening a terminal:
 * **Offer real alternatives with their consequences.** "A is 12 g lighter, B
   is £4 cheaper at 1k" is a decision. "Does this look OK?" is not.
 * **Never ask them to review something you have not looked at yourself.**
-  Open the PDF. Look at the render. Half of what a review would catch, you
-  will catch first.
+  Open the PDF. Look at the render. Open the page and use it — zoom a sheet,
+  orbit the model, sort the table. Half of what a review would catch, you will
+  catch first, and a control that does not work is worse than one that is not
+  there.
+* **Show, do not describe.** If a number can be plotted, plot it. `hw-chart`
+  covers the standard ones. A paragraph explaining which rail is tight is a
+  paragraph that a bar chart would have made unnecessary.
 
 ## What this is not
 

@@ -887,10 +887,19 @@ def phase_architecture(root: str) -> Phase | None:
     if not spec or not spec.get("blocks"):
         return None
     p = Phase("architecture", "Architecture", "Stage 4")
-    p.add("figures", [f for f in [figure(
+    # The budget chart, where it exists, goes *first*. A rail at 90% of its
+    # limit is the most useful fact in an architecture review and it is
+    # invisible in the diagram; the table below it carries the exact numbers.
+    figs = [figure(root, "docs/design/power-budget.svg",
+                   "Worst case per rail against its budget. Amber past 85%, "
+                   "red over. Generated from the same numbers as the table "
+                   "below — `block-diagram --summary --csv`.")]
+    figs = [f for f in figs if f and not f.get("warn")]
+    figs.append(figure(
         root, "docs/design/block-diagram.svg",
         "Power tree with a budget gauge per rail, then the functional "
-        "blocks and the buses between them.")] if f])
+        "blocks and the buses between them."))
+    p.add("figures", [f for f in figs if f])
 
     if block_diagram:
         rows = block_diagram.budget(spec)

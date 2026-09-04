@@ -1,0 +1,5 @@
+name,used,budget,unit
+VBUS,450,500,mA
+VBAT,11.05,1200,mA
+V3P3,12.38,250,mA
+VREF,0.25,10,mA

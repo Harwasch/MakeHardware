@@ -7,6 +7,82 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.4.0
+
+Drawings somebody can read, files somebody can open, and pictures instead of
+paragraphs. The plugin had fourteen skills and none of them was about drawing:
+Konnect will place a symbol anywhere it is told to, and nothing had an opinion
+about where.
+
+### Added
+
+* **`hw-schematic`** and **`sch-lint`** — house practice for a readable
+  drawing, and fourteen checks that measure it: the 1.27 mm grid, orthogonal
+  wires, sheet density against the review page's budget, named nets, rails up
+  and grounds down, one text size, hierarchical pins matching their labels,
+  decoupling drawn beside the pin it serves, designators in reading order,
+  and `--plan`, which binds every sheet back to the block diagram the human
+  agreed to. `--svg` draws every finding on the sheet — 340 elements against
+  the 60,538 KiCad's own plot of that sheet costs.
+
+* **`hw-pcb-layout`** and **`pcb-lint`** — the prose in
+  `hw-verification/references/pcb-layout.md` turned into arithmetic that runs.
+  A thermal-via array landing on opposite-side copper, a net class no pad on
+  its nets can accept, a clearance that violates itself inside a footprint, a
+  keepout written from memory, decoupling loops ranked worst-first, silk on
+  pads, unreadable designators, courtyard overlap by real polygon area, and a
+  signal layer with no reference plane.
+
+* **`hw-cad`** and **`cad-export`** — assemblies rather than one unnamed
+  solid. STEP AP242 with the tree, part names, colours and a named datum at
+  every joint; GLB for the review page's orbit viewer; STL for GitHub's own 3D
+  viewer, the only 3D format it renders; 3MF for print; `joints.json`; a
+  FreeCAD 1.0 macro that rebuilds the assembly with real, draggable joints;
+  and renders assembled, exploded, sectioned and isometric. The gate fails on
+  a part with no label, no colour, or no joint reaching it.
+
+* **`hw-visuals`** and **`hw-chart`** — the seven plots the workflow needs, to
+  one set of rules: direct labelling rather than a legend, the limit drawn
+  beside the value, the anomaly annotated, small multiples on one shared
+  scale, and state never carried by colour alone. Two to seven kilobytes of
+  themed SVG each.
+
+* **The review page became usable.** Scroll-to-zoom and drag-to-pan on every
+  figure, an orbit viewer for a `.glb`, sortable tables. A plotted A4 sheet
+  squeezed into a browser column is legible as a shape and unreadable as a
+  document; that is the difference between a picture of a schematic and a
+  schematic.
+
+* **House KiCad templates** — an A3 drawing sheet whose every field is a KiCad
+  text variable, and the grid, text sizes and net classes as Konnect config.
+
+* **`block-diagram --summary --csv`**, so the power budget chart comes from the
+  same numbers the table prints rather than from a retyped copy.
+
+### Notes
+
+Nine things were found by measuring rather than by reading, and each is
+written down where it will be met again — the plugin's own `CLAUDE.md`, the
+skill that owns it, or the script's docstring. The ones that would have
+silently produced wrong output:
+
+* **Net classes are not in the `.kicad_pcb`.** They are in the sibling
+  `.kicad_pro`. A board linter written to the obvious design reports every
+  board clean.
+* **STEP AP242 cannot be selected from outside `build123d`.** `export_step`
+  resets `write.step.schema` partway through its own body, so setting it
+  returns True and changes nothing.
+* **`Compound(children=[...])` reparents.** Building a second compound from an
+  assembly's children empties the assembly, and every export after it writes a
+  few hundred bytes of nothing.
+* **KiCad's page-layout parser rejects `;;` comments**, and on a parse error
+  `kicad-cli` prints one line to stderr, exits 0, and plots with the built-in
+  frame.
+* **Sheet size cannot be estimated from character count** — the two committed
+  example sheets measure 60 and 29 SVG elements per rendered character. So
+  `sch-lint` shells out to `kicad-cli` and measures; the estimate only warns.
+* **GitHub's 3D viewer renders `.stl` only.** Not `.step`, not `.glb`.
+
 ## 0.3.0
 
 Magnetics. SPICE cannot tell you an inductance; now something can.

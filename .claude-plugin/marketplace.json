@@ -9,9 +9,9 @@
       "name": "makehardware",
       "source": "./plugins/makehardware",
       "description": "Agent-driven hardware engineering: vision, planning, requirements, design, simulation and verification workflow with KiCad, SPICE and build123d.",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "author": { "name": "Harrison Waschura" },
-      "keywords": ["hardware", "kicad", "spice", "cad", "requirements", "pcb"]
+      "keywords": ["hardware", "kicad", "spice", "cad", "requirements", "pcb", "schematic", "charts"]
     }
   ]
 }

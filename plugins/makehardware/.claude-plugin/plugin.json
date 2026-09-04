@@ -1,7 +1,7 @@
 {
   "name": "makehardware",
   "displayName": "MakeHardware",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Agent-driven hardware engineering workflow: vision boards, project planning, traceable requirements, KiCad/SPICE/CAD design loops and evidence-based verification.",
   "author": { "name": "Harrison Waschura" },
   "repository": "https://github.com/Harwasch/MakeHardware",

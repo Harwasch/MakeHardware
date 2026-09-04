@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="240" viewBox="0 0 760 240" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img">
+<style>.s{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .axf{fill:#c3c2b7} .card{fill:#ffffff}@media (prefers-color-scheme:dark){.s{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .axf{fill:#383835} .card{fill:#242422}}</style>
+<rect class="s" width="760" height="240"/>
+<text class="ink" x="16" y="26" font-size="16" font-weight="600">Rail current against budget</text>
+<text class="ink2" x="16" y="45" font-size="12">Worst case per rail, from hw/block-diagram.yaml</text>
+<text class="ink" x="16" y="79" font-size="12.5" text-anchor="start">VBUS</text>
+<rect class="card" x="134" y="62" width="436" height="26" rx="3"/><rect x="134" y="62" width="436" height="26" rx="3" fill="none" class="ax" stroke-width="1"/>
+<rect x="134" y="62" width="392.4" height="26" rx="3" fill="#e08a1e" fill-opacity=".85"><title>VBUS: 450 mA of 500 mA (90%)</title></rect>
+<text class="ink" x="582" y="79" font-size="12.5" fill="#e08a1e">450 mA / 500 mA</text>
+<text class="ink2" x="582" y="79" font-size="12.5" opacity="0">  90%</text>
+<text x="582" y="92" font-size="10.5" fill="#e08a1e">90% of budget</text>
+<text class="ink" x="16" y="115" font-size="12.5" text-anchor="start">VBAT</text>
+<rect class="card" x="134" y="98" width="436" height="26" rx="3"/><rect x="134" y="98" width="436" height="26" rx="3" fill="none" class="ax" stroke-width="1"/>
+<rect x="134" y="98" width="4.0" height="26" rx="3" fill="#2e8b57" fill-opacity=".85"><title>VBAT: 11.1 mA of 1200 mA (1%)</title></rect>
+<text class="ink" x="582" y="115" font-size="12.5" fill="None">11.1 mA / 1200 mA</text>
+<text class="ink2" x="582" y="115" font-size="12.5" opacity="0">  1%</text>
+<text class="ink" x="16" y="151" font-size="12.5" text-anchor="start">V3P3</text>
+<rect class="card" x="134" y="134" width="436" height="26" rx="3"/><rect x="134" y="134" width="436" height="26" rx="3" fill="none" class="ax" stroke-width="1"/>
+<rect x="134" y="134" width="21.6" height="26" rx="3" fill="#2e8b57" fill-opacity=".85"><title>V3P3: 12.4 mA of 250 mA (5%)</title></rect>
+<text class="ink" x="582" y="151" font-size="12.5" fill="None">12.4 mA / 250 mA</text>
+<text class="ink2" x="582" y="151" font-size="12.5" opacity="0">  5%</text>
+<text class="ink" x="16" y="187" font-size="12.5" text-anchor="start">VREF</text>
+<rect class="card" x="134" y="170" width="436" height="26" rx="3"/><rect x="134" y="170" width="436" height="26" rx="3" fill="none" class="ax" stroke-width="1"/>
+<rect x="134" y="170" width="10.9" height="26" rx="3" fill="#2e8b57" fill-opacity=".85"><title>VREF: 0.25 mA of 10 mA (2%)</title></rect>
+<text class="ink" x="582" y="187" font-size="12.5" fill="None">0.25 mA / 10 mA</text>
+<text class="ink2" x="582" y="187" font-size="12.5" opacity="0">  2%</text>
+<text class="axf" x="16" y="228" font-size="10.5">bar = drawn, outline = budget. Worst: VBUS</text>
+</svg>

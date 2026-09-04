@@ -158,6 +158,23 @@ chk review-artifact "${VENV}/bin/python" \
     "$(dirname "$(readlink -f "$0")")/review_artifact.py" --help
 
 echo
+echo "Design gates and figures:"
+# These are read-only and need no KiCad, no MCP server and nothing outside the
+# standard library plus pyyaml — so a failure here is a broken checkout rather
+# than a missing tool, and worth saying so.
+D="$(dirname "$(readlink -f "$0")")"
+chk sch-lint       "${VENV}/bin/python" "${D}/sch_lint.py" --help
+chk pcb-lint       "${VENV}/bin/python" "${D}/pcb_lint.py" --help
+chk hw-chart       "${VENV}/bin/python" "${D}/charts.py" budget --schema
+chk cad-export     "${VENV}/bin/python" "${D}/cad_export.py" --help
+if command -v freecadcmd >/dev/null 2>&1 || command -v FreeCADCmd >/dev/null 2>&1; then
+    printf '  \033[32mok\033[0m   %-22s .FCStd written here\n' "freecad"; ok=$((ok+1))
+else
+    printf '  \033[33m--\033[0m   %-22s absent — cad-export writes the macro for you to run\n' \
+        "freecad"
+fi
+
+echo
 echo "Display (needed only for live KiCad):"
 if xdpyinfo -display :99 >/dev/null 2>&1; then
     printf '  \033[32mok\033[0m   %-22s Xvfb :99 up\n' "display"; ok=$((ok+1))

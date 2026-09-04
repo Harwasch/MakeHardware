@@ -41,6 +41,11 @@ People judge a picture in a second and a paragraph in a minute, less
 reliably. As soon as you can put numbers on an envelope, build the massing
 model and render it.
 
+A concept is one shape in one material, and `vision-board` is the right tool
+for it — do not model an assembly at the vision stage. The moment the concept
+is chosen and the envelope agreed, the model moves to `cad/` and becomes a
+real assembly with labels, colours and joints: see `hw-cad`.
+
 Write each concept as a plain build123d module under `concepts/`, defining
 `PART`, plus optional `TITLE`, `NOTES`, `MATERIAL`, `RATIONALE`:
 

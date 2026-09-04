@@ -67,11 +67,9 @@ fi
 
 echo
 echo "== 2d. the board lint fixture =="
-if "${PY}" -c "import pcbnew" >/dev/null 2>&1; then
-    "${PY}" build-pcb-fixture.py 2>&1 | grep -v "^\./kicad" | tail -1
-else
-    echo "  no pcbnew — keeping the committed board"
-fi
+# No guard here: the script finds pcbnew itself, including in a different
+# interpreter, and says so when it cannot.
+"${PY}" build-pcb-fixture.py 2>&1 | grep -v "^\./kicad" | tail -1
 
 echo
 echo "== 2e. lint reports, drawn on the artefacts they are about =="
@@ -85,7 +83,11 @@ echo "== 3. block diagram and power budget =="
 # --relayout, or the previous run's hand-placed positions are read back and
 # the layout under test never changes.
 block --relayout >/dev/null 2>&1
-block --summary 2>/dev/null | head -8
+block --summary --csv docs/design/rails.csv 2>/dev/null | head -9
+"${PY}" "${S}/charts.py" budget docs/design/rails.csv \
+    --out docs/design/power-budget.svg \
+    --title "Rail current against budget" \
+    --subtitle "Worst case per rail, from hw/block-diagram.yaml" | tail -1
 
 echo
 echo "== 4. plan chart and scope document =="

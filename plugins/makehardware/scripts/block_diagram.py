@@ -995,6 +995,37 @@ def rasterise(svg_path: str, png_path: str, w: int, h: int) -> bool:
 # ---------------------------------------------------------------------------
 # Reporting
 # ---------------------------------------------------------------------------
+def write_budget_csv(rows: list[dict], path: str) -> None:
+    """The budget in the shape `hw-chart budget` reads.
+
+    A rail at 95% of its limit is the most useful fact in an architecture
+    review and it is invisible in the diagram. Emitting the numbers rather
+    than having someone retype them into a chart is the same rule the rest of
+    this toolbox runs on: the figure comes from the file that owns it.
+    """
+    import csv as _csv
+    d = os.path.dirname(os.path.abspath(path))
+    if d:
+        os.makedirs(d, exist_ok=True)
+    # Emit whichever of A or mA keeps the numbers readable. A board whose
+    # largest rail draws 450 mA reads as "0.45 A / 0.5 A", and a reviewer has
+    # to count decimal places before they can compare anything.
+    # The median, not the maximum: one 1.2 A battery rail among three
+    # milliamp rails should not force the other three into "0.0124 A".
+    vals = sorted([r["limit"] for r in rows if r["limit"]] or
+                  [r["max"] for r in rows] or [1.0])
+    median = vals[len(vals) // 2]
+    scale, unit = (1000.0, "mA") if median < 1.0 else (1.0, "A")
+    with open(path, "w", newline="") as fh:
+        w = _csv.writer(fh)
+        w.writerow(["name", "used", "budget", "unit"])
+        for r in rows:
+            w.writerow([r["id"], f'{r["max"] * scale:.4g}',
+                        "" if r["limit"] is None
+                        else f'{r["limit"] * scale:.4g}', unit])
+    print(f"wrote {path}")
+
+
 def print_budget(spec: dict, rows: list[dict]) -> None:
     print(f"{spec.get('project', 'Project')} — power budget\n")
     if not rows:
@@ -1049,6 +1080,10 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="validate only")
     ap.add_argument("--summary", action="store_true",
                     help="power budget only, no files written")
+    ap.add_argument("--csv", metavar="OUT",
+                    help="also write the budget as CSV, ready for "
+                         "`hw-chart budget` — the same numbers, so the chart "
+                         "cannot drift from the table")
     ap.add_argument("--relayout", action="store_true",
                     help="ignore hand-tidied positions in the existing .drawio")
     args = ap.parse_args()
@@ -1065,6 +1100,9 @@ def main() -> int:
 
     rows = budget(spec)
     over = [r for r in rows if r["over"]]
+
+    if args.csv:
+        write_budget_csv(rows, args.csv)
 
     if args.summary:
         print_budget(spec, rows)

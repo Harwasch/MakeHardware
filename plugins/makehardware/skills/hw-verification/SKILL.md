@@ -57,8 +57,25 @@ The gate is structural. These are not, and they are where real problems hide:
 
 These are verification too — they are the cheapest place to catch a defect,
 and every one of them has been diagnosed as something else first, at a cost of
-hours. **`references/pcb-layout.md` next to this file has the full workflow
-and the commands.** The four that matter most:
+hours.
+
+**Most of them now run as one command:**
+
+```bash
+sch-lint hw/probe.kicad_sch --gate --plan hw/block-diagram.yaml
+pcb-lint hw/probe.kicad_pcb --gate
+```
+
+`pcb-lint` automates items 1, 2 and 4 below plus the keep-out check, ranks the
+decoupling loops worst-first, and finds silkscreen on pads, unreadable
+reference designators, overlapping courtyards and a signal layer with no
+reference plane. `sch-lint` does the same for the drawing, and `--plan` binds
+it to the architecture the human already agreed to. Both are read-only, both
+run headless, and neither needs KiCad.
+
+Run them, then item 3 — DRC on the placed, unrouted board — which nothing else
+substitutes for. **`references/pcb-layout.md` next to this file has the full
+workflow, the commands and the diagnosis stories.** The four that matter most:
 
 1. **Net class widths against pad sizes.** A 1.20 mm track cannot enter a
    0.25 mm QFN pad and a router will not neck down. This presents as "180 of
@@ -78,7 +95,13 @@ and the commands.** The four that matter most:
 Also: where a keep-out in a layout script mirrors a footprint dimension, read
 it from the footprint rather than writing the number down. A keep-out at
 6.60 mm guarding pads at 8.50 mm protects bare laminate and leaves the pads
-exposed.
+exposed. `pcb-lint --keepout J5=6.60` checks a declared number against the real
+footprint.
+
+One fact worth holding before writing any board script: **net classes are not
+in the `.kicad_pcb`.** They live in the sibling `.kicad_pro` under
+`net_settings.classes`. A check that looks in the board file finds none and
+reports the board clean.
 
 And know which half of the toolchain you are in: **Konnect's schematic tools
 are file-based; its PCB tools need a live KiCad.** When `check_kicad_ui`
@@ -95,6 +118,11 @@ all.
 Publish the traceability output as an Artifact for anything the human will
 share or act on — the coverage number, the table by level, and an explicit
 list of what is not yet closed. Lead with the gaps, not the percentage.
+
+**Draw it rather than tabulating it.** `hw-chart coverage` puts the gaps first
+in every bar, which is the same rule in visual form; `hw-chart corners` shows
+whether the evidence covers the corners or only nominal — a nominal-only result
+has one bar and looks as thin as it is.
 
 And put it where the human can actually see it. They are reviewing from
 github.com while you work in a cloud VM, so the verification report belongs in
