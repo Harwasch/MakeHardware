@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "MakeHardware house defaults for KiCad, loaded through Konnect's",
+    "save_project_config. Every number here is one sch-lint or pcb-lint",
+    "checks, so changing one means changing the gate's default too.",
+    "Scaffolded by /hw-new-project into the project root."
+  ],
+  "schematic": {
+    "grid_mm": 1.27,
+    "text_size_mm": 1.27,
+    "text_size_heading_mm": [1.524, 2.54],
+    "wire_width_mm": 0.152,
+    "bus_width_mm": 0.305,
+    "default_paper": "A3",
+    "drawing_sheet": "hw/makehardware.kicad_wks",
+    "junction_diameter_mm": 0.9,
+    "label_to_wire_stub_mm": 2.54,
+    "decoupling_max_mm": 25.4
+  },
+  "pcb": {
+    "min_text_height_mm": 0.8,
+    "min_text_thickness_mm": 0.15,
+    "silk_to_pad_clearance_mm": 0.15,
+    "decoupling_loop_max_mm": 5.0,
+    "via_drill_mm": 0.3,
+    "via_diameter_mm": 0.6
+  },
+  "net_classes": {
+    "_comment": "Widths a router can actually enter a pad with. See pcb-lint PCB-TRACKW: a net class wider than the pads on its nets is unroutable and nothing warns you. Route at these, then widen the power nets and re-run DRC.",
+    "Default": { "track_width_mm": 0.25, "clearance_mm": 0.2 },
+    "Rail":    { "track_width_mm": 0.4,  "clearance_mm": 0.2 },
+    "Power":   { "track_width_mm": 0.4,  "clearance_mm": 0.2,
+                 "final_track_width_mm": 1.2 },
+    "HS":      { "track_width_mm": 0.2,  "clearance_mm": 0.2 }
+  }
+}
