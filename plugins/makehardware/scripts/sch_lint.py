@@ -1096,7 +1096,7 @@ def overlay_svg(sh: Sheet, findings: list[dict]) -> str:
     """
     _, pw, ph = sh.paper
     mine = [f for f in findings if f.get("sheet") == sh.name and "where" in f]
-    margin = 60.0
+    margin = 84.0
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{pw + margin}mm" '
          f'height="{ph}mm" viewBox="0 0 {pw + margin} {ph}">',
          f"<style>{SVG_STYLE}</style>",
@@ -1124,9 +1124,23 @@ def overlay_svg(sh: Sheet, findings: list[dict]) -> str:
         o.append(f'<text class="ref" x="{c["x"] + 1:.2f}" y="{c["y"] + 4:.2f}">'
                  f'{esc(c["name"])}</text>')
 
+    seen: dict = {}
     for i, f in enumerate(mine, 1):
         col = SEV_COLOUR.get(f["severity"], "#888")
-        x, y = f["where"]["x"], f["where"]["y"]
+        ax, ay = f["where"]["x"], f["where"]["y"]
+        # Several findings on one symbol is normal; several circles at the same
+        # coordinates is an unreadable knot. Ring them.
+        key = (round(ax, 1), round(ay, 1))
+        n = seen.get(key, 0)
+        seen[key] = n + 1
+        if n:
+            ang = math.radians(55 * n - 90)
+            x = ax + (5.0 + 1.4 * (n // 6)) * math.cos(ang)
+            y = ay + (5.0 + 1.4 * (n // 6)) * math.sin(ang)
+            o.append(f'<line x1="{ax:.2f}" y1="{ay:.2f}" x2="{x:.2f}" y2="{y:.2f}" '
+                     f'stroke="{col}" stroke-width=".2" stroke-opacity=".6"/>')
+        else:
+            x, y = ax, ay
         ext = f.get("extent")
         if ext and ext["w"] > 0.5 and ext["h"] > 0.5:
             o.append(f'<rect x="{ext["x"]:.2f}" y="{ext["y"]:.2f}" '
@@ -1143,18 +1157,32 @@ def overlay_svg(sh: Sheet, findings: list[dict]) -> str:
     o.append(f'<text class="note" x="{pw + 3:.1f}" y="{y:.1f}">'
              f'{esc(sh.name)} — {len(mine)} finding(s)</text>')
     for i, f in enumerate(mine, 1):
-        y += 4.4
-        if y > ph - 4:
+        col = SEV_COLOUR.get(f["severity"], "#888")
+        lines = _wrap(f'{SEV_GLYPH.get(f["severity"], "")} {i}. {f["what"]}', 46)[:3]
+        y += 3.2
+        if y + 2.4 * len(lines) > ph - 3:
             o.append(f'<text class="lbl" x="{pw + 3:.1f}" y="{y:.1f}">'
                      f'… {len(mine) - i + 1} more, see the report</text>')
             break
-        col = SEV_COLOUR.get(f["severity"], "#888")
-        txt = f["what"][:58] + ("…" if len(f["what"]) > 58 else "")
-        o.append(f'<text x="{pw + 3:.1f}" y="{y:.1f}" fill="{col}" '
-                 f'style="font:2.0px sans-serif">'
-                 f'{SEV_GLYPH.get(f["severity"], "")} {i}. {esc(txt)}</text>')
+        for line in lines:
+            o.append(f'<text x="{pw + 3:.1f}" y="{y:.1f}" fill="{col}" '
+                     f'style="font:1.9px sans-serif">{esc(line)}</text>')
+            y += 2.4
     o.append("</svg>")
     return "\n".join(o)
+
+
+def _wrap(text, width):
+    words, lines, cur = str(text).split(), [], ""
+    for w in words:
+        if len(cur) + len(w) + 1 > width and cur:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = f"{cur} {w}".strip()
+    if cur:
+        lines.append(cur)
+    return lines
 
 
 # --------------------------------------------------------------------------
