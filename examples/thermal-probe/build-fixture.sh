@@ -52,6 +52,35 @@ else
 fi
 
 echo
+echo "== 2c. the CAD assembly, from the real exporter =="
+# cad/enclosure.py is a genuine build123d assembly — four labelled, coloured
+# parts held by joints — so the STEP, GLB, STL, 3MF, joints.json, FreeCAD macro
+# and every render come from cad-export rather than from a drawing of one. Only
+# where build123d is installed; the committed outputs stand otherwise, the same
+# rule the schematic step above follows.
+if "${PY}" -c "import build123d" >/dev/null 2>&1; then
+    "${PY}" "${S}/cad_export.py" cad/enclosure.py \
+        --out docs/design/cad --name enclosure 2>&1 | sed -n '/wrote/,$p' | head -14
+else
+    echo "  no build123d — keeping the committed CAD outputs"
+fi
+
+echo
+echo "== 2d. the board lint fixture =="
+if "${PY}" -c "import pcbnew" >/dev/null 2>&1; then
+    "${PY}" build-pcb-fixture.py 2>&1 | grep -v "^\./kicad" | tail -1
+else
+    echo "  no pcbnew — keeping the committed board"
+fi
+
+echo
+echo "== 2e. lint reports, drawn on the artefacts they are about =="
+"${PY}" "${S}/sch_lint.py" hw/kicad-demo/pic_programmer.kicad_sch \
+    --svg docs/design/lint --no-export 2>&1 | tail -3
+"${PY}" "${S}/pcb_lint.py" hw/lint-fixture.kicad_pcb \
+    --svg docs/design/lint/board.lint.svg 2>&1 | grep -E "^wrote|error\(s\)"
+
+echo
 echo "== 3. block diagram and power budget =="
 # --relayout, or the previous run's hand-placed positions are read back and
 # the layout under test never changes.

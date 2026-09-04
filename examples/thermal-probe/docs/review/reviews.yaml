@@ -25,14 +25,16 @@ reviews:
     sha256: cfcab37980ce60cf
   - path: docs/design/vision/concept_b/elevation.svg
     sha256: a1e368103887f426
-  requested: '2026-08-31'
-  requested_commit: db3273e
+  references:
+  - concepts
+  requested: '2026-09-04'
+  requested_commit: c3d45a5
   status: approved
   packet: docs/review/vision.md
   history:
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: requested
-    commit: db3273e
+    commit: c3d45a5
     questions:
     - Which concept, and what made you pick it?
     - Is 164 mm too long to hold comfortably in a glove?
@@ -45,9 +47,9 @@ reviews:
     - docs/design/vision.md
     - docs/design/vision/concept_a/elevation.svg
     - docs/design/vision/concept_b/elevation.svg
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: approved
-    commit: db3273e
+    commit: c3d45a5
     by: harrison
     note: 'The wand. A freezer walk is one-handed and you are already carrying
 
@@ -55,8 +57,8 @@ reviews:
   note: 'The wand. A freezer walk is one-handed and you are already carrying
 
     a clipboard — the bench version solves a problem we do not have.'
-  decided: '2026-08-31'
-  decided_commit: db3273e
+  decided: '2026-09-04'
+  decided_commit: c3d45a5
   reviewer: harrison
 - id: plan
   title: Project plan
@@ -76,14 +78,14 @@ reviews:
   - docs/plan.drawio
   - docs/plan.svg
   - plan.yaml
-  requested: '2026-08-31'
-  requested_commit: db3273e
+  requested: '2026-09-04'
+  requested_commit: c3d45a5
   status: approved
   packet: docs/review/plan.md
   history:
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: requested
-    commit: db3273e
+    commit: c3d45a5
     questions:
     - Is this all the work?
     - Is the order right — do you know a lead time we do not?
@@ -94,9 +96,9 @@ reviews:
       about.'
     added:
     - docs/plan.md
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: approved
-    commit: db3273e
+    commit: c3d45a5
     by: harrison
     note: 'Add the drop test earlier if the enclosure is printed rather than
 
@@ -104,8 +106,8 @@ reviews:
   note: 'Add the drop test earlier if the enclosure is printed rather than
 
     moulded. Otherwise the order is right.'
-  decided: '2026-08-31'
-  decided_commit: db3273e
+  decided: '2026-09-04'
+  decided_commit: c3d45a5
   reviewer: harrison
 - id: requirements
   title: Requirements tree
@@ -125,14 +127,14 @@ reviews:
   - requirements/00-vision.sdoc
   - requirements/10-system.sdoc
   - requirements/hardware.sgra
-  requested: '2026-08-31'
-  requested_commit: db3273e
+  requested: '2026-09-04'
+  requested_commit: c3d45a5
   status: approved
   packet: docs/review/requirements.md
   history:
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: requested
-    commit: db3273e
+    commit: c3d45a5
     questions:
     - Is 7 days the right target, or is 5 with a smaller cell better?
     - Is anything here that nobody asked for?
@@ -143,14 +145,14 @@ reviews:
       about.'
     added:
     - docs/design/requirements-map.svg
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: approved
-    commit: db3273e
+    commit: c3d45a5
     by: harrison
     note: 7 days. A week means Friday-to-Friday and nobody has to think.
   note: 7 days. A week means Friday-to-Friday and nobody has to think.
-  decided: '2026-08-31'
-  decided_commit: db3273e
+  decided: '2026-09-04'
+  decided_commit: c3d45a5
   reviewer: harrison
 - id: architecture
   title: Block diagram, power tree and buses
@@ -170,14 +172,14 @@ reviews:
   references:
   - hw/block-diagram.drawio
   - hw/block-diagram.yaml
-  requested: '2026-08-31'
-  requested_commit: db3273e
+  requested: '2026-09-04'
+  requested_commit: c3d45a5
   status: requested
   packet: docs/review/architecture.md
   history:
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: requested
-    commit: db3273e
+    commit: c3d45a5
     questions:
     - Is a rail or a part missing?
     - SPI1 shares flash and LCD on one bus — acceptable, or separate them?
@@ -202,19 +204,17 @@ reviews:
   - Split line at 40% depth puts the seam on the grip. Acceptable?
   artifacts:
   - path: docs/design/cad/enclosure-render.png
-    sha256: 59ae2c2c6323c84f
-  - path: docs/design/cad/enclosure-section.svg
-    sha256: 46ab7b9a747b6741
+    sha256: 0bddf7e8d238c794
   references:
   - cad/enclosure.py
-  requested: '2026-08-31'
-  requested_commit: db3273e
+  requested: '2026-09-04'
+  requested_commit: c3d45a5
   status: approved
   packet: docs/review/cad.md
   history:
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: requested
-    commit: db3273e
+    commit: c3d45a5
     questions:
     - Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?
     - Split line at 40% depth puts the seam on the grip. Acceptable?
@@ -225,10 +225,9 @@ reviews:
       to it, so moving it is expensive from here.'
     added:
     - docs/design/cad/enclosure-render.png
-    - docs/design/cad/enclosure-section.svg
-  - 'on': '2026-08-31'
+  - 'on': '2026-09-04'
     action: approved
-    commit: db3273e
+    commit: c3d45a5
     by: harrison
     note: 'Yes to both. Move the seam to 45% if the tooling allows it, but do not
 
@@ -236,7 +235,6 @@ reviews:
   note: 'Yes to both. Move the seam to 45% if the tooling allows it, but do not
 
     hold the schematic for it.'
-  decided: '2026-08-31'
-  decided_commit: db3273e
+  decided: '2026-09-04'
+  decided_commit: c3d45a5
   reviewer: harrison
-artifact_url: https://claude.ai/code/artifact/ef071485-7196-44c0-81b3-e65facefc4cb

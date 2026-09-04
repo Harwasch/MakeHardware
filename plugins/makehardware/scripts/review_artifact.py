@@ -114,6 +114,13 @@ SVG_BUDGET = 1_500 * 1024
 SVG_NODE_BUDGET = 30_000
 PAGE_INLINE_BUDGET = 9 * 1024 * 1024
 
+# A glTF binary, inlined as a data URI so the viewer has something to load: the
+# artifact's CSP blocks a fetch of a separate file, so the model has to travel
+# inside the page or not at all. base64 costs a third on top, and an assembly
+# exported by `cad-export` at review tolerance is tens of kilobytes, so this is
+# generous. Over it, the page falls back to the static render and says why.
+MODEL_BUDGET = 2_500 * 1024
+
 # Bytes inlined so far this run. Reset by main(); see spend().
 _inlined = 0
 
@@ -567,6 +574,7 @@ class Phase:
 
 
 VIEWER = {".pdf": "GitHub's PDF viewer", ".stl": "GitHub's 3D viewer",
+          ".step": "a CAD application", ".3mf": "a slicer or a CAD application",
           ".step": "any CAD package", ".stp": "any CAD package",
           ".kicad_sch": "KiCad", ".kicad_pcb": "KiCad",
           ".drawio": "draw.io", ".csv": "GitHub's table view"}
@@ -663,6 +671,9 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
         return {"warn": f"{path} is not readable as SVG.",
                 "caption": caption, "path": path}
 
+    if ext in (".glb", ".gltf"):
+        return model_figure(full, path, caption)
+
     uri, warn, rw, opaque = inline_raster(full)
     if uri:
         return {"uri": uri, "caption": caption, "path": path, "w": rw,
@@ -681,6 +692,34 @@ def figure(root: str, path: str, caption: str = "") -> dict | None:
     return {"warn": f"{path} is a {ext or 'file'} — nothing on this page can "
                     f"show it. Export an SVG or a PNG.",
             "caption": caption, "path": path}
+
+
+def model_figure(full: str, path: str, caption: str) -> dict:
+    """A 3D model, inlined for the orbit viewer.
+
+    This is the one thing on the page that a static render cannot do: a
+    reviewer looking at an enclosure wants to turn it over, and the opposite
+    side is where the surprises are. GitHub will not show a `.glb` at all — it
+    renders `.stl` and nothing else — so this viewer is the reason to publish
+    the page as well as the repository.
+    """
+    import base64
+    size = os.path.getsize(full)
+    if size > MODEL_BUDGET:
+        return {"warn": f"{path} is {size // 1024} kB, over the "
+                        f"{MODEL_BUDGET // 1024} kB model budget for this page. "
+                        f"Re-export at a coarser tolerance — it is for looking "
+                        f"at, not for manufacturing.",
+                "link": True, "caption": caption, "path": path}
+    cost = int(size * 4 / 3) + 64
+    if not spend(cost):
+        return {"warn": f"{path} would not fit in the page's inline budget. "
+                        f"Put fewer things on this phase, or link it.",
+                "link": True, "caption": caption, "path": path}
+    with open(full, "rb") as fh:
+        b64 = base64.b64encode(fh.read()).decode("ascii")
+    return {"model": f"data:model/gltf-binary;base64,{b64}",
+            "caption": caption, "path": path, "bytes": size}
 
 
 def add_sources(root: str, p: "Phase", specs: list[tuple[str, str, str]]) -> None:
@@ -1127,6 +1166,31 @@ figure{margin:0 0 24px;min-width:0}
 .sheet .svgwrap{display:block}
 .sheet svg{display:block;width:100%;height:auto;max-width:100%}
 .sheet img{display:block;max-width:100%;height:auto;margin:0 auto}
+/* ---- pan and zoom: a dense sheet is decoration until it can be read ---- */
+.sheet{position:relative}
+.zoom{overflow:hidden;touch-action:none}
+.zoom .zin{transform-origin:0 0;will-change:transform}
+.zoom.on{cursor:grab}
+.zoom.drag{cursor:grabbing}
+.zbar{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;
+  transition:opacity .15s;z-index:3}
+.sheet:hover .zbar,.zbar:focus-within{opacity:1}
+.zbar button{font:600 12px/1 var(--sans);color:var(--muted);cursor:pointer;
+  background:var(--panel);border:1px solid var(--rule);border-radius:5px;
+  padding:5px 7px;min-width:26px}
+.zbar button:hover{color:var(--ink);border-color:var(--muted)}
+.zhint{position:absolute;left:10px;bottom:8px;font-size:11px;color:var(--muted);
+  opacity:0;transition:opacity .15s;pointer-events:none}
+.sheet:hover .zhint{opacity:.75}
+/* ---- 3D ---- */
+.model{width:100%;height:420px;display:block;border-radius:4px;
+  background:linear-gradient(180deg,rgba(127,127,127,.09),rgba(127,127,127,.02))}
+.model canvas{display:block;width:100%;height:100%}
+.mfall{padding:18px;font-size:13px;color:var(--muted)}
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable::after{content:" \2195";opacity:.35;font-size:10px}
+th.sortable.asc::after{content:" \2191";opacity:.9}
+th.sortable.desc::after{content:" \2193";opacity:.9}
 figcaption{font-size:12.5px;color:var(--muted);margin-top:8px;max-width:70ch}
 .acts{display:block;margin-top:5px;font-size:12px}\n.tally{font-size:12.5px;color:var(--muted);margin:0 0 10px}\ntr.grp td{font-family:var(--cond);font-size:11.5px;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);padding-top:16px;border-bottom:1px solid var(--rule)}\na.alt{font-size:11.5px;white-space:nowrap;margin-left:8px}
 .acts a{margin-right:2px}
@@ -1325,6 +1389,146 @@ tabs.forEach((t,i)=>t.addEventListener('keydown',e=>{
 }));
 try{const s=localStorage.getItem('mh-phase');
   if(s&&tabs.some(t=>t.dataset.tab===s))show(s);}catch(e){}
+
+/* ---- pan and zoom -------------------------------------------------------
+   A plotted schematic sheet is 297 mm of A4 squeezed into a browser column:
+   legible as a shape, unreadable as a document. Scroll-to-zoom is the whole
+   difference between a picture of a schematic and a schematic.               */
+document.querySelectorAll('.zoom').forEach(z=>{
+  const inner=z.querySelector('.zin'); if(!inner)return;
+  let k=1,x=0,y=0,down=false,px=0,py=0;
+  const apply=()=>{inner.style.transform=`translate(${x}px,${y}px) scale(${k})`;
+    z.classList.toggle('on',k!==1);};
+  const clamp=v=>Math.max(1,Math.min(16,v));
+  z.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const r=z.getBoundingClientRect(), cx=e.clientX-r.left, cy=e.clientY-r.top;
+    const nk=clamp(k*(e.deltaY<0?1.18:1/1.18));
+    // Keep the point under the cursor still, which is what makes zooming feel
+    // like moving a magnifier rather than like resizing a picture.
+    x=cx-(cx-x)*(nk/k); y=cy-(cy-y)*(nk/k); k=nk;
+    if(k===1){x=0;y=0;} apply();
+  },{passive:false});
+  z.addEventListener('pointerdown',e=>{
+    if(k===1)return; down=true; px=e.clientX; py=e.clientY;
+    z.classList.add('drag'); z.setPointerCapture(e.pointerId);
+  });
+  z.addEventListener('pointermove',e=>{
+    if(!down)return; x+=e.clientX-px; y+=e.clientY-py;
+    px=e.clientX; py=e.clientY; apply();
+  });
+  const up=e=>{down=false; z.classList.remove('drag');
+    try{z.releasePointerCapture(e.pointerId)}catch(_){}};
+  z.addEventListener('pointerup',up); z.addEventListener('pointercancel',up);
+  z.addEventListener('dblclick',()=>{k=1;x=0;y=0;apply();});
+  const bar=z.parentElement&&z.parentElement.querySelector('.zbar');
+  if(bar)bar.addEventListener('click',e=>{
+    const b=e.target.closest('[data-z]'); if(!b)return;
+    const r=z.getBoundingClientRect(), cx=r.width/2, cy=r.height/2;
+    if(b.dataset.z==='fit'){k=1;x=0;y=0;}
+    else{const nk=clamp(k*(b.dataset.z==='in'?1.4:1/1.4));
+      x=cx-(cx-x)*(nk/k); y=cy-(cy-y)*(nk/k); k=nk;
+      if(k===1){x=0;y=0;}}
+    apply();
+  });
+});
+
+/* ---- sortable tables --------------------------------------------------- */
+document.querySelectorAll('table.sortable').forEach(tb=>{
+  const body=tb.tBodies[0]; if(!body)return;
+  const numish=v=>{const n=parseFloat(String(v).replace(/[^0-9.eE+-]/g,''));
+    return isNaN(n)?null:n;};
+  [...tb.tHead.rows[0].cells].forEach((th,i)=>{
+    th.addEventListener('click',()=>{
+      const dir=th.classList.contains('asc')?-1:1;
+      [...tb.tHead.rows[0].cells].forEach(c=>c.classList.remove('asc','desc'));
+      th.classList.add(dir===1?'asc':'desc');
+      const rows=[...body.rows];
+      rows.sort((a,b)=>{
+        const A=a.cells[i]?a.cells[i].textContent.trim():'';
+        const B=b.cells[i]?b.cells[i].textContent.trim():'';
+        const na=numish(A), nb=numish(B);
+        if(na!==null&&nb!==null)return (na-nb)*dir;
+        return A.localeCompare(B,undefined,{numeric:true})*dir;
+      });
+      rows.forEach(r=>body.appendChild(r));
+    });
+  });
+});
+
+/* ---- the 3D view --------------------------------------------------------
+   Loaded lazily and defensively. If the CDN is unreachable or blocked the
+   placeholder stays and says where the model actually is, which is better
+   than an empty box that looks like a bug in the design.                     */
+(function(){
+  const hosts=[...document.querySelectorAll('.model[data-model]')];
+  if(!hosts.length)return;
+  const B='https://cdn.jsdelivr.net/npm/three@0.128.0/';
+  const load=src=>new Promise((ok,no)=>{
+    const s=document.createElement('script'); s.src=src; s.onload=ok;
+    s.onerror=()=>no(new Error(src)); document.head.appendChild(s);});
+  const say=msg=>hosts.forEach(h=>{const f=h.querySelector('.mfall');
+    if(f)f.textContent=msg+' The model is in the repository, and the .stl '
+      +"beside it opens in GitHub's own 3D viewer.";});
+  load(B+'build/three.min.js')
+    .then(()=>load(B+'examples/js/controls/OrbitControls.js'))
+    .then(()=>load(B+'examples/js/loaders/GLTFLoader.js'))
+    .catch(()=>{say('The 3D viewer could not load its library.');
+      throw new Error('lib');})
+    // Separate catches on purpose. A viewer that reports "could not load its
+    // library" when the library loaded fine and WebGL was unavailable sends
+    // whoever debugs it to the wrong place entirely.
+    .then(()=>{try{hosts.forEach(mount);}
+      catch(e){say('This browser could not open a 3D view ('+e.message+').');}})
+    .catch(()=>{});
+
+  function mount(host){
+    const url=host.dataset.model;
+    try{
+      const probe=document.createElement('canvas');
+      if(!(probe.getContext('webgl2')||probe.getContext('webgl')))
+        throw new Error('no WebGL');
+    }catch(e){
+      const f=host.querySelector('.mfall');
+      if(f)f.textContent='This browser has no WebGL, so the 3D view cannot '
+        +'open. The model is in the repository, and the .stl beside it opens '
+        +"in GitHub's own 3D viewer.";
+      return;
+    }
+    const w=host.clientWidth||720, h=host.clientHeight||420;
+    const sc=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(38,w/h,0.1,10000);
+    const ren=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    ren.setSize(w,h); ren.setPixelRatio(Math.min(devicePixelRatio,2));
+    sc.add(new THREE.HemisphereLight(0xffffff,0x404048,1.05));
+    const key=new THREE.DirectionalLight(0xffffff,0.85);
+    key.position.set(1,1.4,1.2); sc.add(key);
+    const fill=new THREE.DirectionalLight(0xffffff,0.3);
+    fill.position.set(-1,-0.4,-0.8); sc.add(fill);
+    new THREE.GLTFLoader().load(url,g=>{
+      const box=new THREE.Box3().setFromObject(g.scene);
+      const size=box.getSize(new THREE.Vector3());
+      const c=box.getCenter(new THREE.Vector3());
+      g.scene.position.sub(c);
+      sc.add(g.scene);
+      const r=Math.max(size.x,size.y,size.z)||1;
+      cam.position.set(r*1.2,r*0.9,r*1.5);
+      cam.near=r/200; cam.far=r*40; cam.updateProjectionMatrix();
+      const ctl=new THREE.OrbitControls(cam,ren.domElement);
+      ctl.enableDamping=true; ctl.dampingFactor=0.08;
+      host.innerHTML=''; host.appendChild(ren.domElement);
+      (function tick(){requestAnimationFrame(tick);ctl.update();
+        ren.render(sc,cam);})();
+      addEventListener('resize',()=>{
+        const nw=host.clientWidth||w;
+        ren.setSize(nw,h); cam.aspect=nw/h; cam.updateProjectionMatrix();});
+    },undefined,()=>{
+      const f=host.querySelector('.mfall');
+      if(f)f.textContent='That model could not be read. It is still in the '
+        +'repository.';
+    });
+  }
+})();
 </script>""")
     return "\n".join(o)
 
@@ -1478,12 +1682,26 @@ def render_phase(p: Phase) -> str:
                 if f.get("svg"):
                     cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
                     mat = " mat" if f.get("mat") else ""
-                    a(f'<div class="sheet{mat}"{cap_w}>{f["svg"]}</div>')
+                    a(f'<div class="sheet{mat}"{cap_w}>{ZBAR}'
+                      f'<div class="zoom"><div class="zin">{f["svg"]}</div></div>'
+                      f'<span class="zhint">scroll to zoom, drag to pan, '
+                      f'double-click to reset</span></div>')
                 elif f.get("uri"):
                     cap_w = f' style="max-width:{f["w"] + 34:.0f}px"' if f.get("w") else ""
                     mat = " mat" if f.get("mat") else ""
-                    a(f'<div class="sheet{mat}"{cap_w}><img src="{f["uri"]}" '
-                      f'alt="{esc(f.get("caption") or f["path"])}"></div>')
+                    a(f'<div class="sheet{mat}"{cap_w}>{ZBAR}'
+                      f'<div class="zoom"><div class="zin">'
+                      f'<img src="{f["uri"]}" '
+                      f'alt="{esc(f.get("caption") or f["path"])}"></div></div>'
+                      f'<span class="zhint">scroll to zoom, drag to pan, '
+                      f'double-click to reset</span></div>')
+                elif f.get("model"):
+                    a(f'<div class="sheet"><div class="model" '
+                      f'data-model="{f["model"]}">'
+                      f'<div class="mfall">Loading the 3D view. If it does not '
+                      f'appear, the model is still in the repository — and the '
+                      f'<code>.stl</code> beside it opens in GitHub\'s own 3D '
+                      f'viewer.</div></div></div>')
                 elif f.get("warn"):
                     url = blob_url(f["path"])
                     link = (f' <a href="{esc(url)}" target="_blank" '
@@ -1532,6 +1750,13 @@ def render_phase(p: Phase) -> str:
     return "\n".join(o)
 
 
+ZBAR = ('<div class="zbar"><button type="button" data-z="out" '
+        'aria-label="zoom out">\u2212</button>'
+        '<button type="button" data-z="in" aria-label="zoom in">+</button>'
+        '<button type="button" data-z="fit" aria-label="reset">fit</button>'
+        "</div>")
+
+
 def render_csv_table(t: dict) -> str:
     o = [f'<h3 class="sec">{esc(t["title"])}</h3>']
     if t.get("note"):
@@ -1542,9 +1767,12 @@ def render_csv_table(t: dict) -> str:
                  f'a checked price. Treat the roll-up as indicative until they '
                  f'are quoted — a BOM cost built on guesses is the number that '
                  f'gets committed to.</li></ul></div>')
-    o.append('<div class="scroll"><table><thead><tr>')
+    # A BOM with forty lines is a table somebody wants to sort by price, and a
+    # coverage table is one somebody wants to sort by what is missing. Making
+    # the header clickable costs one attribute and turns a list into a tool.
+    o.append('<div class="scroll"><table class="sortable"><thead><tr>')
     for h in t["headers"]:
-        o.append(f"<th>{esc(h)}</th>")
+        o.append(f'<th class="sortable">{esc(h)}</th>')
     o.append("</tr></thead><tbody>")
     for row in t["rows"]:
         cls = f' class="t-{row["tone"]}"' if row["tone"] else ""

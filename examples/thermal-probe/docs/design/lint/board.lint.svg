@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50.0mm" height="54.3mm" viewBox="-5.00 -5.00 50.00 54.30">
+<style>.bg{fill:#faf9f6}.edge{stroke:#5b6470;stroke-width:.25;fill:none}.fpF{fill:#8fb4d9;fill-opacity:.30;stroke:#4b7fae;stroke-width:.08}.fpB{fill:#d9a88f;fill-opacity:.30;stroke:#ae7f4b;stroke-width:.08}.ref{fill:#3c4650;font:1.3px sans-serif}.note{fill:#3c4650;font:2.0px sans-serif}.tiny{fill:#5b6470;font:1.4px sans-serif}.leg{font:1.5px sans-serif}@media (prefers-color-scheme:dark){.bg{fill:#14171a}.edge{stroke:#7e8a99}.ref,.note{fill:#c8d2dc}.tiny{fill:#93a1b0}}</style>
+<rect class="bg" x="-5.00" y="-5.00" width="50.00" height="54.30"/>
+<rect class="edge" x="0.00" y="0.00" width="40.00" height="26.00"/>
+<polygon class="fpF" points="29.09,20.54 30.91,20.54 30.91,21.46 29.09,21.46"/>
+<rect class="fpF" x="29.24" y="20.69" width="0.56" height="0.62"/>
+<rect class="fpF" x="30.20" y="20.69" width="0.56" height="0.62"/>
+<text class="ref" x="30.00" y="20.60" text-anchor="middle">C2</text>
+<polygon class="fpF" points="1.55,20.15 8.45,20.15 8.45,28.75 1.55,28.75"/>
+<rect class="fpF" x="3.40" y="21.12" width="1.20" height="1.75"/>
+<rect class="fpF" x="5.40" y="21.12" width="1.20" height="1.75"/>
+<text class="ref" x="4.00" y="21.60" text-anchor="middle">J1</text>
+<polygon class="fpF" points="8.85,11.25 15.15,11.25 15.15,14.75 8.85,14.75"/>
+<rect class="fpF" x="9.10" y="11.83" width="1.57" height="0.40"/>
+<rect class="fpF" x="9.10" y="12.48" width="1.57" height="0.40"/>
+<rect class="fpF" x="9.10" y="13.12" width="1.57" height="0.40"/>
+<rect class="fpF" x="9.10" y="13.78" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="13.78" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="13.12" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="12.48" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="11.83" width="1.57" height="0.40"/>
+<rect class="fpF" x="11.20" y="12.10" width="0.50" height="0.50"/>
+<rect class="fpF" x="11.20" y="13.40" width="0.50" height="0.50"/>
+<rect class="fpF" x="11.25" y="12.10" width="1.50" height="1.80"/>
+<rect class="fpF" x="11.20" y="12.10" width="1.60" height="1.80"/>
+<rect class="fpF" x="12.30" y="12.10" width="0.50" height="0.50"/>
+<rect class="fpF" x="12.30" y="13.40" width="0.50" height="0.50"/>
+<text class="ref" x="12.00" y="12.60" text-anchor="middle">U1</text>
+<polygon class="fpF" points="11.09,10.14 12.91,10.14 12.91,11.06 11.09,11.06"/>
+<rect class="fpF" x="11.24" y="10.29" width="0.56" height="0.62"/>
+<rect class="fpF" x="12.20" y="10.29" width="0.56" height="0.62"/>
+<text class="ref" x="12.00" y="10.20" text-anchor="middle">C1</text>
+<polygon class="fpB" points="23.30,5.30 30.70,5.30 30.70,10.70 23.30,10.70"/>
+<rect class="fpB" x="28.50" y="5.79" width="1.95" height="0.60"/>
+<rect class="fpB" x="28.50" y="7.06" width="1.95" height="0.60"/>
+<rect class="fpB" x="28.50" y="8.33" width="1.95" height="0.60"/>
+<rect class="fpB" x="28.50" y="9.60" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="9.61" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="8.33" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="7.07" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="5.80" width="1.95" height="0.60"/>
+<text class="ref" x="27.00" y="7.60" text-anchor="middle">U2 (B)</text>
+<polygon class="fpB" points="12.91,11.89 11.09,11.89 11.09,12.81 12.91,12.81"/>
+<rect class="fpB" x="12.20" y="12.04" width="0.56" height="0.62"/>
+<rect class="fpB" x="11.24" y="12.04" width="0.56" height="0.62"/>
+<text class="ref" x="12.00" y="11.95" text-anchor="middle">C3 (B)</text>
+<line x1="30.00" y1="21.00" x2="27.00" y2="8.00" stroke="#c23b22" stroke-width=".4" stroke-linecap="round"><title>C2 -&gt; U2.8 loop is 26.9 mm (15.7 mm to the power pad + 11.1 mm of ground return) against a 5.0 mm budget</title></line>
+<text class="tiny" x="29.70" y="14.50" fill="#c23b22">26.9 mm</text>
+<circle cx="11.45" cy="12.35" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="11.45" y="12.85" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">1</text><title>ERROR: U1 has a via array under its exposed pad (GND) landing on C3 pad 2 (SW_NODE) on the other side — a short, and it reaches fabrication</title>
+<circle cx="12.55" cy="12.35" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="12.55" y="12.85" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">2</text><title>ERROR: U1 has a via array under its exposed pad (GND) landing on C3 pad 1 (SENSE) on the other side — a short, and it reaches fabrication</title>
+<circle cx="14.11" cy="13.97" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="14.11" y="14.47" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">3</text><title>ERROR: Power class asks for 1.20 mm track on VDD, and U1 pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
+<circle cx="9.89" cy="12.68" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="9.89" y="13.18" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">4</text><title>ERROR: Power class asks for 1.20 mm track on GND, and U1 pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
+<circle cx="12.00" cy="13.00" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="12.00" y="13.50" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">5</text><title>ERROR: Power class clearance 0.30 mm on GND is wider than U1's own pad gap (0.250 mm between pads 2 and 3) — the part is unreachable</title>
+<line x1="12.00" y1="13.00" x2="13.81" y2="11.48" stroke="#e08a1e" stroke-width="0.12" stroke-opacity=".6"/>
+<circle cx="13.81" cy="11.48" r="1.36" fill="#e08a1e" fill-opacity=".14" stroke="#e08a1e" stroke-width="0.27"/><text x="13.81" y="11.98" text-anchor="middle" fill="#e08a1e" style="font:1.45px sans-serif">6</text><title>WARN: U1 is 0.50 mm high on silk against a 0.80 mm minimum — the assembler cannot read it</title>
+<line x1="-5.00" y1="31.00" x2="45.00" y2="31.00" stroke="#c7c2b6" stroke-width=".15"/>
+<text x="-4.00" y="32.47" fill="#3c4650" style="font:bold 1.05px sans-serif">lint-fixture.kicad_pcb — 5 error(s), 2 warning(s)</text>
+<text x="-4.00" y="33.79" fill="#5b6470" style="font:0.74px sans-serif">coloured lines are decoupling loops, longest darkest</text>
+<text x="-4.00" y="35.49" fill="#d03b3b" style="font:0.77px sans-serif">1. U1 has a via array under its exposed pad (GND)</text>
+<text x="-4.00" y="36.69" fill="#d03b3b" style="font:0.77px sans-serif">landing on C3 pad 2 (SW_NODE) on the other side — a</text>
+<text x="-4.00" y="37.89" fill="#d03b3b" style="font:0.77px sans-serif">short, and it reaches fabrication</text>
+<text x="-4.00" y="39.51" fill="#d03b3b" style="font:0.77px sans-serif">2. U1 has a via array under its exposed pad (GND)</text>
+<text x="-4.00" y="40.71" fill="#d03b3b" style="font:0.77px sans-serif">landing on C3 pad 1 (SENSE) on the other side — a</text>
+<text x="-4.00" y="41.91" fill="#d03b3b" style="font:0.77px sans-serif">short, and it reaches fabrication</text>
+<text x="-4.00" y="43.53" fill="#d03b3b" style="font:0.77px sans-serif">3. Power class asks for 1.20 mm track on VDD, and U1</text>
+<text x="-4.00" y="44.73" fill="#d03b3b" style="font:0.77px sans-serif">pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
+<text x="-4.00" y="45.93" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
+<text x="21.00" y="35.49" fill="#d03b3b" style="font:0.77px sans-serif">4. Power class asks for 1.20 mm track on GND, and U1</text>
+<text x="21.00" y="36.69" fill="#d03b3b" style="font:0.77px sans-serif">pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
+<text x="21.00" y="37.89" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
+<text x="21.00" y="39.51" fill="#d03b3b" style="font:0.77px sans-serif">5. Power class clearance 0.30 mm on GND is wider than</text>
+<text x="21.00" y="40.71" fill="#d03b3b" style="font:0.77px sans-serif">U1's own pad gap (0.250 mm between pads 2 and 3) — the</text>
+<text x="21.00" y="41.91" fill="#d03b3b" style="font:0.77px sans-serif">part is unreachable</text>
+<text x="21.00" y="43.53" fill="#e08a1e" style="font:0.77px sans-serif">6. U1 is 0.50 mm high on silk against a 0.80 mm</text>
+<text x="21.00" y="44.73" fill="#e08a1e" style="font:0.77px sans-serif">minimum — the assembler cannot read it</text>
+</svg>

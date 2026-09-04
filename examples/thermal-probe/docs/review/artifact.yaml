@@ -11,15 +11,44 @@ phases:
     eyebrow: Stage 5 · mechanical
     after: architecture
     images:
-      - docs/design/cad/enclosure-render.png
-      - docs/design/cad/enclosure-section.svg
+      - docs/design/cad/enclosure.glb
+      - docs/design/cad/enclosure-exploded.png
+      - docs/design/cad/enclosure-section.png
+      - docs/design/cad/enclosure-iso.svg
     captions:
-      docs/design/cad/enclosure-render.png: >-
-        Exploded view, rendered from the parametric model. Lid, board and cell
-        at their modelled positions.
-      docs/design/cad/enclosure-section.svg: >-
-        Section through the cell pocket — wall thicknesses and the two
-        clearances the display depends on.
+      docs/design/cad/enclosure.glb: >-
+        The assembly, live. Drag to orbit, scroll to zoom. This is the one
+        thing a static render cannot do and the reason to publish the page as
+        well as the repository — the far side of a part is where the surprises
+        are. GitHub will not show a .glb at all; the .stl beside it opens in
+        GitHub's own 3D viewer.
+      docs/design/cad/enclosure-exploded.png: >-
+        Exploded along the axes of the joints that hold the parts, not along
+        offsets somebody picked — so it stays correct when a dimension moves.
+        Shell, lid, board and cell in their own colours.
+      docs/design/cad/enclosure-section.png: >-
+        Section through the cell pocket. Wall thicknesses, the standoff height
+        and the two clearances the display depends on — the one view an orbit
+        viewer will not give you by default.
+      docs/design/cad/enclosure-iso.svg: >-
+        Isometric line view with hidden edges dashed, straight from the model
+        geometry.
+    links:
+      - path: docs/design/cad/enclosure.step
+        label: STEP (AP242)
+        why: Assembly tree, part names, colours, and a MATE_* datum at every joint
+      - path: docs/design/cad/enclosure.stl
+        label: STL
+        why: Renders in GitHub's own 3D viewer — a review mesh, not a manufacturing one
+      - path: docs/design/cad/enclosure-joints.json
+        label: The joints
+        why: Type, parts, position, orientation and limits — what STEP cannot carry
+      - path: docs/design/cad/enclosure-freecad.py
+        label: FreeCAD macro
+        why: Rebuilds the assembly in FreeCAD 1.0 with real, draggable joints
+      - path: cad/enclosure.py
+        label: The model (source)
+        why: The only place the constraints survive a changed dimension
 
   - id: schematic
     title: Schematic
@@ -27,6 +56,8 @@ phases:
     after: cad
     images:
       - docs/design/schematic/sheet-2-sockets.svg
+      - docs/design/lint/1-pic-programmer.lint.svg
+      - docs/design/lint/board.lint.svg
       - docs/design/schematic/sheet-1-main.svg
     captions:
       docs/design/schematic/sheet-2-sockets.svg: >-
@@ -35,6 +66,14 @@ phases:
         pic_programmer demo put through `kicad-cli sch export svg` — which is
         the point: it is what the exporter actually emits, page size in
         millimetres and all.
+      docs/design/lint/1-pic-programmer.lint.svg: >-
+        What sch-lint found, drawn on the sheet rather than listed beside it.
+        340 elements against the 60,538 KiCad's own plot of this sheet costs —
+        which is why this one inlines and that one cannot. Scroll to zoom.
+      docs/design/lint/board.lint.svg: >-
+        pcb-lint on the board fixture. Numbered findings, and every decoupling
+        loop drawn with its length in millimetres — the via array under U1 is
+        landing on a back-side capacitor's pads on another net.
       docs/design/schematic/sheet-1-main.svg: >-
         The main sheet of the same export, and the reason SVG has a
         budget: 3.0 MB and 61,681 elements, because KiCad's plotter writes one
@@ -42,6 +81,9 @@ phases:
         Sheets that heavy are linked rather than inlined.
     docs: [docs/design/adr-0002-power.md]
     links:
+      - path: docs/design/lint/1-pic-programmer.lint.svg
+        label: sch-lint findings, sheet 1
+        why: Every finding circled on the sheet it is about
       - path: hw/kicad-demo/pic_programmer.kicad_sch
         label: KiCad schematic (source)
         why: Opens in KiCad — the editable original
@@ -74,6 +116,18 @@ phases:
     title: Manufacturing
     eyebrow: Stage 7
     after: fea
+    tables:
+      - csv: docs/design/bom-summary.csv
+        title: BOM roll-up
+        note: >-
+          Click a heading to sort. The basis column is what matters: a line
+          with an estimate against it is a line the roll-up cannot be trusted
+          on, and it is drawn in red for that reason.
+      - csv: docs/design/mfg/quotes.csv
+        title: Quotes received
+        note: >-
+          Sort by lead time before sorting by price. A quote with no date is a
+          quote, not a price.
     links_title: Release checklist
     links_note: >-
       Everything a fab, an assembler and a purchaser need in order to quote and
