@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# MakeHardware wrapper — runs cad_export.py on the hardware toolchain's Python.
+exec "${HARDWARE_PYTHON:-/opt/hw-py/bin/python}" \
+  "$(dirname "$(dirname "$(readlink -f "$0")")")/scripts/cad_export.py" "$@"
