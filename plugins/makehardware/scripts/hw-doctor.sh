@@ -19,7 +19,7 @@ _firstline() { printf '%s' "${1%%$'\n'*}" | cut -c1-58; }
 chkout() {  # chkout <label> <expected-regex> <command...>
     local label=$1 want=$2; shift 2
     local out
-    out=$("$@" 2>&1)
+    out=$(probe "$@")
     if [[ ${out} =~ ${want} ]]; then
         printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" \
             "$(grep -m1 -E "${want}" <<<"${out}" | cut -c1-58)"
@@ -30,10 +30,27 @@ chkout() {  # chkout <label> <expected-regex> <command...>
     fi
 }
 
+# Every probe runs with stdin closed and under a timeout. Both matter:
+# `fasthenry` with no arguments reads a deck from stdin and waits forever, so
+# `hw-doctor` — the command the workflow tells you to run *first*, and which an
+# agent runs non-interactively — hung indefinitely with no output at all. A
+# diagnostic that hangs is worse than one that reports a failure, because there
+# is nothing to read and nothing to act on.
+# `timeout` reports its own "failed to run command" for anything absent, which
+# buries the one fact that matters — the tool is not installed — under the name
+# of the wrapper. Say it plainly instead.
+probe() {
+    if [[ $1 != /* ]] && ! command -v "$1" >/dev/null 2>&1; then
+        echo "not installed"
+        return 127
+    fi
+    timeout "${MH_DOCTOR_TIMEOUT:-20}" "$@" </dev/null 2>&1
+}
+
 chk() {  # chk <label> <command...>
     local label=$1; shift
     local out
-    if out=$("$@" 2>&1); then
+    if out=$(probe "$@"); then
         printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" "$(_firstline "${out}")"
         ok=$((ok+1))
     else
