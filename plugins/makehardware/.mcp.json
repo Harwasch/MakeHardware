@@ -1,10 +1,5 @@
 {
   "mcpServers": {
-    "konnect": {
-      "command": "konnect",
-      "args": [],
-      "env": {}
-    },
     "build123d": {
       "command": "${CLAUDE_PLUGIN_ROOT}/bin/build123d-mcp",
       "args": [

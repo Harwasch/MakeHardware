@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """A read-only S-expression reader for KiCad files.
 
-Konnect's rule stands and is not weakened here: **nothing writes a
-`.kicad_*` file except KiCad or Konnect.** Direct edits corrupt them. But
-*reading* one is a different act, and the gates in this directory have to run
-headless in a container with no KiCad, no MCP server and no third-party
-packages, so they need their own reader.
+The house rule stands and is not weakened here: **nothing writes a `.kicad_*`
+file except KiCad, its IPC bindings, or a structured parser that round-trips
+it.** A hand-rolled text edit corrupts them. But *reading* one is a different
+act, and the gates in this directory have to run headless in a container with
+no KiCad and no third-party packages, so they need their own reader.
 
 KiCad's format is a plain S-expression tree, documented at
 https://dev-docs.kicad.org/en/file-formats/sexpr-intro/. Three things about it

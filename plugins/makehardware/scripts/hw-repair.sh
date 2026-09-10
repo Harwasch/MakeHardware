@@ -13,6 +13,7 @@
 #
 #   hw-repair            what is missing and what can be repaired
 #   hw-repair elmer      install Elmer (~70 s, needs ppa.launchpadcontent.net)
+#   hw-repair kicad      install ki-stack and clear the Konnect leftovers
 #   hw-repair all        everything repairable that is currently missing
 #
 # Every repair is idempotent and re-verifies the tool afterwards. A repair that
@@ -25,6 +26,19 @@ ELMER_PPA="${MH_ELMER_PPA:-https://ppa.launchpadcontent.net/elmer-csc-ubuntu/elm
 ELMER_SUITE="${MH_ELMER_SUITE:-noble}"
 ELMER_PACKAGE="${MH_ELMER_PACKAGE:-elmerfem-csc}"
 ELMER_FINGERPRINT="1FE4A88ACFEE8388A409F23A89358ABF9FB7E178"
+
+KI_STACK_REPO="${KI_STACK_REPO:-https://github.com/Milind220/ki-stack}"
+KI_STACK_REV="${KI_STACK_REV:-d5f5d0103e4b2a5572f724fe90cb49dc4f131d37}"
+KI_STACK_ROOT="${KI_STACK_ROOT:-/opt/ki-stack}"
+KI_STACK_PACK="${KI_STACK_ROOT}/skills/ki-stack"
+SKILL_DIR="${MH_SKILL_DIR:-/root/.claude/skills}"
+AGENT_DIR="${MH_AGENT_DIR:-/root/.claude/agents}"
+
+# What `konnect init` used to write. All of it instructs an agent to route
+# KiCad changes through MCP tools this plugin no longer registers.
+KONNECT_SKILLS="konnect kicad-schematic kicad-pcb kicad-review kicad-library kicad-manufacture"
+KONNECT_AGENTS="kicad-schematic-build-agent kicad-design-review-agent"
+KI_STACK_SKILLS="ki-stack-orient ki-stack-render ki-stack-live ki-stack-file-surgery ki-stack-verify ki-stack-pcb ki-stack-schematic ki-stack-symbols ki-stack-footprints"
 
 _have() { command -v "$1" >/dev/null 2>&1; }
 _say()  { printf '%s\n' "$*"; }
@@ -98,48 +112,79 @@ EOF
 }
 
 # --------------------------------------------------------------------------
-# konnect — the subagents' tool namespace
+# kicad — ki-stack in, Konnect leftovers out
 #
-# `konnect init` writes `tools: [mcp__konnect__*]` into its two subagents.
-# Under this plugin the server namespaces to mcp__plugin_makehardware_konnect__,
-# so that glob matches nothing and both agents launch with no tools at all.
-# They do not fail loudly; they come back having "reviewed" a board they never
-# opened. Every environment built before this was fixed carries the broken
-# files in its snapshot.
+# 0.7.0 replaced Konnect with ki-stack. An environment built before that still
+# carries Konnect's six skills and two agents in its snapshot, and they are
+# worse than absent: they tell the agent that every `.kicad_*` change MUST go
+# through MCP tools that are no longer registered, so it reads a missing tool
+# as a broken environment and stops, rather than reaching for kicad-cli or the
+# IPC bindings that are right there.
 # --------------------------------------------------------------------------
-KONNECT_AGENT_DIR="${MH_AGENT_DIR:-/root/.claude/agents}"
-
-_konnect_agents_broken() {
-    local f
-    for f in "${KONNECT_AGENT_DIR}"/kicad-*.md; do
-        [ -f "${f}" ] || continue
-        grep -q 'mcp__plugin_makehardware_konnect__' "${f}" && continue
-        grep -q 'mcp__konnect__' "${f}" && return 0
+_konnect_leftovers() {
+    local n
+    for n in ${KONNECT_SKILLS}; do
+        [ -e "${SKILL_DIR}/${n}" ] && return 0
+    done
+    for n in ${KONNECT_AGENTS}; do
+        [ -e "${AGENT_DIR}/${n}.md" ] && return 0
     done
     return 1
 }
 
-repair_konnect() {
-    if [ ! -d "${KONNECT_AGENT_DIR}" ]; then
-        _say "konnect: no agent directory at ${KONNECT_AGENT_DIR} — nothing to repair"
-        return 0
+_kistack_installed() { [ -d "${KI_STACK_PACK}" ]; }
+
+repair_kicad() {
+    _need_root
+    if ! _kistack_installed; then
+        _say "kicad: cloning ki-stack ${KI_STACK_REV:0:7}..."
+        rm -rf "${KI_STACK_ROOT}"
+        # Full clone, not shallow: a shallow clone cannot check out a pinned
+        # revision, and the pin is the point.
+        git clone -q "${KI_STACK_REPO}" "${KI_STACK_ROOT}" >>"${LOG}" 2>&1 \
+            || _die "could not clone ${KI_STACK_REPO}"
+        git -C "${KI_STACK_ROOT}" checkout -q "${KI_STACK_REV}" >>"${LOG}" 2>&1 \
+            || _die "could not check out ${KI_STACK_REV}"
+        [ -d "${KI_STACK_PACK}" ] || _die "${KI_STACK_PACK} missing in that revision"
     fi
-    if ! _konnect_agents_broken; then
-        _say "konnect: agents already resolve to this plugin's tool namespace"
-        return 0
-    fi
-    local f fixed=0
-    for f in "${KONNECT_AGENT_DIR}"/kicad-*.md; do
-        [ -f "${f}" ] || continue
-        grep -q 'mcp__plugin_makehardware_konnect__' "${f}" && continue
-        # Both patterns are kept so the file stays correct if Konnect is ever
-        # registered directly rather than through the plugin.
-        sed -i 's|^\(\s*\)- mcp__konnect__\*$|\1- mcp__plugin_makehardware_konnect__*\n\1- mcp__konnect__*|' "${f}" \
-            || _die "could not rewrite ${f}"
-        _say "konnect: renamespaced $(basename "${f}")"
-        fixed=$((fixed+1))
+
+    chmod +x "${KI_STACK_PACK}"/bin/* 2>>"${LOG}"
+    local helper name
+    for helper in "${KI_STACK_PACK}"/bin/*; do
+        [ -f "${helper}" ] || continue
+        name=$(basename "${helper}")
+        # rm -f first: `cat >` follows a symlink, and a leftover symlink here
+        # would send the wrapper straight through into the upstream script.
+        rm -f "/usr/local/bin/${name}"
+        cat > "/usr/local/bin/${name}" <<EOB
+#!/usr/bin/env bash
+exec "${helper}" "\$@"
+EOB
+        chmod +x "/usr/local/bin/${name}"
     done
-    [ "${fixed}" -gt 0 ] && _say "konnect: restart the session for the agents to pick this up"
+
+    mkdir -p "${SKILL_DIR}"
+    local sk
+    for sk in ${KI_STACK_SKILLS}; do
+        [ -d "${KI_STACK_PACK}/${sk}" ] || _die "skill ${sk} absent from ${KI_STACK_REV}"
+        rm -rf "${SKILL_DIR:?}/${sk}"
+        ln -s "${KI_STACK_PACK}/${sk}" "${SKILL_DIR}/${sk}"
+    done
+    grep -q 'KI_STACK_DIR' /root/.bashrc 2>/dev/null || \
+        printf 'export KI_STACK_DIR=%s\n' "${KI_STACK_PACK}" >> /root/.bashrc
+    _say "kicad: ki-stack $("${KI_STACK_PACK}/bin/ki-stack-version" 2>/dev/null || echo '?') — 9 skills installed"
+
+    if _konnect_leftovers; then
+        local n removed=0
+        for n in ${KONNECT_SKILLS}; do
+            [ -e "${SKILL_DIR}/${n}" ] && { rm -rf "${SKILL_DIR:?}/${n}"; removed=$((removed+1)); }
+        done
+        for n in ${KONNECT_AGENTS}; do
+            [ -e "${AGENT_DIR}/${n}.md" ] && { rm -f "${AGENT_DIR}/${n}.md"; removed=$((removed+1)); }
+        done
+        _say "kicad: removed ${removed} stale Konnect skill(s)/agent(s)"
+    fi
+    _say "kicad: restart the session for the skill list to refresh"
     return 0
 }
 
@@ -154,10 +199,12 @@ report() {
     else
         _say "  MISSING   elmer      hw-repair elmer     (~70 s)"
     fi
-    if _konnect_agents_broken; then
-        _say "  BROKEN    konnect    hw-repair konnect   (agents have no tools)"
+    if ! _kistack_installed; then
+        _say "  MISSING   ki-stack   hw-repair kicad     (KiCad skills)"
+    elif _konnect_leftovers; then
+        _say "  STALE     konnect    hw-repair kicad     (leftover skills/agents)"
     else
-        _say "  ok        konnect    agents resolve to this plugin's tools"
+        _say "  ok        ki-stack   installed, no Konnect leftovers"
     fi
     _say ""
     _say "Run \`hw-doctor\` for the full picture. A repair here fixes this"
@@ -169,7 +216,7 @@ report() {
 case "${1:-}" in
     ""|-h|--help|status) report ;;
     elmer)               repair_elmer ;;
-    konnect)             repair_konnect ;;
-    all)                 repair_konnect; repair_elmer ;;
-    *) _die "unknown repair '$1' — try: elmer, konnect, all" ;;
+    kicad)               repair_kicad ;;
+    all)                 repair_kicad; repair_elmer ;;
+    *) _die "unknown repair '$1' — try: elmer, kicad, all" ;;
 esac

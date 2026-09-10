@@ -135,7 +135,31 @@ fi
 echo "Electrical:"
 chkout ngspice     "ngspice-[0-9]+" ngspice --version
 chk kicad-cli      kicad-cli version
-chk konnect        konnect --version
+# ki-stack is skills plus a handful of shell helpers, so there is no server to
+# probe — what matters is that the pack is present, pinned, and that its two
+# substrates answer. kicad-cli is checked above; kipy is the live half, and it
+# imports without a running KiCad (connecting is what needs one).
+chkout ki-stack    "^[0-9]+\.[0-9]+" ki-stack-version
+chk kicad-python   "${VENV}/bin/python" -c "import kipy;print('kipy ok — live IPC available with hw-kicad-up')"
+if [ -d "${KI_STACK_DIR:-/opt/ki-stack/skills/ki-stack}" ]; then
+    printf '  \033[32mok\033[0m   %-22s %s skills at %s\n' "ki-stack skills" \
+        "$(find "${KI_STACK_DIR:-/opt/ki-stack/skills/ki-stack}" -maxdepth 1 -type d -name 'ki-stack-*' | wc -l)" \
+        "$(git -C /opt/ki-stack rev-parse --short HEAD 2>/dev/null || echo 'unknown rev')"
+    ok=$((ok+1))
+else
+    printf '  \033[31mFAIL\033[0m %-22s pack absent — \033[1mhw-repair kicad\033[0m installs it\n' \
+        "ki-stack skills"
+    bad=$((bad+1))
+fi
+# Konnect was replaced by ki-stack in 0.7.0. An environment built before that
+# still carries its skills and agents in the snapshot, and they instruct an
+# agent to route every KiCad change through MCP tools that are no longer
+# registered — which reads to the agent as "the tools are broken" rather than
+# "this guidance is stale".
+if [ -e /root/.claude/skills/konnect ] || [ -e /root/.claude/agents/kicad-schematic-build-agent.md ]; then
+    printf '  \033[33m!!\033[0m   %-22s stale Konnect skills/agents present — \033[1mhw-repair kicad\033[0m\n' \
+        "konnect leftovers"
+fi
 chkpy ltspice-mcp  "${VENV}/bin/ltspice-mcp" --help
 
 echo

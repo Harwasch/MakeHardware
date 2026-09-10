@@ -10,7 +10,7 @@ estimated.
 |---|---|---|
 | Planning | **plan.yaml** + `plan-render` | Session-sized chunks with explicit dependencies, scheduled by longest path, rendered as a dependency Gantt into the README. |
 | Requirements | **StrictDoc** 0.28.3 | Plain-text `.sdoc` in git, typed grammar, parent/child relations, refuses to build a tree with a dangling parent or duplicate UID. Exports HTML, JSON and ReqIF. |
-| Schematic / PCB | **KiCad 10** + **Konnect** 0.10.0 | Konnect is a single Rust binary exposing 214 MCP tools over KiCad 10's IPC API, with a native S-expression engine for file-based schematic work. |
+| Schematic / PCB | **KiCad 10** + **[ki-stack](https://github.com/Milind220/ki-stack)** 0.1.0 (MIT) | Nine skills, not a server. They teach the agent to drive `kicad-python` (live IPC), `kicad-cli` (render/export/DRC/ERC) and `kiutils-rs` (structured offline edits) directly. |
 | PCB checks & output | **kicad-cli** | ERC, DRC, netlist, gerbers, STEP. Headless, scriptable, no GUI needed. |
 | Circuit simulation | **ngspice 42** via **ltspice-mcp** 0.5.0 | Headless, no Wine, first-class backend in the MCP server. Returns parsed measurements, not plots. |
 | Circuit simulation (opt-in) | **LTspice** under Wine | Only for vendor-encrypted ADI models and `.asc` editing. Off by default. |
@@ -21,7 +21,7 @@ estimated.
 | Figures | **`hw-chart`** | Eight engineering plots as themed SVG, 2-9 kB each, generated from the file that owns the numbers. |
 | Design loops | **`hw-iterate`** | A ledger of every verify-and-refine pass — variables, measured metrics, the run file each number came from — and the evolution chart drawn from it. What turns "it meets the target" into something a reviewer can check. |
 | Environment repair | **`hw-repair`** | Installs, at run time, what the environment build failed to. A degraded snapshot is otherwise a dead session until somebody rebuilds the environment. |
-| Design review | **kicad-happy** (MIT) | Read-only analysers Konnect does not have: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference, distributor search. Pure Python, needs no KiCad install. |
+| Design review | **kicad-happy** (MIT) | Read-only analysers nothing else here has: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference, distributor search. Pure Python, needs no KiCad install. |
 | Vision renders | **matplotlib** + build123d tessellation | Shaded views and isometric line art from real geometry. |
 | Vision styling | **Hugging Face Spaces** (FLUX Kontext, Qwen) | Restyles a geometry render without inventing new proportions. No API key needed. |
 
@@ -47,15 +47,16 @@ to the allowlist. It is a supplement, not the foundation.
 
 ### KiCad 10 must come from the PPA, and that needs an allowlist entry
 
-Ubuntu 24.04 universe carries **KiCad 7.0.11**, which has no IPC API. Konnect
-cannot drive it. KiCad 10.0.5 is published for noble on the KiCad PPA.
+Ubuntu 24.04 universe carries **KiCad 7.0.11**, which has no IPC API and no
+`kicad-cli` worth the name, so neither half of ki-stack works against it.
+KiCad 10 is published for noble on the KiCad PPA.
 
 The trap: PPA content is served from `ppa.launchpadcontent.net`, and the
 Trusted allowlist names only `launchpad.net` and the **retired**
 `ppa.launchpad.net` (which now fails to connect at all). So without a Custom
 allowlist entry, `apt-get update` prints a warning, **still exits 0**, and
 `apt-get install kicad` quietly installs KiCad 7 from universe. The failure is
-silent and lands three steps later as "Konnect can't connect".
+silent and lands three steps later as "the IPC socket does not answer".
 
 `env/setup.sh` pins the PPA with an apt preference and then explicitly asserts
 the installed major version, so this fails loudly instead.
@@ -68,42 +69,42 @@ where the PPA was reachable, the index fetched and the candidate correctly
 pinned at 10.0.5 — and KiCad never got installed. The check now captures the
 output and matches it with `case`. See `docs/01-environment.md`.
 
-### Konnect is downloaded, not built — the proxy does serve release assets
+### ki-stack replaced Konnect: skills over a tool surface
 
-This repo used to build Konnect from source on the belief that the session's
-GitHub proxy 403s release assets. That belief came from probing the wrong two
-URLs. The proxy scopes the **API** and the release **web pages** to attached
-repositories; the asset path itself is served:
+Konnect was an MCP server — one Rust binary, 214 tools over KiCad 10's IPC API.
+It worked, and it was replaced in 0.7.0 by [ki-stack](https://github.com/Milind220/ki-stack),
+which is nine SKILL.md files and a dozen shell helpers.
 
-```
-https://api.github.com/repos/mixelpixx/Konnect/releases  -> 403
-https://github.com/mixelpixx/Konnect/releases/latest     -> 403
-https://github.com/mixelpixx/Konnect/releases/download/v0.10.0/\
-  konnect-v0.10.0-x86_64-unknown-linux-gnu.tar.gz        -> 200
-```
+The argument for the swap is what `kicad-cli` cannot do. It has no `add`,
+`place`, `route` or `connect` verb and never has, so *something* has to drive
+the IPC API. The question is only whether that something is a fixed surface of
+pre-sliced verbs or the agent writing code against the substrate. Two things
+decide it here:
 
-So `gh release download` and anything API-driven genuinely does fail here —
-that part of the original finding holds, and it is why the mistake was easy to
-make. A plain `curl` of the asset does not fail. Verified on the image: 11 MB,
-seconds to fetch, `konnect 0.10.0` runs, three dynamic dependencies, and its
-highest symbol requirement is `GLIBC_2.39` — exactly what Ubuntu 24.04 ships.
+* **A tool surface costs context whether or not it is used.** Konnect answered
+  this by loading 2 of its 20 toolsets at startup and making the agent call
+  `load_toolset` for the rest — which is a real cost paid in round trips and in
+  failures that read as "the tool is missing". A skill costs nothing until it
+  loads.
+* **The failure mode is different in kind.** A missing tool is a wall. A skill
+  that says "use `kicad-python`, and if the socket is dead use `kiutils-rs`
+  instead" is a route. That is the same reasoning as `hw-optimize`'s
+  perseverance rule, applied to the toolchain.
 
-The skills and agents are embedded in the binary, not read from the checkout:
-`konnect init --client claude` installs all six skills and both agents from the
-downloaded binary alone. So the clone is not needed for those either.
+ki-stack's own ethos states the house rule better than we did: *no success
+claim without evidence — artifact path, DRC/ERC output, changed file list, or
+script output.*
 
-That removes ~4 minutes from the build — the phase that used to overrun the
-budget and get the whole script killed — along with `cmake`, `pkg-config`,
-`protobuf-compiler`, `libprotobuf-dev` and a multi-GB cargo tree.
+What the swap costs: Konnect's design-review audits and its manufacturing
+pipeline have no ki-stack equivalent. `sch-lint`, `pcb-lint`, `hw-verification`
+and kicad-happy already covered most of that ground, which is why the loss is
+acceptable, but it is a loss and not a wash.
 
-Upstream publishes no checksums file, so `env/setup.sh` pins its own SHA-256 of
-the asset next to the version and treats a mismatch as a hard failure. Bump the
-two together. `MH_KONNECT_FROM_SOURCE=1` restores the source build, kept
-working as the fallback if upstream ever stops shipping a Linux asset.
-
-Note that *downloading* upstream's own asset carries none of the AGPL
-source-offer obligation that re-hosting a mirrored binary on our own repo
-would have. Not mirroring remains the right call, for a better reason.
+The pack is a **pinned clone**, not a vendored copy: these are instructions an
+agent follows, so an unpinned checkout means the guidance under a project can
+change between sessions with nothing in the repo recording it. MIT, so
+vendoring would be permitted — pinning is better because `git -C /opt/ki-stack`
+still knows what revision it is on.
 
 ### Image generation comes from the Hugging Face connector
 
@@ -119,38 +120,37 @@ header on the connector that disables `invoke`; see
 `docs/01-environment.md`. A paid direct API remains the upgrade path when
 shared-GPU latency stops being acceptable.
 
-### Konnect needs a running KiCad only for part of its job
+### Live IPC needs a running KiCad; nothing else does
 
-Its own requirements are explicit: "For most PCB tools: KiCAD running with the
-target board open (IPC API)". But schematic work goes through a native
-S-expression engine, `place_component`/`move_component`/`rotate_component`
-fall back to a closed board file, and ERC/DRC/exports go through `kicad-cli`.
+`kicad-python` talks to an application, not a file. So board work through IPC
+needs a KiCad up (`hw-kicad-up`, which starts Xvfb and the GUI), while render,
+export, ERC, DRC and structured file edits all run headless.
 
-So the agent works headless by default and escalates to a live GUI
-(`hw-kicad-up`) only for live board editing. This matters because the
-environment snapshot preserves **files, not processes** — a KiCad started
-during setup is gone by the time a session runs.
+This matters because the environment snapshot preserves **files, not
+processes** — a KiCad started during setup is gone by the time a session runs.
+Schematic work in particular is usually better off on the offline structured
+route than on IPC, so the default posture is headless and the GUI is an
+escalation.
 
-### Konnect and kicad-happy are complementary, not competing
+### ki-stack and kicad-happy are complementary, not competing
 
-Both provide KiCad skills, and their triggers overlap. They do different jobs:
-Konnect *changes* designs through KiCad 10's IPC API and a native S-expression
-engine, and its own rules make routing edits through it mandatory because
-direct file edits corrupt `.kicad_*` files. kicad-happy *reads* designs — pure
-Python analysers producing structured reports, plus distributor search and
-datasheet extraction.
+Both provide KiCad skills and their triggers overlap. They do different jobs:
+ki-stack *changes* designs, through the IPC bindings or a structured parser.
+kicad-happy *reads* them — pure Python analysers producing structured reports,
+plus distributor search and datasheet extraction.
 
-So the rule is: writes go through Konnect, reads go through kicad-happy, and
+So the rule is: writes go through ki-stack, reads go through kicad-happy, and
 the decision about which part to actually buy stays in `hw-sourcing` where the
 house standards live. The full precedence table ships in the project
 `CLAUDE.md`.
 
 ### The linters parse KiCad files themselves, and that is not a contradiction
 
-Konnect's rule — nothing writes a `.kicad_*` file except KiCad or Konnect —
-stands and is not weakened. It is about **writes**: direct edits corrupt those
-files. Reading one is a different act, and a gate has to run headless in a
-container with no KiCad, no MCP server and no third-party packages, so
+The house rule — nothing writes a `.kicad_*` file except KiCad, its IPC
+bindings, or a structured parser that round-trips it — stands and is not
+weakened. It is about **writes**: a hand-rolled text edit corrupts those files.
+Reading one is a different act, and a gate has to run headless in a container
+with no KiCad and no third-party packages, so
 `scripts/kicad_sexpr.py` is a ~250-line reader that does exactly that and
 nothing else. Verified against both dialects present in this image: the KiCad 7
 schematic fixture and KiCad 10's own shipped boards.
@@ -195,8 +195,8 @@ starting structure, not shared code, so divergence there is correct.
 |---|---|
 | `add-apt-repository` | Depends on `apt_pkg`, which this image's Python 3.11 default cannot import. See `docs/01-environment.md`. |
 | KiCad from Ubuntu universe | 7.0.11, no IPC API. |
-| Building Konnect from source | Was the default until the 403 finding was retested. ~4 min for something `curl` does in seconds. Still available behind `MH_KONNECT_FROM_SOURCE=1`. |
-| Mirroring Konnect on our own repo | Would work — the proxy serves attached repos — but re-hosting the binary carries an AGPL source-offer obligation, and the upstream asset is directly fetchable anyway. |
+| Konnect | Replaced by ki-stack in 0.7.0 — see above. It worked; the swap is about a tool surface versus a substrate the agent can write code against. |
+| Vendoring ki-stack into this repo | MIT permits it, but a pinned clone keeps upstream's authorship visible and `git -C /opt/ki-stack` knows its own revision. Copies go stale silently. |
 | LTspice as the default | Blocked domain, ~2 GB, and unnecessary — ngspice covers the loop. |
 | NGSolve, Kratos, scikit-fem | Nothing has needed them yet, and every tool in the image is one more thing that can fail the build. Add them when a project needs one. |
 | Elmer from source | ~20 minutes on 1 vCPU against ~70 s for the packaged build, and it does not fit the setup budget. |
@@ -217,7 +217,7 @@ one, not the sum.
 |---|---|
 | Base apt packages | 22 s |
 | Python stack via uv (1.6 GB) | 10 s |
-| Konnect release download + install | **~5 s** (was 78 s warm / ~3.5 min cold from source) |
+| ki-stack clone + skill install | **~5 s** |
 | KiCad 10 from PPA | dominated by download |
 | **Total (parallel)** | **~2 min** |
 
@@ -225,7 +225,7 @@ LTspice, when enabled, adds roughly 2 GB and pushes this past the budget —
 another reason it is opt-in.
 
 The budget is not a soft target: overrunning it kills the script mid-phase.
-That happened on a cold build where the Konnect compile was still running at
+That happened on a cold build where a from-source compile was still running at
 the limit, and because the script's tail wrote `status.json` and the helper
 commands *after* everything else, the session came up with no toolchain and no
 diagnosis. The script now writes helpers first, rewrites `status.json` after

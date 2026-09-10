@@ -80,7 +80,7 @@ Two consequences worth holding:
 * **A power net's final track width is a thermal number, and it is usually far
   wider than a router can enter a pad with.** Route at pad width, widen
   afterwards, and record the target width in the layout notes so the widening
-  is not forgotten. `templates/kicad/konnect-house.json` has a
+  is not forgotten. `templates/kicad/house-defaults.json` has a
   `final_track_width_mm` field for exactly this.
 * **Vias carry current too.** A 0.3 mm via is good for roughly 1 A. Parallel
   them on a power path; one via is a fuse.

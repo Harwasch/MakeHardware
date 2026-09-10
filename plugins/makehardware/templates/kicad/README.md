@@ -37,9 +37,9 @@ once after any edit:
 grep -c MakeHardware build/check.pdf     # 0 means the template did not load
 ```
 
-## `konnect-house.json` — grid, sizes and net classes
+## `house-defaults.json` — grid, sizes and net classes
 
-Loaded through Konnect's `save_project_config`. Every number in it is one that
+Merged into the project's `.kicad_pro`, which is plain JSON. Every number in it is one that
 `sch-lint` or `pcb-lint` checks, so if you change one here, change the gate's
 default with it — a house standard and a gate that disagree is worse than
 neither.

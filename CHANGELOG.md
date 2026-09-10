@@ -7,6 +7,78 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.7.0
+
+Konnect is out; [ki-stack](https://github.com/Milind220/ki-stack) is in. The
+plugin no longer ships a KiCad MCP server at all.
+
+### Changed
+
+* **KiCad automation moved from a tool surface to a substrate.** Konnect was an
+  MCP server — one Rust binary, 214 tools over KiCad 10's IPC API. ki-stack is
+  nine SKILL.md files and a dozen shell helpers that teach the agent to drive
+  the three real substrates itself: `kicad-python` for live IPC,
+  `kicad-cli` for render/export/DRC/ERC, and `kiutils-rs` for structured
+  offline file edits.
+
+  The argument is what `kicad-cli` cannot do. It has no `add`, `place`, `route`
+  or `connect` verb, so *something* has to drive the IPC API; the only question
+  is whether that something is pre-sliced verbs or code the agent writes. Two
+  things settled it: a tool surface costs context whether or not it is used
+  (Konnect loaded 2 of its 20 toolsets at startup and made the agent fetch the
+  rest, which failed in ways that read as "the tool is missing"), and a missing
+  tool is a wall where a skill that names its fallback is a route — the same
+  reasoning `hw-optimize` already applies to everything else.
+
+  **What it costs:** Konnect's design-review audits and its manufacturing
+  pipeline have no ki-stack equivalent. `sch-lint`, `pcb-lint`,
+  `hw-verification` and kicad-happy already covered most of that ground, which
+  is why the loss is acceptable — but it is a loss, not a wash.
+
+* **The rule about editing `.kicad_*` files changed shape.** It was "nothing
+  writes one except KiCad or Konnect". It is now "nothing writes one except
+  KiCad, its IPC bindings, or a structured parser that round-trips it".
+  Parser-backed offline edits are a first-class route now, and for schematic
+  work usually the better one. Hand-rolled S-expression edits — `sed`, a regex,
+  a string replace — are as forbidden as they ever were, and for the same
+  reason: the file still opens and the netlist is quietly wrong. The
+  distinction is structural versus textual, not tool versus file.
+
+* **`MH_ENABLE_KONNECT` is now `MH_ENABLE_KICAD`.** The old name is still
+  honoured, so an environment carrying it keeps working rather than silently
+  losing KiCad. `MH_KONNECT_FROM_SOURCE` is gone — nothing is built from source
+  any more, which also drops `cmake`, `pkg-config` and the protobuf toolchain
+  from the base packages.
+
+* `templates/kicad/konnect-house.json` is now `house-defaults.json`, merged
+  into the project's `.kicad_pro` (plain JSON) rather than loaded through an
+  MCP call.
+
+### Added
+
+* **`hw-repair kicad`** — installs ki-stack and deletes the Konnect leftovers.
+  This is the important half of the migration: an environment built before
+  0.7.0 still carries Konnect's six skills and two agents in its snapshot, and
+  they are worse than absent. They tell the agent that every `.kicad_*` change
+  MUST go through MCP tools that are no longer registered, so it reads a
+  missing tool as a broken environment and stops, instead of reaching for the
+  `kicad-cli` and IPC bindings sitting right there. `hw-doctor` flags the
+  leftovers and names the command.
+
+### Fixed
+
+* **A wrapper generator that ate the thing it wrapped.** The first cut of the
+  ki-stack phase wrote `/usr/local/bin/<helper>` with `cat >`, over a path a
+  previous install had left as a symlink into the clone. `cat >` follows a
+  symlink, so the wrapper landed *inside* the upstream script as an `exec` of
+  itself — an infinite loop that hung the build with no error at all. `rm -f`
+  before the write. Caught by running the phase twice.
+
+* Seven ki-stack helpers locate the pack with `dirname "${0}"/../../..`, which
+  under a symlink in `/usr/local/bin` resolves to `/`. They are installed as
+  wrappers rather than symlinks so `ki-stack-version` and `kicad-render` work
+  from any directory.
+
 ## 0.6.0
 
 ### Removed

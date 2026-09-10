@@ -15,7 +15,7 @@ Traceback (most recent call last):
 ModuleNotFoundError: No module named 'apt_pkg'
 ```
 
-This has nothing to do with KiCad, Konnect or LTspice. The base image points
+This has nothing to do with KiCad, ki-stack or LTspice. The base image points
 `/usr/bin/python3` at **Python 3.11.15** through `update-alternatives`, while
 Ubuntu 24.04's `python3-apt` only ships
 `apt_pkg.cpython-**312**-x86_64-linux-gnu.so`. `add-apt-repository` starts with
@@ -35,20 +35,20 @@ silent:
 | # | Failure | How it would have shown up |
 |---|---|---|
 | 1 | `add-apt-repository` / `apt_pkg` | Hard fail — the one you saw. |
-| 2 | `ppa.launchpadcontent.net` denied by the egress policy | **Silent.** `apt-get update` warns and still exits 0, then `apt-get install kicad` installs KiCad **7.0.11** from universe. Konnect cannot drive it. |
+| 2 | `ppa.launchpadcontent.net` denied by the egress policy | **Silent.** `apt-get update` warns and still exits 0, then `apt-get install kicad` installs KiCad **7.0.11** from universe, which has no IPC API. |
 | 3 | `ltspice.analog.com` denied by the egress policy | Hard fail at `curl -fL`, killing the script under `set -e`. |
-| 4 | `protobuf-compiler` without `libprotobuf-dev` | Konnect build fails: `google/protobuf/any.proto: File not found`. Ubuntu's `protobuf-compiler` does not ship the well-known descriptors. Only reachable now via `MH_KONNECT_FROM_SOURCE=1`. |
+| 4 | `protobuf-compiler` without `libprotobuf-dev` | Broke the Konnect source build with `google/protobuf/any.proto: File not found`, because Ubuntu's `protobuf-compiler` ships no well-known descriptors. Unreachable since 0.7.0 — nothing is built from source any more — and kept here because the failure mode recurs with any protobuf project. |
 | 5 | ~5 minute setup budget | KiCad + Wine + LTspice + a cold Rust build serially exceeds it, so the environment snapshot never caches and every session re-runs setup. |
 
 The corrected script in `env/setup.sh` addresses all five.
 
 A sixth showed up later, in a real build: **the script can be killed at the
 budget, and everything a session needs was at the end of it.** A cold build
-spent its budget compiling Konnect and was terminated mid-phase, so
+spent its budget compiling Konnect from source and was terminated mid-phase, so
 `status.json`, `hw-doctor`'s input, `/etc/ltspice-mcp.toml` and the `hw-*`
 commands — all written after the phases — never existed. The session started
 with a half-built toolchain and nothing to explain why. Two changes fix the
-class, not just the case: the Konnect compile is gone (see `docs/00-stack.md`),
+class, not just the case: nothing is compiled from source any more (see `docs/00-stack.md`),
 and the script now front-loads the helper commands, rewrites `status.json`
 after every phase, and runs its tail from an `EXIT`/`TERM` trap.
 
@@ -105,12 +105,13 @@ level, Full included, which is why the setup script works around them:
 
 * `add-apt-repository` is broken — the image's `python3` is 3.11 and
   `python3-apt` ships only the 3.12 module.
-* `protobuf-compiler` alone cannot build Konnect; `libprotobuf-dev` supplies
-  the well-known descriptors. Only matters under `MH_KONNECT_FROM_SOURCE=1`.
+* `protobuf-compiler` alone cannot build a protobuf project; `libprotobuf-dev`
+  supplies the well-known descriptors. No longer reachable here, kept because
+  the failure recurs anywhere protobuf is compiled.
 * **The GitHub API and release *web pages* 403 for repos not attached to the
   session**, independently of the network access level — so `gh release
   download` and anything API-driven fails. The release *asset* path
-  (`/releases/download/<tag>/<file>`) is **not** blocked, which is why Konnect
+  (`/releases/download/<tag>/<file>`) is **not** blocked, which is why a
   installs by `curl` rather than a source build. `git clone` of a public repo
   is served too.
 * **`WebFetch` cannot read most datasheet PDFs.** It returns text saying the
@@ -169,15 +170,15 @@ HF Spaces is the zero-config default.
 
 Paste from `env/environment-variables.env`. The two that change behaviour:
 
-* `MH_ENABLE_KONNECT=1` — install KiCad 10 + Konnect. Needs the allowlist entry
+* `MH_ENABLE_KICAD=1` — install KiCad 10 + ki-stack. Needs the allowlist entry
   above. Set to `0` for a simulation/CAD-only environment that runs on the
   stock Trusted preset with no changes at all.
 * `MH_ENABLE_LTSPICE=0` — LTspice under Wine. Off by default; ngspice is the
   default simulator.
-* `MH_KONNECT_FROM_SOURCE=0` — clone and `cargo build` Konnect instead of
-  installing the upstream release binary. Adds ~4 minutes and the
-  protobuf/cmake toolchain; the fallback if upstream ever stops publishing a
-  Linux asset.
+* `KI_STACK_REV` — the ki-stack revision to install. Pinned, deliberately:
+  these are instructions an agent follows, so an unpinned checkout means the
+  guidance under a project can change between sessions with nothing in the repo
+  recording it. `KI_STACK_REPO` and `KI_STACK_DIR` are the other two knobs.
 * `MH_ENABLE_PLUGIN=1` — install the MakeHardware plugin itself at user scope.
   Set to `0` only if the project repo installs it some other way.
 * `MH_PLUGIN_SOURCE=Harwasch/MakeHardware` — anything `claude plugin
@@ -195,7 +196,7 @@ fail to start. Each phase records `PASS` / `DEGRADED` / `FAIL` into
 session rather than bricking it. `scripts/hw-doctor.sh` reads it back, and the
 SessionStart hook surfaces anything degraded at the top of the session.
 
-**Phases run concurrently.** `apt`, the Python stack, KiCad and the Konnect
+**Phases run concurrently.** `apt`, the Python stack, KiCad and the ki-stack
 install overlap, so the wall clock is roughly the longest phase (~2 min) rather
 than the sum.
 
@@ -240,7 +241,7 @@ and in a cloud session it fails silently in two independent ways:
    the skills, the commands, the MCP servers and `bin/` are all absent.
 
 `phase_plugin` sidesteps both by installing at **user scope** into
-`/root/.claude`, which is part of the snapshot — the same trick `phase_konnect`
+`/root/.claude`, which is part of the snapshot — the same trick `phase_kistack`
 uses for the KiCad skills. Folder trust never enters into it.
 
 The GitHub *API* 403s for repos not attached to the session, but `claude plugin
@@ -280,7 +281,7 @@ scripts/hw-doctor.sh
 Expected on a fully-provisioned environment:
 
 ```
-Electrical:     ngspice, kicad-cli (10.x), konnect, ltspice-mcp
+Electrical:     ngspice, kicad-cli (10.x), ki-stack, kicad-python, ltspice-mcp
 Mechanical:     build123d, build123d-mcp, gmsh, calculix
 Datasheets:     pdftotext, pypdf
 Requirements:   strictdoc, pyyaml, review-gate

@@ -349,6 +349,49 @@ assert t.count('<') < 220, 'chart is too heavy for the review page'" \
     || fail "hw-chart budget output is wrong"
 
 echo
+echo "== the KiCad channel =="
+
+# 0.7.0 replaced Konnect with ki-stack. The regression these guard against is a
+# half-migration: guidance that still tells an agent to route every `.kicad_*`
+# change through MCP tools the plugin no longer registers, which reads to the
+# agent as a broken environment rather than as stale advice.
+check "${PY}" -c "
+import json
+d = json.load(open('${ROOT}/plugins/makehardware/.mcp.json'))
+assert 'konnect' not in d['mcpServers'], d['mcpServers']" \
+    && pass "the plugin registers no konnect MCP server" \
+    || fail "konnect is still in .mcp.json"
+
+# kicad-channels.md is excluded by name: its whole job is to say that the old
+# rule is stale, so it quotes it, and a grep cannot tell a quotation from an
+# instruction.
+stale=$(grep -rl "Konnect MCP\|through \*\*Konnect\*\*\|konnect__" \
+    "${ROOT}/plugins/makehardware/skills" 2>/dev/null \
+    | grep -v "kicad-channels.md" | wc -l)
+[ "${stale}" -eq 0 ] \
+    && pass "no skill routes KiCad edits through Konnect" \
+    || fail "${stale} skill(s) still route edits through Konnect"
+
+check "${PY}" -c "
+import json
+json.load(open('${ROOT}/plugins/makehardware/templates/kicad/house-defaults.json'))" \
+    && pass "the house KiCad defaults parse as JSON a .kicad_pro can take" \
+    || fail "house-defaults.json is missing or malformed"
+
+# The rule that did NOT change. A hand-rolled text edit corrupts these files
+# whatever drives the toolchain, and the reader must stay a reader.
+# Its docstring, not a --help flag: this module has no CLI beyond "parse the
+# file named in argv[1]", and asserting on a flag it does not have was a test
+# bug, not a finding.
+check "${PY}" -c "
+import ast, pathlib
+doc = ast.get_docstring(ast.parse(pathlib.Path('${S}/kicad_sexpr.py').read_text()))
+assert 'read-only' in doc.lower(), doc.splitlines()[0]
+assert 'nothing writes' in doc.lower()" \
+    && pass "the S-expression module still describes itself as read-only" \
+    || fail "kicad_sexpr.py no longer states that it only reads"
+
+echo
 echo "== the closed design loop =="
 
 # hw-iterate is the ledger a review's evolution chart is drawn from, so the

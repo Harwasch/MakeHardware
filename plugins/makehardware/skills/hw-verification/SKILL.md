@@ -103,7 +103,7 @@ in the `.kicad_pcb`.** They live in the sibling `.kicad_pro` under
 `net_settings.classes`. A check that looks in the board file finds none and
 reports the board clean.
 
-And know which half of the toolchain you are in: **Konnect's schematic tools
+And know which half of the toolchain you are in: **the schematic tools
 are file-based; its PCB tools need a live KiCad.** When `check_kicad_ui`
 reports `ipc_responsive: false`, scripted layout goes through KiCad's own
 `pcbnew` Python API — the same object model, so still not text manipulation.

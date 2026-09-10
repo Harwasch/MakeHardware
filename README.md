@@ -94,7 +94,7 @@ are all deliverables in name only.
 | **Commands** | `/hw-new-project`, `/hw-status`, `/hw-review`, `/hw-retro` |
 | **Gates** | `sch-lint`, `pcb-lint`, `cad-export --check`, `req-trace --gate`, `block-diagram --check`, `plan-render --check`, `review-gate check`, `hw-iterate status --gate` |
 | **Tools on PATH** | `hw-doctor`, `hw-repair`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `review-gate`, `review-artifact`, `sch-lint`, `pcb-lint`, `cad-export`, `hw-chart`, `hw-iterate`, `imagegen` |
-| **MCP servers** | `konnect` (KiCad), `spice` (ngspice/LTspice), `build123d` |
+| **MCP servers** | `spice` (ngspice/LTspice), `build123d` |
 | **Templates** | An A3 KiCad drawing sheet and the house grid, text sizes and net classes |
 | **Practices** | House standards for schematic and board drawing, sourcing, connectors, passives and charts — edited over time to steer the agent |
 
@@ -106,7 +106,7 @@ are all deliverables in name only.
 | Requirements | StrictDoc, with a hardware grammar and a traceability gate, plus a draw.io/SVG requirements map |
 | Architecture | `block-diagram` — one YAML spec renders an editable draw.io file, a review SVG, and a power budget with a gate |
 | Planning | `plan-render` — a dependency Gantt, an editable draw.io graph, and a scope document, with `done` checked against the filesystem |
-| Schematic / PCB | KiCad 10 + Konnect (214 MCP tools), `kicad-cli` |
+| Schematic / PCB | KiCad 10 + [ki-stack](https://github.com/Milind220/ki-stack) skills over `kicad-python`, `kicad-cli` and `kiutils-rs` |
 | Circuit simulation | ngspice via `ltspice-mcp`; LTspice opt-in |
 | 3D CAD | build123d + `build123d-mcp` |
 | Meshing / FEA | gmsh + CalculiX |
@@ -145,7 +145,7 @@ plugins/makehardware/
 │                                 block-diagram, vision-board, review-gate,
 │                                 review-artifact, hw-chart, hw-iterate, imagegen
 ├── scripts/                      their implementations
-└── .mcp.json                     konnect, spice, build123d
+└── .mcp.json                     spice, build123d
 templates/github-repo/            contents of the GitHub template repository
 examples/thermal-probe/           a worked project, part-way through — see below
 env/                              cloud environment configuration
