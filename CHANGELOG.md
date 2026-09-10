@@ -7,6 +7,27 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.6.0
+
+### Removed
+
+* **The Onshape FeatureScript MCP server**, added one release ago in 0.5.0.
+  The server entry is out of `.mcp.json`, the `onshape` section is out of
+  `hw-cad`, `fs-mcp.labs.onshape.app` is out of the allowlist, and the
+  reachability probe is out of `hw-doctor`. `build123d` was already the
+  default CAD path and is unaffected — nothing else in the toolbox depended on
+  Onshape.
+
+  A minor bump rather than a patch: anyone who installed 0.5.0 and started
+  calling the `onshape` tools loses them, and 0.x treats that as breaking even
+  when the window was hours. Rebuild the environment to drop it; a session on a
+  0.5.0 snapshot keeps the server until then. If you kept
+  `fs-mcp.labs.onshape.app` on a Custom allowlist, it is now dead weight rather
+  than a problem.
+
+  This removes the *plugin's* wiring only. An Onshape connector attached to a
+  claude.ai account is a separate thing and is untouched.
+
 ## 0.5.0
 
 Two tools that had never worked, one that failed for a reason nobody had

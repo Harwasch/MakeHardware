@@ -20,10 +20,6 @@
         "/etc/ltspice-mcp.toml"
       ],
       "env": {}
-    },
-    "onshape": {
-      "type": "http",
-      "url": "https://fs-mcp.labs.onshape.app/mcp"
     }
   }
 }

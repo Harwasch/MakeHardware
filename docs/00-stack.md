@@ -15,7 +15,6 @@ estimated.
 | Circuit simulation | **ngspice 42** via **ltspice-mcp** 0.5.0 | Headless, no Wine, first-class backend in the MCP server. Returns parsed measurements, not plots. |
 | Circuit simulation (opt-in) | **LTspice** under Wine | Only for vendor-encrypted ADI models and `.asc` editing. Off by default. |
 | 3D CAD | **build123d** 0.11.1 + **build123d-mcp** | Parametric Python CAD on OCCT. Models are code, so they diff, review and re-render on a changed number. |
-| Cloud CAD (opt-in) | **Onshape FeatureScript MCP** | For a live CAD document the human opens in a browser tab, and for authoring reusable custom features — the one thing build123d has no equivalent of. Remote HTTP server; Claude Code runs the sign-in on first use, against the human's own account and API allocation. |
 | Meshing / FEA | **gmsh** 4.12.1 + **CalculiX** 2.21 | Both in the Ubuntu archive, both headless. Thermal and structural. |
 | Magnetics | **FastHenry** 3.0.1 + **Elmer** 26.2 (`elmerfem-csc`, elmer-csc PPA) + **GetDP** 3.2.0 | SPICE cannot tell you an inductance. FastHenry is PEEC — no air mesh, seconds for L, M, k and R_ac of air-core conductors; Elmer does the cases with ferrite in them. See the `hw-magnetics` skill for which answers what. |
 | Design gates | **`sch-lint`**, **`pcb-lint`**, **`cad-export`** | In-tree, read-only, no KiCad and no MCP server needed. They measure the things ERC and DRC have no opinion about: whether a human can read the drawing, whether the net classes are physically routable, whether the CAD file is an assembly or a lump. |

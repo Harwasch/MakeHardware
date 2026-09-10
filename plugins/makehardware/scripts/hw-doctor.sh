@@ -144,23 +144,6 @@ chk build123d      "${VENV}/bin/python" -c "import build123d;print('build123d',b
 chkpy build123d-mcp "${VENV}/bin/build123d-mcp" --version
 chk gmsh           gmsh --version
 chkout calculix    "Version [0-9]" ccx -v
-# Onshape is a remote MCP server, so there is no binary to probe — only the
-# endpoint. A 401 is the healthy answer: the host is reachable and the server is
-# asking the human to sign in, which Claude Code prompts for on first use. A
-# connection failure means the host is off this environment's allowlist, which
-# looks identical from inside a session to the plugin not shipping the tools.
-onshape_code=$(timeout "${MH_DOCTOR_TIMEOUT:-45}" curl -sS -o /dev/null -w '%{http_code}' \
-    -X POST https://fs-mcp.labs.onshape.app/mcp \
-    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"hw-doctor","version":"1"}}}' \
-    2>/dev/null)
-case "${onshape_code}" in
-    200) printf '  \033[32mok\033[0m   %-22s reachable and authenticated\n' "onshape"; ok=$((ok+1)) ;;
-    401|403) printf '  \033[32mok\033[0m   %-22s reachable — sign in when a tool is first used\n' \
-                "onshape"; ok=$((ok+1)) ;;
-    *)   printf '  \033[33m--\033[0m   %-22s fs-mcp.labs.onshape.app unreachable (%s) — add it to the allowlist\n' \
-                "onshape" "${onshape_code:-no response}" ;;
-esac
 
 echo
 echo "Magnetics & field simulation:"
