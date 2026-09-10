@@ -491,8 +491,6 @@ def main() -> int:
     os.makedirs(os.path.join(OUT, "schematic"), exist_ok=True)
     os.makedirs(os.path.join(OUT, "mfg"), exist_ok=True)
     files = {
-        "cad/enclosure-exploded.svg": cad_exploded(),
-        "cad/enclosure-section.svg": cad_section(),
         "standby-corners.svg": standby_chart(),
         "thermal-map.svg": thermal_map(),
         "stackup.svg": stackup(),

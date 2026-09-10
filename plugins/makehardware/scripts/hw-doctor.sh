@@ -19,7 +19,7 @@ _firstline() { printf '%s' "${1%%$'\n'*}" | cut -c1-58; }
 chkout() {  # chkout <label> <expected-regex> <command...>
     local label=$1 want=$2; shift 2
     local out
-    out=$("$@" 2>&1)
+    out=$(probe "$@")
     if [[ ${out} =~ ${want} ]]; then
         printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" \
             "$(grep -m1 -E "${want}" <<<"${out}" | cut -c1-58)"
@@ -30,10 +30,33 @@ chkout() {  # chkout <label> <expected-regex> <command...>
     fi
 }
 
+# Every probe runs with stdin closed and under a timeout. Both matter:
+# `fasthenry` with no arguments reads a deck from stdin and waits forever, so
+# `hw-doctor` — the command the workflow tells you to run *first*, and which an
+# agent runs non-interactively — hung indefinitely with no output at all. A
+# diagnostic that hangs is worse than one that reports a failure, because there
+# is nothing to read and nothing to act on.
+# `timeout` reports its own "failed to run command" for anything absent, which
+# buries the one fact that matters — the tool is not installed — under the name
+# of the wrapper. Say it plainly instead.
+probe() {
+    if [[ $1 != /* ]] && ! command -v "$1" >/dev/null 2>&1; then
+        echo "not installed"
+        return 127
+    fi
+    # 45 s, not 20. build123d's first import pulls in OCCT and takes ~25 s on a
+    # cold page cache, which the old ceiling cut off — reporting FAIL with an
+    # empty message for a perfectly good install, on the one command whose job
+    # is to tell an agent whether the toolchain works. Every probe here has
+    # stdin closed, so a generous ceiling costs nothing but a slow report on a
+    # tool that is genuinely hung.
+    timeout "${MH_DOCTOR_TIMEOUT:-45}" "$@" </dev/null 2>&1
+}
+
 chk() {  # chk <label> <command...>
     local label=$1; shift
     local out
-    if out=$("$@" 2>&1); then
+    if out=$(probe "$@"); then
         printf '  \033[32mok\033[0m   %-22s %s\n' "${label}" "$(_firstline "${out}")"
         ok=$((ok+1))
     else
@@ -121,6 +144,23 @@ chk build123d      "${VENV}/bin/python" -c "import build123d;print('build123d',b
 chkpy build123d-mcp "${VENV}/bin/build123d-mcp" --version
 chk gmsh           gmsh --version
 chkout calculix    "Version [0-9]" ccx -v
+# Onshape is a remote MCP server, so there is no binary to probe — only the
+# endpoint. A 401 is the healthy answer: the host is reachable and the server is
+# asking the human to sign in, which Claude Code prompts for on first use. A
+# connection failure means the host is off this environment's allowlist, which
+# looks identical from inside a session to the plugin not shipping the tools.
+onshape_code=$(timeout "${MH_DOCTOR_TIMEOUT:-45}" curl -sS -o /dev/null -w '%{http_code}' \
+    -X POST https://fs-mcp.labs.onshape.app/mcp \
+    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"hw-doctor","version":"1"}}}' \
+    2>/dev/null)
+case "${onshape_code}" in
+    200) printf '  \033[32mok\033[0m   %-22s reachable and authenticated\n' "onshape"; ok=$((ok+1)) ;;
+    401|403) printf '  \033[32mok\033[0m   %-22s reachable — sign in when a tool is first used\n' \
+                "onshape"; ok=$((ok+1)) ;;
+    *)   printf '  \033[33m--\033[0m   %-22s fs-mcp.labs.onshape.app unreachable (%s) — add it to the allowlist\n' \
+                "onshape" "${onshape_code:-no response}" ;;
+esac
 
 echo
 echo "Magnetics & field simulation:"
@@ -130,6 +170,11 @@ echo "Magnetics & field simulation:"
 # "Unexpected end of file" and still prints its version.
 chkout elmer       "v [0-9]+\.[0-9]" ElmerSolver --version
 chkout elmergrid   "Version: [0-9]" ElmerGrid
+# A missing Elmer is repairable in about ninety seconds without rebuilding the
+# environment, and an agent that reads "not installed" and gives up on the
+# magnetics work is the outcome this line exists to prevent. Say the command.
+command -v ElmerSolver >/dev/null 2>&1 || \
+    printf '       %-22s repairable now: \033[1mhw-repair elmer\033[0m (~70 s, this container only)\n' ""
 chkout fasthenry   "FastHenry [0-9]" fasthenry
 chk getdp          getdp --version
 if [ -d /opt/elmer-elmag ]; then
@@ -156,6 +201,24 @@ chk review-gate    "${VENV}/bin/python" \
     "$(dirname "$(readlink -f "$0")")/review_gate.py" --help
 chk review-artifact "${VENV}/bin/python" \
     "$(dirname "$(readlink -f "$0")")/review_artifact.py" --help
+
+echo
+echo "Design gates and figures:"
+# These are read-only and need no KiCad, no MCP server and nothing outside the
+# standard library plus pyyaml — so a failure here is a broken checkout rather
+# than a missing tool, and worth saying so.
+D="$(dirname "$(readlink -f "$0")")"
+chk sch-lint       "${VENV}/bin/python" "${D}/sch_lint.py" --help
+chk pcb-lint       "${VENV}/bin/python" "${D}/pcb_lint.py" --help
+chk hw-chart       "${VENV}/bin/python" "${D}/charts.py" budget --schema
+chk cad-export     "${VENV}/bin/python" "${D}/cad_export.py" --help
+chk hw-iterate     "${VENV}/bin/python" "${D}/iterate.py" --help
+if command -v freecadcmd >/dev/null 2>&1 || command -v FreeCADCmd >/dev/null 2>&1; then
+    printf '  \033[32mok\033[0m   %-22s .FCStd written here\n' "freecad"; ok=$((ok+1))
+else
+    printf '  \033[33m--\033[0m   %-22s absent — cad-export writes the macro for you to run\n' \
+        "freecad"
+fi
 
 echo
 echo "Display (needed only for live KiCad):"

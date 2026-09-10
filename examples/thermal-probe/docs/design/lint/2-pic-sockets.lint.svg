@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="381.0mm" height="210mm" viewBox="0 0 381.0 210">
+<style>
+  .bg   { fill:#faf9f6 }
+  .wire { stroke:#7a8899; stroke-width:.18; fill:none }
+  .body { stroke:#9aa7b5; stroke-width:.18; fill:none }
+  .lbl  { fill:#7a8899; font:1.6px sans-serif }
+  .ref  { fill:#556; font:1.6px sans-serif }
+  .cap  { fill:#333; font:2.2px sans-serif }
+  .note { fill:#444; font:2.4px sans-serif }
+  @media (prefers-color-scheme: dark) {
+    .bg{fill:#14171a} .wire{stroke:#4d5b6b} .body{stroke:#5c6b7a}
+    .lbl,.ref{fill:#8494a5} .cap,.note{fill:#c8d2dc}
+  }
+</style>
+<rect class="bg" x="0" y="0" width="381.0" height="210"/>
+<rect x="0" y="0" width="297" height="210" fill="none" stroke="#c7c2b6" stroke-width=".3"/>
+<line class="wire" x1="259.08" y1="157.48" x2="259.08" y2="119.38"/>
+<line class="wire" x1="83.82" y1="175.26" x2="83.82" y2="176.53"/>
+<line class="wire" x1="180.34" y1="160.02" x2="55.88" y2="160.02"/>
+<line class="wire" x1="111.76" y1="38.10" x2="134.62" y2="38.10"/>
+<line class="wire" x1="137.16" y1="50.80" x2="137.16" y2="78.74"/>
+<line class="wire" x1="182.88" y1="157.48" x2="259.08" y2="157.48"/>
+<line class="wire" x1="256.54" y1="35.56" x2="256.54" y2="50.80"/>
+<line class="wire" x1="69.85" y1="116.84" x2="69.85" y2="118.11"/>
+<line class="wire" x1="53.34" y1="60.96" x2="53.34" y2="157.48"/>
+<line class="wire" x1="134.62" y1="38.10" x2="134.62" y2="53.34"/>
+<line class="wire" x1="180.34" y1="48.26" x2="203.20" y2="48.26"/>
+<line class="wire" x1="134.62" y1="120.65" x2="114.30" y2="120.65"/>
+<line class="wire" x1="71.12" y1="33.02" x2="71.12" y2="34.29"/>
+<line class="wire" x1="48.26" y1="157.48" x2="53.34" y2="157.48"/>
+<line class="wire" x1="180.34" y1="48.26" x2="180.34" y2="99.06"/>
+<line class="wire" x1="256.54" y1="50.80" x2="256.54" y2="101.60"/>
+<line class="wire" x1="55.88" y1="113.03" x2="55.88" y2="160.02"/>
+<line class="wire" x1="137.16" y1="124.46" x2="114.30" y2="124.46"/>
+<line class="wire" x1="134.62" y1="68.58" x2="113.03" y2="68.58"/>
+<line class="wire" x1="74.93" y1="116.84" x2="69.85" y2="116.84"/>
+<line class="wire" x1="254.00" y1="38.10" x2="254.00" y2="48.26"/>
+<line class="wire" x1="48.26" y1="50.80" x2="137.16" y2="50.80"/>
+<line class="wire" x1="60.96" y1="157.48" x2="60.96" y2="165.10"/>
+<line class="wire" x1="111.76" y1="35.56" x2="137.16" y2="35.56"/>
+<line class="wire" x1="182.88" y1="124.46" x2="182.88" y2="157.48"/>
+<line class="wire" x1="139.70" y1="157.48" x2="182.88" y2="157.48"/>
+<line class="wire" x1="203.20" y1="124.46" x2="182.88" y2="124.46"/>
+<line class="wire" x1="71.12" y1="30.48" x2="76.20" y2="30.48"/>
+<line class="wire" x1="55.88" y1="86.36" x2="55.88" y2="113.03"/>
+<line class="wire" x1="139.70" y1="157.48" x2="139.70" y2="116.84"/>
+<line class="wire" x1="139.70" y1="116.84" x2="114.30" y2="116.84"/>
+<line class="wire" x1="48.26" y1="53.34" x2="134.62" y2="53.34"/>
+<line class="wire" x1="60.96" y1="165.10" x2="60.96" y2="167.64"/>
+<line class="wire" x1="60.96" y1="157.48" x2="139.70" y2="157.48"/>
+<line class="wire" x1="55.88" y1="160.02" x2="48.26" y2="160.02"/>
+<line class="wire" x1="76.20" y1="33.02" x2="71.12" y2="33.02"/>
+<line class="wire" x1="180.34" y1="99.06" x2="180.34" y2="160.02"/>
+<line class="wire" x1="254.00" y1="99.06" x2="233.68" y2="99.06"/>
+<line class="wire" x1="233.68" y1="50.80" x2="256.54" y2="50.80"/>
+<line class="wire" x1="76.20" y1="86.36" x2="55.88" y2="86.36"/>
+<line class="wire" x1="137.16" y1="35.56" x2="137.16" y2="50.80"/>
+<line class="wire" x1="180.34" y1="99.06" x2="203.20" y2="99.06"/>
+<line class="wire" x1="55.88" y1="113.03" x2="74.93" y2="113.03"/>
+<line class="wire" x1="137.16" y1="78.74" x2="137.16" y2="124.46"/>
+<line class="wire" x1="83.82" y1="165.10" x2="60.96" y2="165.10"/>
+<line class="wire" x1="254.00" y1="48.26" x2="254.00" y2="99.06"/>
+<line class="wire" x1="139.70" y1="116.84" x2="139.70" y2="20.32"/>
+<line class="wire" x1="134.62" y1="53.34" x2="134.62" y2="68.58"/>
+<line class="wire" x1="139.70" y1="20.32" x2="93.98" y2="20.32"/>
+<line class="wire" x1="93.98" y1="46.99" x2="93.98" y2="45.72"/>
+<line class="wire" x1="60.96" y1="175.26" x2="60.96" y2="176.53"/>
+<line class="wire" x1="259.08" y1="119.38" x2="259.08" y2="68.58"/>
+<line class="wire" x1="53.34" y1="60.96" x2="76.20" y2="60.96"/>
+<line class="wire" x1="256.54" y1="101.60" x2="233.68" y2="101.60"/>
+<line class="wire" x1="71.12" y1="27.94" x2="71.12" y2="30.48"/>
+<line class="wire" x1="71.12" y1="27.94" x2="76.20" y2="27.94"/>
+<line class="wire" x1="71.12" y1="30.48" x2="71.12" y2="33.02"/>
+<line class="wire" x1="83.82" y1="167.64" x2="83.82" y2="165.10"/>
+<line class="wire" x1="259.08" y1="119.38" x2="233.68" y2="119.38"/>
+<line class="wire" x1="134.62" y1="38.10" x2="254.00" y2="38.10"/>
+<line class="wire" x1="134.62" y1="68.58" x2="134.62" y2="120.65"/>
+<line class="wire" x1="137.16" y1="35.56" x2="256.54" y2="35.56"/>
+<line class="wire" x1="53.34" y1="157.48" x2="60.96" y2="157.48"/>
+<line class="wire" x1="137.16" y1="78.74" x2="113.03" y2="78.74"/>
+<line class="wire" x1="233.68" y1="48.26" x2="254.00" y2="48.26"/>
+<line class="wire" x1="259.08" y1="68.58" x2="233.68" y2="68.58"/>
+<rect class="body" x="83.82" y="57.15" width="21.59" height="31.75" rx=".5"/>
+<text class="ref" x="95.25" y="73.06">U6</text>
+<rect class="body" x="82.55" y="99.06" width="24.13" height="35.56" rx=".5"/>
+<text class="ref" x="95.25" y="116.24">U5</text>
+<rect class="body" x="113.03" y="59.69" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="68.58" y="118.11" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="201.93" y="125.73" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="83.82" y="25.40" width="20.32" height="15.24" rx=".5"/>
+<text class="ref" x="93.98" y="32.42">U1</text>
+<rect class="body" x="69.85" y="34.29" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="210.82" y="96.52" width="15.24" height="53.34" rx=".5"/>
+<text class="ref" x="218.44" y="122.59">P3</text>
+<rect class="body" x="233.68" y="120.65" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="58.93" y="170.69" width="4.06" height="1.52" rx=".5"/>
+<text class="ref" x="60.96" y="170.85">C6</text>
+<rect class="body" x="59.69" y="176.53" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="81.79" y="170.69" width="4.06" height="1.52" rx=".5"/>
+<text class="ref" x="83.82" y="170.85">C7</text>
+<rect class="body" x="82.55" y="176.53" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="210.82" y="45.72" width="15.24" height="38.10" rx=".5"/>
+<text class="ref" x="218.44" y="64.17">P2</text>
+<rect class="body" x="201.93" y="64.77" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="233.68" y="69.85" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="201.93" y="115.57" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="92.71" y="46.99" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="83.82" y="163.19" width="3.81" height="3.81" rx=".5"/>
+<text class="lbl" x="237.49" y="47.76">DATA-RB7</text>
+<text class="lbl" x="118.11" y="123.96">CLOCK-RB6</text>
+<text class="lbl" x="237.49" y="101.10">CLOCK-RB6</text>
+<text class="lbl" x="93.98" y="19.82">VCC_PIC</text>
+<text class="lbl" x="240.03" y="118.88">VCC_PIC</text>
+<text class="lbl" x="182.88" y="123.96">VCC_PIC</text>
+<text class="lbl" x="120.65" y="116.34">VCC_PIC</text>
+<text class="lbl" x="69.85" y="164.60">VCC_PIC</text>
+<text class="lbl" x="115.57" y="37.60">DATA-RB7</text>
+<text class="lbl" x="118.11" y="120.15">DATA-RB7</text>
+<text class="lbl" x="58.42" y="112.53">VPP-MCLR</text>
+<text class="lbl" x="59.69" y="85.86">VPP-MCLR</text>
+<text class="lbl" x="186.69" y="98.56">VPP-MCLR</text>
+<text class="lbl" x="186.69" y="47.76">VPP-MCLR</text>
+<text class="lbl" x="62.23" y="60.46">VCC_PIC</text>
+<text class="lbl" x="240.03" y="68.08">VCC_PIC</text>
+<text class="lbl" x="237.49" y="98.56">DATA-RB7</text>
+<text class="lbl" x="116.84" y="78.24">CLOCK-RB6</text>
+<text class="lbl" x="116.84" y="68.08">DATA-RB7</text>
+<text class="lbl" x="237.49" y="50.30">CLOCK-RB6</text>
+<text class="lbl" x="115.57" y="35.06">CLOCK-RB6</text>
+<text class="lbl" x="48.26" y="50.30">CLOCK-RB6</text>
+<text class="lbl" x="48.26" y="52.84">DATA-RB7</text>
+<text class="lbl" x="48.26" y="159.52">VPP-MCLR</text>
+<text class="lbl" x="48.26" y="156.98">VCC_PIC</text>
+<circle cx="113.03" cy="60.96" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="113.03" y="61.76" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">1</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="203.20" cy="127.00" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="203.20" y="127.80" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">2</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="233.68" cy="121.92" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="233.68" y="122.72" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">3</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="203.20" cy="66.04" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="203.20" y="66.84" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">4</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="233.68" cy="71.12" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="233.68" y="71.92" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">5</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="203.20" cy="116.84" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="203.20" y="117.64" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">6</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="60.96" cy="171.45" r="2.4" fill="none" stroke="#d03b3b" stroke-width=".5"/><text x="60.96" y="172.25" text-anchor="middle" fill="#d03b3b" font="2.2px sans-serif" style="font:2.2px sans-serif">7</text><title>ERROR: C6 (100nF) is drawn 64 mm from U5 pin 14, the pin it decouples — draw it beside the pin</title>
+<circle cx="83.82" cy="171.45" r="2.4" fill="none" stroke="#d03b3b" stroke-width=".5"/><text x="83.82" y="172.25" text-anchor="middle" fill="#d03b3b" font="2.2px sans-serif" style="font:2.2px sans-serif">8</text><title>ERROR: C7 (100nF) is drawn 56 mm from U5 pin 14, the pin it decouples — draw it beside the pin</title>
+<text class="note" x="300.0" y="6.0">pic_sockets — 8 finding(s)</text>
+<text x="300.0" y="9.2" fill="#e08a1e" style="font:1.9px sans-serif">! 1. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="11.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="17.2" fill="#e08a1e" style="font:1.9px sans-serif">! 2. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="19.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="25.2" fill="#e08a1e" style="font:1.9px sans-serif">! 3. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="27.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="33.2" fill="#e08a1e" style="font:1.9px sans-serif">! 4. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="35.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="41.2" fill="#e08a1e" style="font:1.9px sans-serif">! 5. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="43.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="49.2" fill="#e08a1e" style="font:1.9px sans-serif">! 6. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="51.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="57.2" fill="#d03b3b" style="font:1.9px sans-serif">✕ 7. C6 (100nF) is drawn 64 mm from U5 pin 14,</text>
+<text x="300.0" y="59.6" fill="#d03b3b" style="font:1.9px sans-serif">the pin it decouples — draw it beside the pin</text>
+<text x="300.0" y="65.2" fill="#d03b3b" style="font:1.9px sans-serif">✕ 8. C7 (100nF) is drawn 56 mm from U5 pin 14,</text>
+<text x="300.0" y="67.6" fill="#d03b3b" style="font:1.9px sans-serif">the pin it decouples — draw it beside the pin</text>
+</svg>

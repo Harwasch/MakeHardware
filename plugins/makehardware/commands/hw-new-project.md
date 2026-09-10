@@ -80,11 +80,26 @@ Then:
    artefacts do not exist yet commented. Turning one on later is uncommenting
    three lines; noticing it was never there at all is much harder.
 
-6. Run `hw-doctor` and `imagegen --list` and report what the
+6. Install the house KiCad settings, so the first schematic is drawn on the
+   right grid inside the right frame rather than being fixed afterwards:
+
+   ```bash
+   cp "${CLAUDE_PLUGIN_ROOT}/templates/kicad/makehardware.kicad_wks" hw/
+   ```
+
+   Then point the project at it — Page Settings → Drawing sheet, or
+   `schematic.page_layout_descr_file` in the `.kicad_pro` — and load
+   `templates/kicad/konnect-house.json` through Konnect's
+   `save_project_config`. Check the sheet actually took: a bad `.kicad_wks`
+   makes `kicad-cli` print one line to stderr, **still exit 0**, and plot with
+   the built-in frame, so a broken template yields a good-looking PDF with the
+   wrong sheet on it. `templates/kicad/README.md` has the one-line check.
+
+7. Run `hw-doctor` and `imagegen --list` and report what the
    environment can actually do, so the human knows up front if KiCad or a
    simulator is missing.
 
-7. Confirm the repository has a **remote on github.com** — `git remote -v`.
+8. Confirm the repository has a **remote on github.com** — `git remote -v`.
    The whole review mechanism links the human at
    `https://github.com/<owner>/<repo>/blob/<branch>/...`, and without a remote
    `review-gate` can only print paths. If there is no remote, say so now

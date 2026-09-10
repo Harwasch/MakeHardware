@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="495" viewBox="0 0 760 495" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img">
+<style>.s{fill:#fcfcfb} .ink{fill:#0b0b0b} .ink2{fill:#52514e} .ax{stroke:#c3c2b7} .axf{fill:#c3c2b7} .card{fill:#ffffff}@media (prefers-color-scheme:dark){.s{fill:#1a1a19} .ink{fill:#ffffff} .ink2{fill:#c3c2b7} .ax{stroke:#383835} .axf{fill:#383835} .card{fill:#242422}}</style>
+<rect class="s" width="760" height="495"/>
+<text class="ink" x="16" y="26" font-size="16" font-weight="600">Design loop — standby</text>
+<text class="ink2" x="16" y="45" font-size="12">worst in-spec standby corner under 25 uA, without making wake-up slower than the 10 ms the logging interval…</text>
+<text class="ink2" x="16" y="62" font-size="12">5 iterations  ·  accepted #3: i_standby_ua 6.4 uA,  target met  ·  converged  ·  best was #5 (4.8 uA)</text>
+<line class="ax" x1="71" y1="247" x2="664" y2="247" stroke-width="1"/>
+<line class="ax" x1="71" y1="79" x2="71" y2="247" stroke-width="1"/>
+<text class="axf" x="65" y="232.1" text-anchor="end" font-size="10">4.8 uA</text>
+<text class="axf" x="65" y="100.9" text-anchor="end" font-size="10">31.8 uA</text>
+<text class="axf" x="71" y="73" font-size="10.5">i_standby_ua (uA)</text>
+<line x1="71" y1="130.4" x2="664" y2="130.4" stroke="#d03b3b" stroke-width="1" stroke-dasharray="4 3" opacity=".75"/>
+<text x="668" y="126.4" font-size="10" fill="#d03b3b">max 25 uA</text>
+<polyline points="71.0,97.4 219.2,223.3 367.5,220.8 515.8,227.2 664.0,228.6" fill="none" stroke="#4b7fae" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="71.0" cy="97.4" r="3" fill="#4b7fae"><title>iteration 1: 31.8 uA — reference always on — the +40 C corner as built</title></circle>
+<circle cx="219.2" cy="223.3" r="3" fill="#4b7fae"><title>iteration 2: 5.9 uA — duty-cycle the reference: current solved, wake-up now over budget</title></circle>
+<circle cx="367.5" cy="220.8" r="3" fill="#4b7fae"><title>iteration 3: 6.4 uA — smaller reference bypass — settles in time, costs 0.5 uA</title></circle>
+<circle cx="515.8" cy="227.2" r="3" fill="#4b7fae"><title>iteration 4: 5.1 uA — gating the LDO too: lowest current of the five, and four times over the wake budget</title></circle>
+<circle cx="664.0" cy="228.6" r="3" fill="#4b7fae"><title>iteration 5: 4.8 uA — lower-Iq comparator on the same topology as #3</title></circle>
+<text x="670.0" y="232.6" font-size="11" font-weight="600" fill="#4b7fae">4.8 uA</text>
+<path d="M67.6,94.0L74.4,100.8M74.4,94.0L67.6,100.8" stroke="#d03b3b" stroke-width="1.6"/>
+<circle cx="219.2" cy="223.3" r="4.5" fill="none" stroke="#e08a1e" stroke-width="1.4"/>
+<path d="M512.4,223.8L519.1,230.6M519.1,223.8L512.4,230.6" stroke="#d03b3b" stroke-width="1.6"/>
+<circle cx="367.5" cy="220.8" r="6.5" fill="none" stroke="#2e8b57" stroke-width="2"/>
+<text x="376.5" y="210.8" text-anchor="start" font-size="11" font-weight="600" fill="#2e8b57">#3 accepted</text>
+<line class="ax" x1="71" y1="365" x2="664" y2="365" stroke-width="1"/>
+<line class="ax" x1="71" y1="291" x2="71" y2="365" stroke-width="1"/>
+<text class="axf" x="65" y="360.4" text-anchor="end" font-size="10">0.4 ms</text>
+<text class="axf" x="65" y="302.6" text-anchor="end" font-size="10">41 ms</text>
+<text class="axf" x="71" y="285" font-size="10.5">wake_ms (ms)</text>
+<line x1="71" y1="343.2" x2="664" y2="343.2" stroke="#d03b3b" stroke-width="1" stroke-dasharray="4 3" opacity=".75"/>
+<text x="668" y="339.2" font-size="10" fill="#d03b3b">max 10 ms</text>
+<polyline points="71.0,356.9 219.2,340.2 367.5,351.5 515.8,299.1 664.0,351.2" fill="none" stroke="#c06a2e" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="71.0" cy="356.9" r="3" fill="#c06a2e"><title>iteration 1: 0.4 ms — reference always on — the +40 C corner as built</title></circle>
+<circle cx="219.2" cy="340.2" r="3" fill="#c06a2e"><title>iteration 2: 12.1 ms — duty-cycle the reference: current solved, wake-up now over budget</title></circle>
+<circle cx="367.5" cy="351.5" r="3" fill="#c06a2e"><title>iteration 3: 4.2 ms — smaller reference bypass — settles in time, costs 0.5 uA</title></circle>
+<circle cx="515.8" cy="299.1" r="3" fill="#c06a2e"><title>iteration 4: 41 ms — gating the LDO too: lowest current of the five, and four times over the wake budget</title></circle>
+<circle cx="664.0" cy="351.2" r="3" fill="#c06a2e"><title>iteration 5: 4.4 ms — lower-Iq comparator on the same topology as #3</title></circle>
+<text x="670.0" y="355.2" font-size="11" font-weight="600" fill="#c06a2e">4.4 ms</text>
+<text class="axf" x="71" y="387" font-size="10.5">changed</text>
+<text class="ink2" x="65" y="401" text-anchor="end" font-size="10.5">ref_duty</text>
+<circle cx="71.0" cy="397.0" r="3" fill="#52514e" opacity="1"><title>iteration 1: ref_duty = 1</title></circle>
+<circle cx="219.2" cy="397.0" r="3" fill="#52514e" opacity="1"><title>iteration 2: ref_duty = 0.017</title></circle>
+<circle cx="367.5" cy="397.0" r="1.6" fill="#52514e" opacity="0.35"><title>iteration 3: ref_duty = 0.017</title></circle>
+<circle cx="515.8" cy="397.0" r="1.6" fill="#52514e" opacity="0.35"><title>iteration 4: ref_duty = 0.017</title></circle>
+<circle cx="664.0" cy="397.0" r="1.6" fill="#52514e" opacity="0.35"><title>iteration 5: ref_duty = 0.017</title></circle>
+<text class="ink2" x="672" y="401" font-size="10.5">1 → 0.017</text>
+<text class="ink2" x="65" y="419" text-anchor="end" font-size="10.5">c_ref_nf</text>
+<circle cx="71.0" cy="415.0" r="3" fill="#52514e" opacity="1"><title>iteration 1: c_ref_nf = 100</title></circle>
+<circle cx="219.2" cy="415.0" r="1.6" fill="#52514e" opacity="0.35"><title>iteration 2: c_ref_nf = 100</title></circle>
+<circle cx="367.5" cy="415.0" r="3" fill="#52514e" opacity="1"><title>iteration 3: c_ref_nf = 10</title></circle>
+<circle cx="515.8" cy="415.0" r="1.6" fill="#52514e" opacity="0.35"><title>iteration 4: c_ref_nf = 10</title></circle>
+<circle cx="664.0" cy="415.0" r="1.6" fill="#52514e" opacity="0.35"><title>iteration 5: c_ref_nf = 10</title></circle>
+<text class="ink2" x="672" y="419" font-size="10.5">100 → 10</text>
+<text class="ink2" x="65" y="437" text-anchor="end" font-size="10.5">ldo_gated</text>
+<circle cx="515.8" cy="433.0" r="3" fill="#52514e" opacity="1"><title>iteration 4: ldo_gated = 1</title></circle>
+<text class="ink2" x="672" y="437" font-size="10.5">1</text>
+<text class="ink2" x="65" y="455" text-anchor="end" font-size="10.5">comparator</text>
+<circle cx="664.0" cy="451.0" r="3" fill="#52514e" opacity="1"><title>iteration 5: comparator = TS881</title></circle>
+<text class="ink2" x="672" y="455" font-size="10.5">TS881</text>
+<text class="axf" x="71.0" y="483" text-anchor="middle" font-size="10">1</text>
+<text class="axf" x="219.2" y="483" text-anchor="middle" font-size="10">2</text>
+<text class="axf" x="367.5" y="483" text-anchor="middle" font-size="10">3</text>
+<text class="axf" x="515.8" y="483" text-anchor="middle" font-size="10">4</text>
+<text class="axf" x="664.0" y="483" text-anchor="middle" font-size="10">5</text>
+<text class="axf" x="674" y="483" font-size="10.5">iteration</text>
+</svg>

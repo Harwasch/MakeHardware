@@ -200,3 +200,19 @@ check` will say so. That is the mechanism doing its job: the human agreed to a
 different diagram, and everything downstream is now resting on that agreement.
 Re-open the review, say what changed and why, and ask again. It is a short
 conversation.
+
+## Put the budget in front of the human as a picture
+
+`block-diagram --summary` prints the power budget as text, which is right for a
+terminal and wrong for a review. A rail at 95% of its limit is the single most
+useful thing in an architecture review and it is invisible in the diagram:
+
+```bash
+block-diagram --summary --csv build/rails.csv
+hw-chart budget build/rails.csv --out docs/design/power-budget.svg \
+    --title "Rail current against budget"
+```
+
+Bars inside their own budget outline, amber past 85%, red past 100% with the
+overage named. Commit it beside `block-diagram.svg` and put both in the review.
+See `hw-visuals`.

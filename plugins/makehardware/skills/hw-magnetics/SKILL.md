@@ -9,7 +9,11 @@ SPICE cannot tell you an inductance. These tools can, and each answers a
 different question — picking the wrong one is the main way this goes wrong.
 
 Run `hw-doctor` if a tool is missing; the environment build reports what it
-managed to install.
+managed to install. **A missing tool is not the end of the task.** If Elmer is
+absent, `hw-repair elmer` installs it into this container in about ninety
+seconds — do that and carry on, rather than reporting a degraded toolchain and
+stopping. Only escalate if the repair itself fails, and then say which host it
+could not reach.
 
 ## Which tool
 
@@ -97,9 +101,11 @@ Do **not** author a `.sif` from scratch. Copy a working one:
 `CoilWithFerriteCoreAndShield`; the Elmer source tree carries ~1000
 regression tests, 72 of them magnetodynamics.
 
-* **`LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/elmersolver`** must be set
-  in every shell. The environment build puts it in `/root/.bashrc`; a
-  subprocess with a scrubbed environment needs it passed explicitly.
+* **No `LD_LIBRARY_PATH` is needed.** Elmer is the packaged `elmerfem-csc`
+  build and finds its own solver modules under `/usr/share/elmersolver/lib`,
+  including from a subprocess with a scrubbed environment. Older notes told you
+  to export `/usr/local/lib/elmersolver`; that path belonged to a source build
+  that is no longer how this is installed, and setting it does nothing.
 * **`Max Output Level` below 5 suppresses the result line.** The solve still
   succeeds. `ElectroMagnetic Field Energy:` is how inductance is read out, and
   below level 5 it is simply not printed.
@@ -170,3 +176,11 @@ A field result becomes evidence the same way a SPICE result does: it names the
 tool and version, the geometry it came from, the convergence settings it was
 taken at, and the cross-check that agreed with it. A solver number with none
 of those is a guess with more decimal places.
+
+## Sweeping is a loop, so record it
+
+A parameter sweep looking for a target inductance or an acceptable loss is
+a closed loop. Run it under `hw-optimize`: `hw-iterate record` each solve
+with the `.sif` or the FastHenry deck as its `--evidence`, and chart the
+trajectory for the review. It is also the only thing that stops the next
+session re-meshing geometry this one already ruled out.

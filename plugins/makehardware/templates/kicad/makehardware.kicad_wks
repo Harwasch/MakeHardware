@@ -1,0 +1,52 @@
+(page_layout
+  (setup (textsize 1.5 1.5) (linewidth 0.15) (textlinewidth 0.15)
+    (left_margin 10) (right_margin 10) (top_margin 10) (bottom_margin 10))
+
+  (rect (name frame:Rect) (start 0 0 ltcorner) (end 0 0) (linewidth 0.5))
+
+  (line (name tb_top:Line)  (start 130 32 rbcorner) (end 0 32 rbcorner) (linewidth 0.35))
+  (line (name tb_left:Line) (start 130 32 rbcorner) (end 130 0 rbcorner) (linewidth 0.35))
+  (line (name tb_r1:Line)   (start 130 25 rbcorner) (end 0 25 rbcorner) (linewidth 0.15))
+  (line (name tb_r2:Line)   (start 130 14 rbcorner) (end 0 14 rbcorner) (linewidth 0.15))
+  (line (name tb_c1:Line)   (start 60 14 rbcorner)  (end 60 0 rbcorner) (linewidth 0.15))
+  (line (name tb_c2:Line)   (start 38 14 rbcorner)  (end 38 0 rbcorner) (linewidth 0.15))
+  (line (name tb_c3:Line)   (start 20 14 rbcorner)  (end 20 0 rbcorner) (linewidth 0.15))
+
+  (tbtext "${COMPANY}" (name co:Text) (pos 127 28 rbcorner)
+    (font bold (size 2.0 2.0) (linewidth 0.3)) (justify left) (maxlen 120))
+
+  (tbtext "${TITLE}" (name title:Text) (pos 127 19 rbcorner)
+    (font bold (size 2.8 2.8) (linewidth 0.4)) (justify left) (maxlen 124) (maxheight 8))
+
+  (tbtext "${SHEETNAME}" (name sname:Text) (pos 127 10 rbcorner)
+    (font (size 1.8 1.8)) (justify left) (maxlen 66))
+  (tbtext "${SHEETPATH}" (name spath:Text) (pos 127 5.5 rbcorner)
+    (font (size 1.3 1.3)) (justify left) (maxlen 66))
+  (tbtext "${FILENAME}" (name fname:Text) (pos 127 1.8 rbcorner)
+    (font italic (size 1.2 1.2)) (justify left) (maxlen 66))
+
+  (tbtext "DATE" (name datel:Text) (pos 58 10.5 rbcorner)
+    (font (size 1.3 1.3)) (justify left))
+  (tbtext "${ISSUE_DATE}" (name date:Text) (pos 58 3.5 rbcorner)
+    (font (size 1.6 1.6)) (justify left) (maxlen 20))
+
+  (tbtext "REV" (name revl:Text) (pos 36 10.5 rbcorner)
+    (font (size 1.3 1.3)) (justify left))
+  (tbtext "${REVISION}" (name rev:Text) (pos 36 3.5 rbcorner)
+    (font bold (size 2.6 2.6) (linewidth 0.35)) (justify left) (maxlen 18))
+
+  (tbtext "SHEET" (name pgl:Text) (pos 18 10.5 rbcorner)
+    (font (size 1.3 1.3)) (justify left))
+  (tbtext "${#} / ${##}" (name pg:Text) (pos 18 3.5 rbcorner)
+    (font bold (size 2.2 2.2) (linewidth 0.3)) (justify left) (maxlen 18))
+
+  (tbtext "Generated - edit the source, not the sheet. MakeHardware."
+    (name gen:Text) (pos 2 2 lbcorner) (font italic (size 1.2 1.2)) (justify left))
+
+  (line (name zt:Line) (start 0 5 ltcorner) (end 0 5 rtcorner) (linewidth 0.15))
+  (tbtext A (name zA:Text) (pos 30 2.5 ltcorner) (font (size 2 2)) (justify center)
+    (repeat 4) (incrx 60) (incrlabel 1))
+  (line (name zl:Line) (start 5 0 ltcorner) (end 5 0 lbcorner) (linewidth 0.15))
+  (tbtext 1 (name z1:Text) (pos 2.5 30 ltcorner) (font (size 2 2)) (justify center)
+    (repeat 3) (incry 60) (incrlabel 1))
+)

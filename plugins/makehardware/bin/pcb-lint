@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# MakeHardware wrapper — runs pcb_lint.py on the hardware toolchain's Python.
+exec "${HARDWARE_PYTHON:-/opt/hw-py/bin/python}" \
+  "$(dirname "$(dirname "$(readlink -f "$0")")")/scripts/pcb_lint.py" "$@"

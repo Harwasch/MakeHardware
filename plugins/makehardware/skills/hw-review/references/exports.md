@@ -20,6 +20,7 @@ Two different consumers, two different limits, and the second one bites:
   |---|---|---|
   | raster, as a data URI | 220 kB | `pcb render --width 3000`, `dpi=300` |
   | one SVG | 1.5 MB / 30,000 elements | any dense plotted schematic |
+  | one `.glb` model | 2.5 MB | exporting at manufacturing tolerance |
   | the page, in total | 9 MB inlined | a tab with six sheets on it |
 
   Anything over is reported on the page instead of shown, which is honest but
@@ -73,6 +74,21 @@ artefact that could not be embedded, which is much cheaper than finding out
 from the human.
 
 ---
+
+## The lint overlays — the cheapest useful picture there is
+
+```bash
+sch-lint hw/probe.kicad_sch --svg docs/design/lint
+pcb-lint hw/probe.kicad_pcb --svg docs/design/lint/board.lint.svg
+```
+
+Each writes the artefact drawn at 1:1 with every finding circled, numbered and
+listed underneath. About three hundred elements against the sixty thousand
+KiCad's own plot of the same sheet costs, so they inline on the page *and*
+render on github.com — which the real plot does not.
+
+Put these on the review page next to the plot, not instead of it. The plot is
+what the design is; the overlay is what is wrong with it.
 
 ## KiCad schematic
 
@@ -137,34 +153,33 @@ nothing they can act on.
 
 ## Mechanical (build123d)
 
-`vision-board` already does this and it is not only for the vision stage —
-point it at any concept-shaped module:
+One command, and it produces everything a mechanical review needs:
 
 ```bash
-vision-board cad/enclosure.py --out docs/design/enclosure \
-    --doc docs/design/enclosure.md --project "Enclosure, rev C"
+cad-export cad/enclosure.py --out docs/design/cad --name enclosure
 ```
 
-For an assembly, export STEP for anyone who wants it in CAD — and **STL as
-well**, because GitHub renders STL in an interactive 3D viewer in the blob
-view. That is the one case where the human can rotate and zoom the actual
-geometry without installing anything, and it beats any static render:
+| File | Where it is reviewed |
+|---|---|
+| `enclosure-render.png`, `-exploded.png`, `-section.png` | Inline, on the page and on GitHub |
+| `enclosure-iso.svg` | Inline, line art, themes with the page |
+| `enclosure.glb` | **The review page's orbit viewer** — drag to turn it over |
+| `enclosure.stl` | **GitHub's own 3D viewer**, the only 3D format it renders |
+| `enclosure.step` | Anyone who wants it in CAD: tree, names, colours, MATE_* datums |
+| `enclosure-joints.json`, `-freecad.py` | The constraints STEP cannot carry |
 
-```bash
-/opt/hw-py/bin/python -c "
-from build123d import export_step, export_stl
-import cad.enclosure as m
-export_step(m.PART, 'docs/design/enclosure.step')   # for CAD
-export_stl(m.PART, 'docs/design/enclosure.stl')     # for GitHub's 3D viewer"
-```
+Put the `.glb` in the phase's `images:` and the page builds the viewer. Commit
+the `.stl` too and keep it coarse — it is a review mesh, not a manufacturing
+one, and say so in the request.
 
-Keep the STL coarse enough to stay small — it is for looking at, not for
-manufacturing — and say in the review request that it is a review mesh.
+**A cross-section is still the most informative single image of an enclosure.**
+It shows the wall thicknesses, the internal clearances and where the board
+actually sits, and it is the one view an orbit viewer will not give you by
+default. `cad-export` writes one every time.
 
-A cross-section render is still usually the most informative single *image* of
-an enclosure: it shows the wall thicknesses, the internal clearances and where
-the board actually sits, and it is the one view a 3D viewer will not give you
-by default.
+For a vision-stage concept rather than a finished assembly, `vision-board` is
+still the tool — it renders one shape in one material, which is what a concept
+is.
 
 ## Requirements
 
@@ -201,13 +216,30 @@ The rule generalises: **a diagram you generate should have a `.drawio` beside
 it.** A picture someone cannot change is a picture they can only complain
 about.
 
-Put the power budget table in the review summary — a rail at 95% of its limit
-is the single most useful thing in an architecture review and it is invisible
-in the picture.
+Put the power budget in the review as a **chart**, not as a sentence:
+
+```bash
+hw-chart budget hw/rails.csv --out docs/design/power-budget.svg
+```
+
+A rail at 95% of its limit is the single most useful thing in an architecture
+review, it is invisible in the block diagram, and it is the first thing the eye
+lands on in a bar inside its own budget outline.
 
 ## Simulation
 
-Numbers, in a markdown table, in `docs/design/`. A `.raw` file is not a
+```bash
+hw-chart corners docs/design/corners.csv --out docs/design/standby-corners.svg
+hw-chart bode    docs/design/ac.csv      --out docs/design/loop-gain.svg
+```
+
+`hw-chart corners` draws the corners as small multiples on one shared scale,
+with the spec line and the failing corner marked. `hw-chart bode` computes the
+crossover, phase margin and gain margin **from the data** and annotates them —
+a margin typed into a caption is a margin that stopped being true at the next
+simulation.
+
+Keep the numbers in a markdown table beside the chart. A `.raw` file is not a
 result and a plot without the number beside it is decoration.
 
 ```markdown

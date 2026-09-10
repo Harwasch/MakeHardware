@@ -46,19 +46,29 @@ mkdir -p "${PREFIX}" "${LOGDIR}"
 : "${MH_PLUGIN_ID:=makehardware@makehardware}"
 
 # Magnetics and field simulation — Elmer, FastHenry, GetDP. Everything it
-# needs is on archive.ubuntu.com or github.com, so no allowlist change.
+# needs is on archive.ubuntu.com, github.com or ppa.launchpadcontent.net —
+# the last of which the KiCad phase already requires, so enabling magnetics
+# costs no allowlist entry that KiCad has not already spent.
 # Measured: ~3 minutes, and it runs concurrently with kicad and python.
 : "${MH_ENABLE_MAGNETICS:=1}"
-# Elmer is not in the Ubuntu repos and its PPA is off the allowlist, so it is
-# shipped as a prebuilt tarball. ABI-tied to Ubuntu 24.04 and pinned to a
-# commit: if the base image ever changes, rebuild and re-publish it.
-: "${MH_ELMER_URL:=https://github.com/Harwasch/MakeHardware/releases/download/elmer-26.2/elmer-26.2-ubuntu2404.tgz}"
-: "${MH_ELMER_REV:=6522661}"
-# Our own hash of the asset, taken once and verified on every build — same
-# arrangement as the Konnect pin below, and for the same reason: upstream
-# publishes no checksum, and an environment that silently installs a
-# different Elmer is worse than one with no Elmer at all.
-MH_ELMER_SHA256="d3b7699438ad50ee93349a58334a311b2d25e5ba9228c094b41304b2a1b71bd6"
+# Elmer comes from the upstream elmer-csc PPA — the same host as the KiCad
+# PPA above, so it costs no new allowlist entry.
+#
+# It used to be pulled from a prebuilt tarball published as a release asset on
+# this repository. That asset never existed. The URL 404'd on every build in
+# every environment from the day it was written, phase_magnetics degraded every
+# time, and because a DEGRADED phase still exits 0 the environment came up
+# looking healthy with no ElmerSolver in it. Nobody was reading the log the one
+# line naming the 404 was written to. Do not reintroduce a private asset here:
+# the PPA is upstream's own build, it is reproducible from this file alone, and
+# apt tells you loudly when it cannot fetch it.
+: "${MH_ELMER_PPA:=https://ppa.launchpadcontent.net/elmer-csc-ubuntu/elmer-csc-ppa/ubuntu/}"
+: "${MH_ELMER_SUITE:=noble}"
+: "${MH_ELMER_PACKAGE:=elmerfem-csc}"
+# "Launchpad PPA for Elmer CSC ubuntu packaging". Pinned so the archive is
+# authenticated against a key we named rather than whatever the keyserver hands
+# back for a search string.
+MH_ELMER_PPA_FINGERPRINT="1FE4A88ACFEE8388A409F23A89358ABF9FB7E178"
 
 # Escape hatch: build Konnect from source instead of installing the upstream
 # release binary. Costs ~4 minutes and the protobuf/cmake toolchain, so it is
@@ -425,6 +435,31 @@ phase_konnect() {
     # in every session. Our own skills in .claude/skills/ cover the process and
     # defer to these for KiCad mechanics.
     konnect init --client claude >>"${LOGDIR}/konnect.log" 2>&1 || true
+    konnect_fix_agent_namespace
+}
+
+# `konnect init` writes its two subagents with `tools: [mcp__konnect__*]`,
+# which is correct for a standalone install and wrong for ours.
+#
+# Claude Code namespaces a plugin's MCP servers as
+# `mcp__plugin_<plugin>_<server>__<tool>`, so under this plugin every Konnect
+# tool is `mcp__plugin_makehardware_konnect__*`. The glob upstream wrote
+# therefore matches nothing, and both agents launch with an empty tool list.
+# They do not error: they come back having "reviewed" a board they could not
+# open, which is the worst shape a failure can take. This is a large part of
+# what "Konnect keeps failing" has meant in practice.
+#
+# Both patterns are kept, so the files stay correct if Konnect is later
+# registered directly rather than through the plugin.
+konnect_fix_agent_namespace() {
+    local dir=/root/.claude/agents f
+    [ -d "${dir}" ] || return 0
+    for f in "${dir}"/kicad-*.md; do
+        [ -f "${f}" ] || continue
+        grep -q 'mcp__plugin_makehardware_konnect__' "${f}" && continue
+        sed -i 's|^\(\s*\)- mcp__konnect__\*$|\1- mcp__plugin_makehardware_konnect__*\n\1- mcp__konnect__*|' "${f}"
+        echo ":: renamespaced $(basename "${f}")" >>"${LOGDIR}/konnect.log"
+    done
 }
 
 # ==========================================================================
@@ -593,38 +628,66 @@ phase_plugin() {
 # gmsh and calculix-ccx are already installed by phase_base; only the three
 # magnetics-specific tools are added here.
 #
-# Nothing in here is on a domain outside the Trusted allowlist.
+# Elmer needs ppa.launchpadcontent.net, which is also what KiCad 10 needs and
+# is NOT in the default Trusted allowlist — see env/allowed-domains.txt.
+# Everything else here is on the Trusted allowlist already.
 # ==========================================================================
 phase_magnetics() {
     local log="${LOGDIR}/magnetics.log" degraded=0
     : > "${log}"
-    echo ":: elmer ${MH_ELMER_REV} from ${MH_ELMER_URL}" >>"${log}"
+    echo ":: elmer ${MH_ELMER_PACKAGE} from ${MH_ELMER_PPA} (${MH_ELMER_SUITE})" >>"${log}"
 
     _apt install -y -q --no-install-recommends \
         getdp libgfortran5 libopenblas0 gfortran >>"${log}" 2>&1 || return 1
 
-    # --- Elmer, from the prebuilt tarball --------------------------------
-    # Extracting is under a second. Building from source is ~20 min on 1 vCPU,
-    # which does not fit the build budget — keep that as the fallback for a
-    # changed base image, pinned to ${MH_ELMER_REV}, never an unpinned clone
-    # of the default branch.
-    if curl -fsSL --retry 3 "${MH_ELMER_URL}" -o /tmp/elmer.tgz >>"${log}" 2>&1 \
-       && echo "${MH_ELMER_SHA256}  /tmp/elmer.tgz" | sha256sum -c - >>"${log}" 2>&1 \
-       && tar xzf /tmp/elmer.tgz -C / >>"${log}" 2>&1; then
-        ldconfig
-        rm -f /tmp/elmer.tgz
-        # Elmer looks for its solver libraries at run time and finds them
-        # nowhere by default. Without this, a bare ElmerSolver in a fresh
-        # shell dies at load with no useful message.
-        grep -q 'elmersolver' /root/.bashrc 2>/dev/null || cat >> /root/.bashrc <<'EOB'
-export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/elmersolver:$LD_LIBRARY_PATH
-EOB
-        export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/elmersolver:${LD_LIBRARY_PATH:-}
-        ElmerSolver --version >>"${log}" 2>&1 || degraded=1
+    # --- Elmer, from the elmer-csc PPA -----------------------------------
+    # Measured ~70 s including its MPI and MUMPS dependencies. The packaged
+    # build is self-contained: ElmerSolver finds its own solver modules under
+    # /usr/share/elmersolver/lib with no LD_LIBRARY_PATH set, which the tarball
+    # this replaced could not do.
+    mkdir -p /etc/apt/keyrings
+    if curl -fsSL --max-time 60 --retry 3 --retry-delay 2 \
+            "https://keyserver.ubuntu.com/pks/lookup?op=get&options=mr&search=0x${MH_ELMER_PPA_FINGERPRINT}" \
+            2>>"${log}" \
+        | gpg --batch --yes --no-tty --dearmor \
+              -o /etc/apt/keyrings/elmer-ppa.gpg 2>>"${log}"; then
+        cat > /etc/apt/sources.list.d/elmer.sources <<EOF
+Types: deb
+URIs: ${MH_ELMER_PPA}
+Suites: ${MH_ELMER_SUITE}
+Components: main
+Signed-By: /etc/apt/keyrings/elmer-ppa.gpg
+EOF
+        # apt-get update exits 0 even when a repo 403s, so ask apt whether it
+        # can actually see the package rather than trusting the return code.
+        # Captured, then matched: `apt-cache policy | grep -q` would SIGPIPE
+        # the writer and pipefail would report a match as a failure — the same
+        # trap phase_kicad documents at length.
+        local policy
+        _apt update -qq >>"${log}" 2>&1
+        policy="$(apt-cache policy "${MH_ELMER_PACKAGE}" 2>/dev/null)"
+        case "${policy}" in
+            *elmer-csc*)
+                _apt install -y -q --no-install-recommends "${MH_ELMER_PACKAGE}" \
+                    >>"${log}" 2>&1 || degraded=1
+                ;;
+            *)  echo "!! ${MH_ELMER_PACKAGE} not visible to apt; saw:" >>"${log}"
+                echo "${policy}" >>"${log}"
+                echo "!! check that ppa.launchpadcontent.net is reachable — the" \
+                     "KiCad phase needs the same host" >>"${log}"
+                degraded=1
+                ;;
+        esac
     else
-        echo "!! elmer tarball unavailable at ${MH_ELMER_URL}" >>"${log}"
+        echo "!! could not fetch the elmer-csc PPA signing key" >>"${log}"
         degraded=1
     fi
+
+    ldconfig
+    # Prove it before claiming it. A solver that installs and will not start is
+    # the failure this phase existed to have and did not report for months.
+    ElmerSolver --version >>"${log}" 2>&1 || degraded=1
+    ElmerGrid >>"${log}" 2>&1
 
     # --- FastHenry2 ------------------------------------------------------
     # 1990s C against GCC >= 10: without -fcommon it dies on

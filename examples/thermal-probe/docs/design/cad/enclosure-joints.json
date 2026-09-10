@@ -1,0 +1,126 @@
+[
+  {
+    "name": "floor",
+    "part": "shell",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      0.0,
+      1.8
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ]
+  },
+  {
+    "name": "rim",
+    "part": "shell",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      0.0,
+      8.8
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ],
+    "connected_to": {
+      "part": "lid",
+      "joint": "seam"
+    }
+  },
+  {
+    "name": "standoffs",
+    "part": "shell",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      18.0,
+      4.8
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ],
+    "connected_to": {
+      "part": "pcb",
+      "joint": "underside"
+    }
+  },
+  {
+    "name": "cell_bay",
+    "part": "shell",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      -46.0,
+      1.8
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ],
+    "connected_to": {
+      "part": "cell",
+      "joint": "base"
+    }
+  },
+  {
+    "name": "seam",
+    "part": "lid",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ]
+  },
+  {
+    "name": "underside",
+    "part": "pcb",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ]
+  },
+  {
+    "name": "base",
+    "part": "cell",
+    "type": "RigidJoint",
+    "freecad_type": "Fixed",
+    "position_mm": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rotation_deg": [
+      -0.0,
+      0.0,
+      -0.0
+    ]
+  }
+]

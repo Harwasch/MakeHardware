@@ -25,18 +25,29 @@
 
 ppa.launchpadcontent.net
 *.frame.claudeusercontent.com
+fs-mcp.labs.onshape.app
 
 #   ppa.launchpadcontent.net
-#     KiCad 10 packages. Launchpad serves PPA content from this host. The
-#     Trusted preset lists only launchpad.net and the RETIRED ppa.launchpad.net
-#     (which no longer connects at all). Without this line apt-get update only
-#     warns, still exits 0, and apt-get install kicad silently gives you KiCad
-#     7.0.11 from Ubuntu universe — which has no IPC API, so Konnect cannot
-#     drive it.
+#     KiCad 10 packages AND Elmer. Launchpad serves PPA content from this
+#     host, and both the kicad-10.0-releases and elmer-csc PPAs live on it, so
+#     this one line buys the schematic toolchain and the field solver.
+#     For KiCad specifically: the Trusted preset lists only launchpad.net and
+#     the RETIRED ppa.launchpad.net (which no longer connects at all). Without
+#     this line apt-get update only warns, still exits 0, and apt-get install
+#     kicad silently gives you KiCad 7.0.11 from Ubuntu universe — which has no
+#     IPC API, so Konnect cannot drive it.
 #
 #   *.frame.claudeusercontent.com
 #     Lets Claude read back the vision boards and reports it publishes as
 #     Artifacts.
+#
+#   fs-mcp.labs.onshape.app
+#     The Onshape FeatureScript MCP server. Without it the server is
+#     unreachable, the sign-in prompt never appears, and the onshape tools are
+#     simply absent — which reads like the plugin not shipping them rather than
+#     like a blocked host. The sign-in redirect itself happens in the human's
+#     browser, not in the session, so no Onshape domain beyond this one is
+#     needed here.
 #
 # Then add vendors as you hit them. The agent will name the denied host:
 #

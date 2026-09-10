@@ -106,3 +106,31 @@ Commit the deck, record the result, and link them:
 
 Then `scripts/req_trace.py` will stop counting it as a gap. If it still does,
 believe the tool.
+
+## Turning a run into something a human will look at
+
+The numbers go in a markdown table in `docs/design/`, committed. The *shape*
+goes in a chart beside them, generated from the same rows:
+
+```bash
+hw-chart corners docs/design/standby-corners.csv \
+    --out docs/design/standby-corners.svg --title "Standby current"
+hw-chart bode docs/design/loop.csv --out docs/design/loop-gain.svg
+hw-chart trace docs/design/startup.csv --out docs/design/startup.svg \
+    --mark "x=1.2e-3,label=regulator enable"
+```
+
+`corners` is small multiples on one shared scale with the spec line drawn and
+the failing corner marked — which is what makes corner evidence readable at a
+glance, and what makes nominal-only evidence look as thin as it is. `bode`
+computes the crossover and both margins from the data rather than taking them
+from a caption. See `hw-visuals`.
+
+Lead the summary with the corner that fails, never with the average.
+
+## When the first run misses the target
+
+A simulation that does not meet its number is the start of a loop, not a
+result. Open one with `hw-optimize` — `hw-iterate` records each pass and
+`hw-iterate chart` puts the trajectory in the review, which is what lets a
+reviewer tell a converged design from one that ran out of time.
