@@ -1,6 +1,6 @@
 ---
 name: hw-pcb-layout
-description: House practice for laying out a board that works and can be reviewed - placement order, stackup and reference planes, decoupling geometry, return paths, silkscreen an assembler can read - plus pcb-lint, the pre-route gate that measures it. Use before placing footprints, while placing or re-placing them, before routing, before generating fabrication output, and when asked whether a board is ready or why a router will not route it. ki-stack does the placing and routing; this decides where things go and what has to be true before a track is drawn.
+description: House practice for laying out a board that works and can be reviewed - placement order, stackup and reference planes, decoupling geometry, return paths, silkscreen an assembler can read - plus pcb-lint, the pre-route gate that measures it. Use before placing footprints, while placing or re-placing them, before routing, before generating fabrication output, and when asked whether a board is ready or why a router will not route it. KiStack's kicad-layout does the placing and routing; this decides where things go and what has to be true before a track is drawn, and wins where the two disagree.
 ---
 
 # Laying out a board
@@ -122,17 +122,18 @@ Both sides, always — the opposite side of a board is where the surprises are.
 Put the DRC count in the review as a number, and the stackup as a table. See
 `hw-review/references/exports.md`.
 
-Board edits go through the **`kicad-python` IPC bindings** — `ki-stack-live`,
-which needs a KiCad running (`hw-kicad-up`) — or through a structured parser
-offline (`ki-stack-file-surgery`). Never text-edit a `.kicad_pcb`. `pcb-lint`
-only ever reads.
+Board edits go through the **`kicad-python` IPC bindings** where a KiCad is
+running (`hw-kicad-up`) — KiStack's `kicad-layout` says to prefer them wherever
+they are available — and through the board file otherwise. Never text-edit a
+`.kicad_pcb`. Save each milestone back to the project's canonical board rather
+than to a staging copy. `pcb-lint` only ever reads.
 
 ## When a board step fails mid-layout
 
 `hw-schematic/references/kicad-channels.md` has the recovery list. The short
-version: run `ki-stack-orient`'s preamble first — it usually names the problem;
-`ipc_connect=failed` means no KiCad is running, so `hw-kicad-up` or take the
-offline file-surgery route instead; and `hw-repair kicad` if the ki-stack pack
-itself is missing. `kicad-cli pcb` can do your DRC, your Gerbers and your 3D
+version: check `kicad-cli version` is 10.x and that you are on the project's
+canonical board; a failed IPC connect means no KiCad is running, so
+`hw-kicad-up` or work the file directly; and `hw-repair kicad` if the KiStack
+pack itself is missing. `kicad-cli pcb` can do your DRC, your Gerbers and your 3D
 render directly, but it cannot place or route anything — there is no headless
 authoring CLI to fall back to.

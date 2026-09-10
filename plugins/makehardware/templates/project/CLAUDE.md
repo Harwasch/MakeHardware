@@ -27,7 +27,7 @@ Three plugins provide KiCad knowledge and they overlap. The division:
 
 | Job | Use | Why |
 |---|---|---|
-| **Changing** any `.kicad_*` file | **ki-stack** — live IPC or a structured parser | A hand-rolled text edit invalidates UUIDs and instance paths: the file still opens and the netlist is wrong. |
+| **Changing** any `.kicad_*` file | **KiStack** — live IPC where a KiCad is up, the file itself otherwise | A hand-rolled text edit invalidates UUIDs and instance paths: the file still opens and the netlist is wrong. |
 | **Deciding where** a symbol or a footprint goes | **`hw-schematic`**, **`hw-pcb-layout`** | The tooling will place a symbol anywhere you tell it to. These say where, and `sch-lint` / `pcb-lint` check it. |
 | **Modelling** anything mechanical | **`hw-cad`** + the `build123d` MCP | Assemblies with labels, colours and joints — not one unnamed solid. |
 | **Drawing** any chart or plot | **`hw-visuals`** (`hw-chart`) | One set of rules, one palette, and the numbers read from the file that owns them. |

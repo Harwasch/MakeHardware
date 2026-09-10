@@ -184,7 +184,7 @@ most useful fact in an architecture review and it is invisible in the picture.
 Ask directly with the link, block on the answer, and `review-gate sign` it —
 see `hw-review`.
 
-Then, and only then, start schematic capture. ki-stack builds the schematic; the
+Then, and only then, start schematic capture. KiStack builds the schematic; the
 block diagram is what tells it what to build.
 
 ## When the design changes

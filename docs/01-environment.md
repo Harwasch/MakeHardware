@@ -15,7 +15,7 @@ Traceback (most recent call last):
 ModuleNotFoundError: No module named 'apt_pkg'
 ```
 
-This has nothing to do with KiCad, ki-stack or LTspice. The base image points
+This has nothing to do with KiCad, KiStack or LTspice. The base image points
 `/usr/bin/python3` at **Python 3.11.15** through `update-alternatives`, while
 Ubuntu 24.04's `python3-apt` only ships
 `apt_pkg.cpython-**312**-x86_64-linux-gnu.so`. `add-apt-repository` starts with
@@ -170,15 +170,15 @@ HF Spaces is the zero-config default.
 
 Paste from `env/environment-variables.env`. The two that change behaviour:
 
-* `MH_ENABLE_KICAD=1` — install KiCad 10 + ki-stack. Needs the allowlist entry
+* `MH_ENABLE_KICAD=1` — install KiCad 10 + KiStack. Needs the allowlist entry
   above. Set to `0` for a simulation/CAD-only environment that runs on the
   stock Trusted preset with no changes at all.
 * `MH_ENABLE_LTSPICE=0` — LTspice under Wine. Off by default; ngspice is the
   default simulator.
-* `KI_STACK_REV` — the ki-stack revision to install. Pinned, deliberately:
-  these are instructions an agent follows, so an unpinned checkout means the
-  guidance under a project can change between sessions with nothing in the repo
-  recording it. `KI_STACK_REPO` and `KI_STACK_DIR` are the other two knobs.
+* `KISTACK_REV` — the KiStack revision to install. Pinned, deliberately: these
+  are instructions an agent follows, so an unpinned checkout means the guidance
+  under a project can change between sessions with nothing in the repo
+  recording it. `KISTACK_REPO` and `KISTACK_DIR` are the other two knobs.
 * `MH_ENABLE_PLUGIN=1` — install the MakeHardware plugin itself at user scope.
   Set to `0` only if the project repo installs it some other way.
 * `MH_PLUGIN_SOURCE=Harwasch/MakeHardware` — anything `claude plugin
@@ -196,7 +196,7 @@ fail to start. Each phase records `PASS` / `DEGRADED` / `FAIL` into
 session rather than bricking it. `scripts/hw-doctor.sh` reads it back, and the
 SessionStart hook surfaces anything degraded at the top of the session.
 
-**Phases run concurrently.** `apt`, the Python stack, KiCad and the ki-stack
+**Phases run concurrently.** `apt`, the Python stack, KiCad and the KiStack
 install overlap, so the wall clock is roughly the longest phase (~2 min) rather
 than the sum.
 
@@ -281,7 +281,7 @@ scripts/hw-doctor.sh
 Expected on a fully-provisioned environment:
 
 ```
-Electrical:     ngspice, kicad-cli (10.x), ki-stack, kicad-python, ltspice-mcp
+Electrical:     ngspice, kicad-cli (10.x), kistack, kicad-python, ltspice-mcp
 Mechanical:     build123d, build123d-mcp, gmsh, calculix
 Datasheets:     pdftotext, pypdf
 Requirements:   strictdoc, pyyaml, review-gate

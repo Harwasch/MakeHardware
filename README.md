@@ -106,7 +106,7 @@ are all deliverables in name only.
 | Requirements | StrictDoc, with a hardware grammar and a traceability gate, plus a draw.io/SVG requirements map |
 | Architecture | `block-diagram` — one YAML spec renders an editable draw.io file, a review SVG, and a power budget with a gate |
 | Planning | `plan-render` — a dependency Gantt, an editable draw.io graph, and a scope document, with `done` checked against the filesystem |
-| Schematic / PCB | KiCad 10 + [ki-stack](https://github.com/Milind220/ki-stack) skills over `kicad-python`, `kicad-cli` and `kiutils-rs` |
+| Schematic / PCB | KiCad 10 + [KiStack](https://github.com/American-Embedded/KiStack) skills over `kicad-cli` and `kicad-python` |
 | Circuit simulation | ngspice via `ltspice-mcp`; LTspice opt-in |
 | 3D CAD | build123d + `build123d-mcp` |
 | Meshing / FEA | gmsh + CalculiX |

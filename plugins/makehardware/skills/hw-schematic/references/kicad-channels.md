@@ -1,107 +1,90 @@
-# Which channel touches a KiCad file, and what to do when one fails
+# Which channel touches a KiCad file, where KiStack fits, and who wins
 
 Four things can read or write a `.kicad_*` file here, and they do not overlap.
 Reaching for the wrong one is most of what "KiCad automation is flaky" turns
-out to be, so this is the map.
+out to be, so this is the map — followed by the part that actually costs time,
+which is what to do where KiStack's house practice and this toolbox's disagree.
 
-**This changed in 0.7.0.** Konnect — an MCP server exposing 214 tools over
-KiCad's IPC API — was replaced by [ki-stack](https://github.com/Milind220/ki-stack),
-a set of skills that teach an agent to drive the substrates directly. If you
-are reading guidance that says "all writes go through Konnect MCP tools", it is
-stale: run `hw-repair kicad`, which installs ki-stack and deletes the leftover
-Konnect skills and agents from the snapshot.
+**Two packs preceded this one.** Konnect (an MCP server, 214 tools) through
+0.6.0; ki-stack through 0.7.0. If you are reading guidance that says "all
+writes go through Konnect MCP tools", or that names a `ki-stack-*` skill, it is
+stale — run `hw-repair kicad`, which installs
+[KiStack](https://github.com/American-Embedded/KiStack) and clears the old pack
+out of the snapshot.
 
 ## The four channels
 
-| | `kicad-python` (IPC) | `kicad-cli` | `kiutils-rs` / `kicad-skip` | `sch-lint` / `pcb-lint` |
+| | `kicad-cli` | `kicad-python` (IPC) | direct file edit | `sch-lint` / `pcb-lint` |
 |---|---|---|---|---|
-| **Authors** — place, wire, route, edit | yes, live | **no** | yes, offline and structural | no |
-| **Checks** — ERC, DRC | via the running app | yes | no | yes, plus house rules the CLI has no concept of |
-| **Exports** — PDF, SVG, Gerber, BOM, 3D | no | yes | no | writes the findings overlay |
-| **Reads** — nets, pins, positions, hierarchy | yes | only via an export | yes | yes |
-| **Needs a running KiCad** | **yes** | no | no | no |
+| **Authors** | **no** | yes, live | yes, and this is what KiStack assumes | no |
+| **Checks** — ERC, DRC | yes | via the running app | no | yes, plus house rules the CLI has no concept of |
+| **Exports** — PDF, SVG, Gerber, BOM, 3D | yes | no | no | writes the findings overlay |
+| **Needs a running KiCad** | no | **yes** | no | no |
 
-The ki-stack skills that own each: `ki-stack-live` (IPC), `ki-stack-render`
-and `ki-stack-verify` (CLI), `ki-stack-file-surgery` (structural edits),
-`ki-stack-orient` (choosing between them). Start at `ki-stack-orient` when the
-route is not obvious — that is what it is for.
+`kicad-cli` has no `add`, `place`, `route` or `connect` verb on KiCad 10 and
+never has, so authoring is IPC or the file itself. KiStack's own rule:
+**prefer the IPC bindings wherever they are available** — `hw-kicad-up` starts
+a KiCad and `kipy` connects to it. Fall back to editing the file when there is
+no session to talk to.
 
-### `kicad-cli` still cannot author. That has not changed.
+When you do edit a file: change one thing, re-export, and look at it. Never
+`sed` a `.kicad_sch` — a text-level edit invalidates UUIDs, symbol instance
+paths and cross-sheet references, the file still opens, and the netlist is
+quietly wrong. `scripts/kicad_sexpr.py` here is a **reader**; `sch-lint` and
+`pcb-lint` go through it and only ever read.
 
-Its complete verb list on KiCad 10 is:
+## The KiStack skills
 
-```
-kicad-cli sch  { erc, export, upgrade }
-kicad-cli pcb  { drc, export, import, render, upgrade }
-kicad-cli sym  { export, upgrade }        kicad-cli fp { export, upgrade }
-```
+`kicad-schematic`, `kicad-pcb`, `kicad-layout`, `kicad-symbol`,
+`kicad-footprint`, `kicad-bom`, `kicad-export`, `kicad-gerbers`,
+`kicad-panelize`, `pcb-product-render`. `kicad-export` carries a reference page
+for every `kicad-cli` verb, which is the fastest way to get an export flag
+right.
 
-No `add`, no `place`, no `route`, no `connect`. KiCad ships no headless
-authoring CLI and never has. So authoring is IPC or structured file edits —
-there is no third option, and that is exactly why the plugin needs *something*
-in this space rather than leaving the agent to invent one.
+They are human-written house practice from a working shop, and the best thing
+in them is the insistence on **iterating on rendered images**: plot the sheet
+to SVG, look at it, fix what is ugly, look again. That is the same instinct as
+`review-artifact` and `hw-optimize`, applied at a finer grain, and it is worth
+following.
 
-### The rule that changed, and the one that did not
+## Where KiStack and this toolbox disagree — and who wins
 
-**Changed:** structured, parser-backed edits to a `.kicad_*` file are now a
-first-class route, not a last resort. `kiutils-rs` round-trips the file
-losslessly, preserving formatting and tokens it does not understand, and
-`ki-stack-file-surgery` is the skill for it. Schematic work in particular is
-often better off here than through IPC, because the schematic editor's IPC
-surface is thinner than the board's.
+**The gate wins.** `sch-lint`, `pcb-lint` and `review-gate` are the things that
+actually fail a stage, and a design that satisfies advice while failing a gate
+is not shippable. KiStack supplies craft where the gates are silent.
 
-**Did not change:** never hand-roll an S-expression edit. `sed`, a regex, or a
-string replace on a `.kicad_sch` invalidates UUIDs, symbol instance paths and
-cross-sheet references — the file still opens, the netlist is wrong, and
-nothing tells you until fabrication. Use a parser or use the IPC. The
-distinction is *structural versus textual*, not *tool versus file*.
+Three specific collisions, so nobody has to discover them at review time:
 
-`scripts/kicad_sexpr.py` in this plugin is a **reader**. `sch-lint` and
-`pcb-lint` go through it and only ever read. Do not write with it.
+| | KiStack says | This toolbox says | Take |
+|---|---|---|---|
+| **Sheet strategy** | prefer a single sheet you can see at once, bigger paper if needed | a sheet plan derived from the agreed block diagram, A3 default, one sheet per functional group | **the sheet plan.** `sch-lint --plan` binds every sheet back to the architecture a human signed off, and its density check fails an overfull sheet. A single huge sheet also does not render on the review page. |
+| **Changing the schematic during layout** | feel free, do pin swaps to clean up routing | the schematic is an agreed artefact | **do it, then re-open the review.** The advice is right — pin swaps are how a board gets routable. But `review-gate` marks the schematic review stale the moment its artefact changes, and that is correct: the human agreed to a different drawing. Say what moved and why. |
+| **Autorouting** | avoid it; route manually unless the board is very dense | `hw-verification/references/pcb-layout.md` documents freerouting | **no conflict.** Both say manual first. The freerouting notes exist for the dense case KiStack also allows. |
 
-## Live IPC needs a running KiCad
-
-`kicad-python` talks to an application, not a file, so a headless session has
-nothing to connect to until you start one:
-
-```bash
-hw-kicad-up hw/board.kicad_pro     # Xvfb + KiCad, IPC at /tmp/kicad/api.sock
-kicad-python-smoke connect         # prove the socket answers before scripting
-```
-
-Render, export, ERC, DRC and structured file edits all run headless and need
-none of that. Only reach for the live path when the task genuinely is live
-board automation — `ki-stack-live` says which those are.
+One that people expect to collide and does not: KiStack's **50 mil label text**
+is exactly the house `text_size_mm: 1.27` in `templates/kicad/house-defaults.json`,
+which is what `SCH-TEXTSIZE` checks. They agree.
 
 ## When a KiCad step fails
 
-Work down this list. Most failures are one of the first three, and none of them
-is a reason to stop the task.
-
-1. **Orient before diagnosing.** `ki-stack-orient`'s preamble runs
-   `kicad-project-find`, `kicad-version` and `kicad-python-smoke` in one go and
-   usually names the problem: wrong file, wrong KiCad major, no IPC.
-
-2. **`ipc_connect=failed`.** No KiCad running (`hw-kicad-up`), the API disabled
-   in preferences, a busy KiCad, or a version mismatch. It is not a reason to
-   fall back to text editing — take the file-surgery route instead.
-
-3. **The pack is missing or the helpers are not found.** `hw-doctor` reports
-   `ki-stack skills`; `hw-repair kicad` installs it. The skills locate their own
-   helpers through `$KI_STACK_DIR`, so an unset `KI_STACK_DIR` makes them look
-   under the *project* directory and find nothing.
-
+1. **Check the obvious first.** `kicad-cli version` (must be 10.x — a KiCad 7
+   from Ubuntu universe has no IPC API at all), and that the path you are
+   passing is the project's canonical file.
+2. **`kipy` cannot connect.** No KiCad running (`hw-kicad-up`), the API server
+   disabled in preferences, a busy KiCad, or a version mismatch. Not a reason
+   to reach for a text editor — work on the file with a parser, or export and
+   check what you have.
+3. **The pack is missing.** `hw-doctor` reports `kistack`; `hw-repair kicad`
+   installs it and clears any previous pack.
 4. **`kicad-cli` refuses the file.** Almost always a major-version mismatch —
    `kicad-cli sch upgrade` / `pcb upgrade`, and say in the review that the file
    format moved.
-
-5. **Only now escalate**, with the command, its output and what you tried. A
+5. **Only now escalate**, with the command, its output, and what you tried. A
    failure you worked around silently is worse than one you reported: the next
    session hits it again with none of what you learned.
 
 ## What to tell the human
 
-`ki-stack`'s own rule is the house rule too: **no success claim without
-evidence** — an artefact path, DRC/ERC output, a changed-file list, or script
-output. A render-after-edit is the cheapest proof there is and `ki-stack-verify`
-exists to make it routine. Put it on the review page rather than describing it.
+**No success claim without evidence** — an artefact path, ERC/DRC output, a
+changed-file list, or a render. A plot-after-edit is the cheapest proof there
+is. Put it on the review page rather than describing it.
