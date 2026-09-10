@@ -89,8 +89,8 @@ Then:
 
    Then point the project at it — Page Settings → Drawing sheet, or
    `schematic.page_layout_descr_file` in the `.kicad_pro` — and load
-   `templates/kicad/konnect-house.json` through Konnect's
-   `save_project_config`. Check the sheet actually took: a bad `.kicad_wks`
+   merge `templates/kicad/house-defaults.json` into the `.kicad_pro`, which
+   is plain JSON. Check the sheet actually took: a bad `.kicad_wks`
    makes `kicad-cli` print one line to stderr, **still exit 0**, and plot with
    the built-in frame, so a broken template yields a good-looking PDF with the
    wrong sheet on it. `templates/kicad/README.md` has the one-line check.

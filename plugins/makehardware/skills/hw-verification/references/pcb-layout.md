@@ -9,25 +9,24 @@ standing. Work the checks in order. They are cheap; the misdiagnoses are not.
 
 ## 0. Which tool drives the board
 
-**Konnect's PCB half needs a live KiCad.** `check_kicad_ui` reporting
-`ipc_responsive: false` means the IPC tools will not work, and the socket path
-is read from `KICAD_API_SOCKET` or `konnect-settings.json` **only at server
-start** — so enabling KiCad's API server, starting Xvfb and launching pcbnew
-inside the session does not fix it without restarting the MCP server.
-
-For scripted layout, use **KiCad's own `pcbnew` Python API** instead. It is
-the same object model that Konnect drives, so this is not text manipulation of
-a `.kicad_pcb`, which is never acceptable:
+**Board work through IPC needs a live KiCad.** `kicad-python` (`kipy`) talks to
+a running application, not a file, so in a headless session there is nothing to
+connect to until you start one:
 
 ```bash
-/usr/lib/kicad/bin/python -c "import pcbnew; print(pcbnew.Version())"
-# or wherever the KiCad 10 install put it:
-python3 -c "import pcbnew" 2>/dev/null || ls /usr/lib/kicad*/bin/python*
+hw-kicad-up hw/board.kicad_pro     # Xvfb + KiCad, socket at /tmp/kicad/api.sock
+kicad-python-smoke connect         # prove it answers before scripting against it
 ```
 
-Konnect's schematic half is file-based and works without a running KiCad.
-That distinction is the one to hold on to: **schematic, file-based; board,
-live or `pcbnew`.**
+`ipc_connect=failed` means no KiCad, the API server disabled in preferences, a
+busy KiCad, or a version mismatch — `ki-stack-live` has the full list. It is
+never a reason to fall back to text-editing a `.kicad_pcb`, which is never
+acceptable.
+
+The offline route is a **structured parser** — `ki-stack-file-surgery`, which
+round-trips the file losslessly and preserves tokens it does not understand.
+That distinction is the one to hold on to: **schematic, usually file-based;
+board, usually live.**
 
 ---
 
@@ -137,20 +136,20 @@ keepout_r = pcbnew.ToMM(r) + clearance_mm
 Wherever a constant in a layout script mirrors a footprint dimension, it will
 drift the first time the footprint changes, and nothing will say so. Read it.
 
-## 5. Konnect quirks worth knowing before they cost time
+## 5. Placement checks worth doing by hand
 
-* **`score_placement` uses bounding boxes.** An annular footprint — a motor
-  terminal ring, a connector shell with a central cutout — reports its bbox as
-  solid, so anything inside the ring comes back as a `hard_fail` courtyard
-  overlap. On one board that was four 24 mm² "overlaps" where the real copper
-  clearance was 1.45 mm. Check the courtyard polygon yourself before believing
-  a hard failure on an annular or L-shaped part; the verdict does not change
-  on a re-run, so re-running is not a test.
-* **`set_footprint_graphics` validates one field per call.** Expect a chain of
-  rejections — `footprint_path`, `selector`, `mode`, `selector.layer`,
-  `graphics`, `radius_mm`, `stroke_width_mm`, `fill` — and note that `fill`
-  takes `"none"`, not `false`. Build the whole argument set from the first
-  error rather than fixing one field at a time.
+* **A bounding-box courtyard check lies about annular parts.** Any automated
+  overlap score that works from bounding boxes — including one you write —
+  reports an annular footprint (a motor terminal ring, a connector shell with a
+  central cutout) as solid, so anything inside the ring comes back as a
+  courtyard overlap. On one board that was four 24 mm² "overlaps" where the
+  real copper clearance was 1.45 mm. Read the courtyard polygon before
+  believing a hard failure on an annular or L-shaped part, and note that a
+  deterministic check does not change on a re-run — re-running is not a test.
+* **Fill the whole argument set from the first error.** Board-editing APIs
+  validate one field per call, so a partially-specified edit gives you a chain
+  of rejections one at a time. Read the API's expectations once and build the
+  complete call, rather than fixing one field per round trip.
 
 ---
 

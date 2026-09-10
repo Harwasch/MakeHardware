@@ -34,7 +34,7 @@ gives it tools. It contains:
 * **bin/** — real executables that get added to `PATH`. In any project with
   this plugin, `plan-render` and `req-trace` just work as commands.
 * **hooks** — things that run automatically, e.g. at session start.
-* **.mcp.json** — the MCP servers to connect (Konnect, spice, build123d).
+* **.mcp.json** — the MCP servers to connect (spice, build123d).
 
 A **marketplace** is just a repo that lists one or more plugins. MakeHardware
 is a marketplace containing one plugin, also called `makehardware`.
@@ -96,8 +96,9 @@ it:
 [kicad-happy](https://github.com/aklofas/kicad-happy) is a separate MIT plugin
 that adds deep read-only KiCad analysers (EMC pre-compliance, thermal, voltage
 derating, datasheet cross-reference) and distributor search. It complements
-Konnect rather than competing with it — Konnect *changes* the design, kicad-happy
-*reviews* it. The precedence table is in the project's `CLAUDE.md`.
+ki-stack rather than competing with it — ki-stack *changes* the design,
+kicad-happy *reviews* it. The precedence table is in the project's
+`CLAUDE.md`.
 
 This file has to exist *before* the first session, because Claude reads it at
 session start to decide what to install. Commit and push it.

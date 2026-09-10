@@ -1,11 +1,11 @@
 ---
 name: hw-schematic
-description: House practice for a schematic a human can actually read - how to split a design into sheets from the agreed block diagram, where on the sheet each thing goes, and the gate that checks it. Use before starting schematic capture, whenever a sheet is being laid out or re-laid out, when a schematic needs to go in front of a reviewer, and when asked whether a drawing is readable or why a sheet is too big. Konnect's kicad-schematic skill does the placing and wiring; this decides what goes where and what good looks like.
+description: House practice for a schematic a human can actually read - how to split a design into sheets from the agreed block diagram, where on the sheet each thing goes, and the gate that checks it. Use before starting schematic capture, whenever a sheet is being laid out or re-laid out, when a schematic needs to go in front of a reviewer, and when asked whether a drawing is readable or why a sheet is too big. ki-stack does the placing and wiring; this decides what goes where and what good looks like.
 ---
 
 # Drawing a schematic somebody can read
 
-Konnect will place a symbol anywhere you tell it to. That is the problem.
+The tooling will place a symbol anywhere you tell it to. That is the problem.
 Nothing in the toolchain has an opinion about *where*, so a capture loop that
 is only trying to satisfy a netlist produces a drawing that is electrically
 correct and visually unreadable — and the review that was supposed to catch
@@ -17,11 +17,12 @@ The rule this skill exists to enforce:
 > let a human find a circuit, follow it, and judge it. If it does not do that,
 > it does not matter that it is correct.
 
-**When a Konnect call fails, work `references/kicad-channels.md` before
-escalating.** It has the failure list, and it answers the recurring question:
-`kicad-cli` cannot author — it has no `add`, `place`, `route` or `connect` verb
-— so there is no direct CLI to reach for instead. Konnect authors; `kicad-cli`
-exports and checks, and you may call it yourself for those.
+**Start at `ki-stack-orient`, and work `references/kicad-channels.md` when a
+step fails.** Between them they answer the recurring question: `kicad-cli`
+cannot author — it has no `add`, `place`, `route` or `connect` verb — so
+authoring is either live IPC (`ki-stack-live`, needs `hw-kicad-up`) or a
+structured file edit (`ki-stack-file-surgery`). For a schematic the second is
+usually the better route.
 
 Run the gate:
 
@@ -127,8 +128,11 @@ budget is not a rendering problem, it is too much on one page. `SCH-DENSITY`.
 7. **Export and look at it yourself** before showing anyone. Half of what a
    reviewer would catch, you will catch first.
 
-All edits go through **Konnect**, always. Direct edits to a `.kicad_sch`
-corrupt it. `sch-lint` only ever reads.
+Edits go through the IPC bindings or a **structured parser** —
+`ki-stack-file-surgery` for the offline route. Never hand-roll an S-expression
+edit: `sed` or a regex on a `.kicad_sch` invalidates UUIDs and symbol instance
+paths, the file still opens, and the netlist is quietly wrong. `sch-lint` only
+ever reads.
 
 ## Setting up a new project's schematic
 
@@ -138,9 +142,10 @@ cp "${CLAUDE_PLUGIN_ROOT}/templates/kicad/makehardware.kicad_wks" hw/
 ```
 
 Then point the project at it (`Page Settings -> Drawing sheet`, or
-`schematic.page_layout_descr_file` in the `.kicad_pro`), and load the house
-grid and text defaults through Konnect's `save_project_config` from
-`templates/kicad/konnect-house.json`. `/hw-new-project` does both.
+`schematic.page_layout_descr_file` in the `.kicad_pro`), and merge the house
+grid and text defaults from `templates/kicad/house-defaults.json` into the
+`.kicad_pro` — a `.kicad_pro` is JSON, so this is one of the few KiCad files a
+structured edit can touch without a KiCad parser. `/hw-new-project` does both.
 
 A3 is the default because A4 forces a split that is about paper rather than
 about function, and a sheet split for the wrong reason is worse than a slightly

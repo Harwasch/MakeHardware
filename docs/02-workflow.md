@@ -196,13 +196,15 @@ not an energy model.
 
 ## 5. Design sprint
 
-Skills: Konnect's `kicad-schematic`, `kicad-pcb`, `kicad-library`, plus
-build123d for mechanical and `hw-sourcing` for every part choice.
+Skills: `ki-stack-orient` first — it picks the substrate — then
+`ki-stack-schematic`, `ki-stack-pcb`, `ki-stack-symbols`,
+`ki-stack-footprints`, plus build123d for mechanical and `hw-sourcing` for
+every part choice.
 
-Electrical work is file-based by default — Konnect's S-expression engine for
-schematics, `kicad-cli` for ERC/DRC/netlist/gerbers/STEP. Live board editing
-escalates to a running KiCad via `hw-kicad-up`. Mechanical work is build123d
-modules under `cad/`.
+Electrical work is headless by default: structured file edits for schematics
+(`ki-stack-file-surgery`), `kicad-cli` for ERC/DRC/netlist/gerbers/STEP. Live
+board editing escalates to a running KiCad via `hw-kicad-up`, which is what
+`ki-stack-live` needs. Mechanical work is build123d modules under `cad/`.
 
 Every artefact gets a `File` relation from the requirement it realises, and
 every decision that constrains something downstream gets an ADR in

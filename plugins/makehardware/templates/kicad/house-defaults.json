@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "MakeHardware house defaults for KiCad, loaded through Konnect's",
+    "MakeHardware house defaults for KiCad. Merge into the project's",
     "save_project_config. Every number here is one sch-lint or pcb-lint",
     "checks, so changing one means changing the gate's default too.",
     "Scaffolded by /hw-new-project into the project root."

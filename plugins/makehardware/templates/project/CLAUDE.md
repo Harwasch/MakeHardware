@@ -27,8 +27,8 @@ Three plugins provide KiCad knowledge and they overlap. The division:
 
 | Job | Use | Why |
 |---|---|---|
-| **Changing** any `.kicad_*` file | **Konnect** MCP tools, always | Direct edits corrupt these files. Konnect's own rules make this mandatory, and they win. |
-| **Deciding where** a symbol or a footprint goes | **`hw-schematic`**, **`hw-pcb-layout`** | Konnect will place a symbol anywhere you tell it to. These say where, and `sch-lint` / `pcb-lint` check it. |
+| **Changing** any `.kicad_*` file | **ki-stack** — live IPC or a structured parser | A hand-rolled text edit invalidates UUIDs and instance paths: the file still opens and the netlist is wrong. |
+| **Deciding where** a symbol or a footprint goes | **`hw-schematic`**, **`hw-pcb-layout`** | The tooling will place a symbol anywhere you tell it to. These say where, and `sch-lint` / `pcb-lint` check it. |
 | **Modelling** anything mechanical | **`hw-cad`** + the `build123d` MCP | Assemblies with labels, colours and joints — not one unnamed solid. |
 | **Drawing** any chart or plot | **`hw-visuals`** (`hw-chart`) | One set of rules, one palette, and the numbers read from the file that owns them. |
 | **Reviewing** a design | **kicad-happy** (`kicad`, `emc`, `bom`) | Deeper read-only analysers: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference. |
@@ -167,9 +167,9 @@ the number has to move.
 * The environment snapshot preserves files, not processes.
 * `hw/block-diagram.drawio` and the SVG are generated. Edit
   `block-diagram.yaml`; rearranging blocks in draw.io is fine and is kept.
-* Konnect's schematic tools are file-based; its **PCB tools need a live
-  KiCad**. When `check_kicad_ui` says `ipc_responsive: false`, script the board
-  with KiCad's own `pcbnew` API — same object model, so still not text editing.
+* Schematic work is usually file-based and headless; **board work through IPC
+  needs a live KiCad** (`hw-kicad-up`). On `ipc_connect=failed`, take the
+  offline structured-edit route rather than reaching for a text editor.
 * A net class track width wider than the pads on its nets is unroutable, and
   nothing warns you. Route at pad width and restore the width afterwards. Run
   DRC on the placed, unrouted board. See `hw-verification`.

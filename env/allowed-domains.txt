@@ -34,7 +34,7 @@ ppa.launchpadcontent.net
 #     the RETIRED ppa.launchpad.net (which no longer connects at all). Without
 #     this line apt-get update only warns, still exits 0, and apt-get install
 #     kicad silently gives you KiCad 7.0.11 from Ubuntu universe — which has no
-#     IPC API, so Konnect cannot drive it.
+#     IPC API and no usable kicad-cli, so neither half of ki-stack works.
 #
 #   *.frame.claudeusercontent.com
 #     Lets Claude read back the vision boards and reports it publishes as
@@ -60,5 +60,5 @@ ppa.launchpadcontent.net
 #     session, at every network level — the GitHub proxy is independent of the
 #     network access level. Release *assets*
 #     (/releases/download/<tag>/<file>) and `git clone` of a public repo are
-#     served, which is how Konnect installs
+#     served, which is how third-party release binaries install
 #   * the ~5 minute setup budget, 4 vCPU / 16 GB RAM / 30 GB disk
