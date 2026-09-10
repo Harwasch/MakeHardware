@@ -92,15 +92,11 @@ environment's variables as exposed to whatever the agent reads.
 | **Full** | Any domain. Recommended. |
 
 If you would rather not run open, [`env/allowed-domains.txt`](../env/allowed-domains.txt)
-has the Custom fallback: `ppa.launchpadcontent.net`,
-`*.frame.claudeusercontent.com` and `fs-mcp.labs.onshape.app` as the minimum,
-plus vendor domains.
+has the Custom fallback: `ppa.launchpadcontent.net` and
+`*.frame.claudeusercontent.com` as the minimum, plus vendor domains.
 
 `ppa.launchpadcontent.net` buys two things, not one: KiCad 10 and Elmer both
-come from PPAs on that host. `fs-mcp.labs.onshape.app` is the Onshape
-FeatureScript MCP server — without it the server is unreachable, the sign-in
-prompt never appears, and the `onshape` tools are simply absent, which reads
-like the plugin not shipping them rather than like a blocked host.
+come from PPAs on that host.
 
 ### What network access does *not* fix
 
