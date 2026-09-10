@@ -7,6 +7,66 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.8.0
+
+The KiCad skill pack is now [KiStack](https://github.com/American-Embedded/KiStack)
+(American Embedded) rather than [ki-stack](https://github.com/Milind220/ki-stack)
+(Milind220). Both are skills, not servers, so the argument in 0.7.0 stands
+unchanged — this is a choice between two skill packs, not a change of
+architecture.
+
+### Changed
+
+* **KiStack replaces ki-stack.** They are different books. ki-stack is a manual
+  for the *substrates* — how to route between live IPC, `kicad-cli` and
+  structured file edits. KiStack is house practice from a working shop: what a
+  good schematic looks like, how to place before routing, when a pin swap is
+  worth it, how to read a Gerber. This toolbox already answered the substrate
+  question in `hw-schematic` and `hw-pcb-layout`; what it did not have was the
+  craft.
+
+  Ten skills — `kicad-schematic`, `kicad-pcb`, `kicad-layout`, `kicad-symbol`,
+  `kicad-footprint`, `kicad-bom`, `kicad-export`, `kicad-gerbers`,
+  `kicad-panelize`, `pcb-product-render` — plus a reference page for every
+  `kicad-cli` verb, which is the fastest way to get an export flag right.
+
+* **A conflict table, because there is a real conflict.** KiStack overlaps
+  `hw-schematic` and `hw-pcb-layout` and disagrees with them in places. The
+  rule is **the gate wins** — `sch-lint`, `pcb-lint` and `review-gate` are what
+  actually fail a stage, and advice that reads well while failing a gate is not
+  shippable. `hw-schematic/references/kicad-channels.md` names the three
+  collisions:
+
+  - **Sheet strategy.** KiStack prefers one big sheet you can see at once; this
+    toolbox derives a sheet plan from the agreed block diagram. Take the sheet
+    plan: `sch-lint --plan` binds every sheet to an architecture a human signed
+    off, and a single huge sheet does not render on the review page.
+  - **Changing the schematic during layout.** KiStack says do the pin swaps.
+    Correct — and `review-gate` will mark the schematic review stale, which is
+    also correct. Do it, then re-open the review.
+  - **Autorouting.** No conflict; both say manual first.
+
+  One that people expect to collide and does not: KiStack's 50 mil label text
+  is exactly the house `text_size_mm: 1.27` that `SCH-TEXTSIZE` checks.
+
+* Skills are linked under their **frontmatter** names, not their directory
+  names — `skills/schematic/` declares `name: kicad-schematic`, and frontmatter
+  is what the agent sees.
+
+### Fixed
+
+* **`hw-repair kicad` no longer eats the pack it just installed.** Konnect
+  shipped skills called `kicad-schematic` and `kicad-pcb`; so does KiStack. The
+  leftover cleanup matched on filename, which would have deleted the new pack
+  along with the old one. Those two names are now matched on **content** —
+  only Konnect's own skills mention Konnect — and `tests/smoke.sh` covers it
+  with a fixture that fails if the check ever regresses to name matching.
+
+* `hw-repair kicad` also clears ki-stack's 0.7.0 leftovers: its nine
+  `ki-stack-*` skills, its twelve `/usr/local/bin` wrappers (which pointed into
+  a clone about to be deleted), the clone itself, and the `KI_STACK_DIR` export
+  in `.bashrc`. Measured on this container: 22 leftovers removed.
+
 ## 0.7.0
 
 Konnect is out; [ki-stack](https://github.com/Milind220/ki-stack) is in. The

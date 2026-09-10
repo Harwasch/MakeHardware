@@ -10,7 +10,7 @@ estimated.
 |---|---|---|
 | Planning | **plan.yaml** + `plan-render` | Session-sized chunks with explicit dependencies, scheduled by longest path, rendered as a dependency Gantt into the README. |
 | Requirements | **StrictDoc** 0.28.3 | Plain-text `.sdoc` in git, typed grammar, parent/child relations, refuses to build a tree with a dangling parent or duplicate UID. Exports HTML, JSON and ReqIF. |
-| Schematic / PCB | **KiCad 10** + **[ki-stack](https://github.com/Milind220/ki-stack)** 0.1.0 (MIT) | Nine skills, not a server. They teach the agent to drive `kicad-python` (live IPC), `kicad-cli` (render/export/DRC/ERC) and `kiutils-rs` (structured offline edits) directly. |
+| Schematic / PCB | **KiCad 10** + **[KiStack](https://github.com/American-Embedded/KiStack)** (MIT) | Ten skills, not a server: human-written house practice for schematic work, layout, BOM, exports, panelisation and Gerber review, plus a reference page for every `kicad-cli` verb. |
 | PCB checks & output | **kicad-cli** | ERC, DRC, netlist, gerbers, STEP. Headless, scriptable, no GUI needed. |
 | Circuit simulation | **ngspice 42** via **ltspice-mcp** 0.5.0 | Headless, no Wine, first-class backend in the MCP server. Returns parsed measurements, not plots. |
 | Circuit simulation (opt-in) | **LTspice** under Wine | Only for vendor-encrypted ADI models and `.asc` editing. Off by default. |
@@ -48,7 +48,7 @@ to the allowlist. It is a supplement, not the foundation.
 ### KiCad 10 must come from the PPA, and that needs an allowlist entry
 
 Ubuntu 24.04 universe carries **KiCad 7.0.11**, which has no IPC API and no
-`kicad-cli` worth the name, so neither half of ki-stack works against it.
+`kicad-cli` worth the name, so neither substrate works against it.
 KiCad 10 is published for noble on the KiCad PPA.
 
 The trap: PPA content is served from `ppa.launchpadcontent.net`, and the
@@ -69,17 +69,13 @@ where the PPA was reachable, the index fetched and the candidate correctly
 pinned at 10.0.5 — and KiCad never got installed. The check now captures the
 output and matches it with `case`. See `docs/01-environment.md`.
 
-### ki-stack replaced Konnect: skills over a tool surface
+### The KiCad substrate: skills, not a tool surface
 
-Konnect was an MCP server — one Rust binary, 214 tools over KiCad 10's IPC API.
-It worked, and it was replaced in 0.7.0 by [ki-stack](https://github.com/Milind220/ki-stack),
-which is nine SKILL.md files and a dozen shell helpers.
-
-The argument for the swap is what `kicad-cli` cannot do. It has no `add`,
-`place`, `route` or `connect` verb and never has, so *something* has to drive
-the IPC API. The question is only whether that something is a fixed surface of
-pre-sliced verbs or the agent writing code against the substrate. Two things
-decide it here:
+This slot has held three things. Konnect (an MCP server: one Rust binary, 214
+tools over KiCad 10's IPC API) through 0.6.0; [ki-stack](https://github.com/Milind220/ki-stack)
+through 0.7.0; [KiStack](https://github.com/American-Embedded/KiStack) now.
+Both replacements are skills rather than servers, and that part of the argument
+has held up twice:
 
 * **A tool surface costs context whether or not it is used.** Konnect answered
   this by loading 2 of its 20 toolsets at startup and making the agent call
@@ -87,24 +83,37 @@ decide it here:
   failures that read as "the tool is missing". A skill costs nothing until it
   loads.
 * **The failure mode is different in kind.** A missing tool is a wall. A skill
-  that says "use `kicad-python`, and if the socket is dead use `kiutils-rs`
-  instead" is a route. That is the same reasoning as `hw-optimize`'s
-  perseverance rule, applied to the toolchain.
+  that names its fallback is a route. That is the same reasoning `hw-optimize`
+  applies to everything else in the toolbox.
 
-ki-stack's own ethos states the house rule better than we did: *no success
-claim without evidence — artifact path, DRC/ERC output, changed file list, or
-script output.*
+`kicad-cli` has no `add`, `place`, `route` or `connect` verb on KiCad 10 and
+never has, so *something* has to author. The question is only whether that is
+pre-sliced verbs or the agent driving `kipy` and the design files with
+judgement about which.
 
-What the swap costs: Konnect's design-review audits and its manufacturing
-pipeline have no ki-stack equivalent. `sch-lint`, `pcb-lint`, `hw-verification`
-and kicad-happy already covered most of that ground, which is why the loss is
-acceptable, but it is a loss and not a wash.
+**Why KiStack over ki-stack.** They are different books. ki-stack is a manual
+for the *substrates* — how to route between IPC, CLI and structured file edits.
+KiStack is house practice from a working shop: what a good schematic looks
+like, how to place before routing, when a pin swap is worth it, how to read a
+Gerber. This toolbox already had the substrate question answered in
+`hw-schematic` and `hw-pcb-layout`; what it did not have was the craft.
+
+The cost is that KiStack overlaps those two skills and disagrees with them in
+places — chiefly the sheet strategy, where KiStack prefers one big sheet and
+this toolbox derives a sheet plan from the agreed block diagram. The rule is
+**the gate wins**: `sch-lint`, `pcb-lint` and `review-gate` are what actually
+fail a stage, and advice that passes review while failing a gate is not
+shippable. `hw-schematic/references/kicad-channels.md` carries the table.
+
+Neither swap kept Konnect's design-review audits or its manufacturing pipeline.
+`sch-lint`, `pcb-lint`, `hw-verification` and kicad-happy cover most of that
+ground, which is why the loss is acceptable — but it is a loss, not a wash.
 
 The pack is a **pinned clone**, not a vendored copy: these are instructions an
 agent follows, so an unpinned checkout means the guidance under a project can
 change between sessions with nothing in the repo recording it. MIT, so
-vendoring would be permitted — pinning is better because `git -C /opt/ki-stack`
-still knows what revision it is on.
+vendoring would be permitted — pinning is better because
+`git -C /opt/kistack` still knows what revision it is on.
 
 ### Image generation comes from the Hugging Face connector
 
@@ -132,14 +141,14 @@ Schematic work in particular is usually better off on the offline structured
 route than on IPC, so the default posture is headless and the GUI is an
 escalation.
 
-### ki-stack and kicad-happy are complementary, not competing
+### KiStack and kicad-happy are complementary, not competing
 
 Both provide KiCad skills and their triggers overlap. They do different jobs:
-ki-stack *changes* designs, through the IPC bindings or a structured parser.
+KiStack *changes* designs, through the IPC bindings or the files themselves.
 kicad-happy *reads* them — pure Python analysers producing structured reports,
 plus distributor search and datasheet extraction.
 
-So the rule is: writes go through ki-stack, reads go through kicad-happy, and
+So the rule is: writes go through KiStack, reads go through kicad-happy, and
 the decision about which part to actually buy stays in `hw-sourcing` where the
 house standards live. The full precedence table ships in the project
 `CLAUDE.md`.
@@ -195,8 +204,9 @@ starting structure, not shared code, so divergence there is correct.
 |---|---|
 | `add-apt-repository` | Depends on `apt_pkg`, which this image's Python 3.11 default cannot import. See `docs/01-environment.md`. |
 | KiCad from Ubuntu universe | 7.0.11, no IPC API. |
-| Konnect | Replaced by ki-stack in 0.7.0 — see above. It worked; the swap is about a tool surface versus a substrate the agent can write code against. |
-| Vendoring ki-stack into this repo | MIT permits it, but a pinned clone keeps upstream's authorship visible and `git -C /opt/ki-stack` knows its own revision. Copies go stale silently. |
+| Konnect | Replaced in 0.7.0 — see above. It worked; the swap is about a tool surface versus a substrate the agent can drive itself. |
+| Vendoring the KiCad skill pack into this repo | MIT permits it, but a pinned clone keeps upstream's authorship visible and `git -C /opt/kistack` knows its own revision. Copies go stale silently. |
+| Milind220/ki-stack | A good pack, and the better one if you want the *substrate* explained. This toolbox already answers that in `hw-schematic` and `hw-pcb-layout`; it wanted the craft instead. |
 | LTspice as the default | Blocked domain, ~2 GB, and unnecessary — ngspice covers the loop. |
 | NGSolve, Kratos, scikit-fem | Nothing has needed them yet, and every tool in the image is one more thing that can fail the build. Add them when a project needs one. |
 | Elmer from source | ~20 minutes on 1 vCPU against ~70 s for the packaged build, and it does not fit the setup budget. |
@@ -217,7 +227,7 @@ one, not the sum.
 |---|---|
 | Base apt packages | 22 s |
 | Python stack via uv (1.6 GB) | 10 s |
-| ki-stack clone + skill install | **~5 s** |
+| KiStack clone + skill install | **~4 s** |
 | KiCad 10 from PPA | dominated by download |
 | **Total (parallel)** | **~2 min** |
 

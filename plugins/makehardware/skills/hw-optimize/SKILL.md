@@ -136,11 +136,11 @@ An agent that never stops burns a day building the wrong thing confidently.
 **Push through, without asking, when the problem is in your way:**
 
 * **A tool is missing or broken.** `hw-doctor`, then `hw-repair`. Elmer absent
-  is ninety seconds, not a blocker. A missing ki-stack pack is
+  is ninety seconds, not a blocker. A missing KiStack pack is
   `hw-repair kicad`. See `hw-schematic/references/kicad-channels.md` for the
   KiCad failure list.
 * **A tool fails on one input.** Read the error, read the log
-  (`/opt/makehardware/logs/`, `ki-stack-orient`'s preamble), try the documented
+  (`/opt/makehardware/logs/`, `hw-doctor`), try the documented
   alternative. Most of these tools name their replacement in the failure.
 * **A solve does not converge, a mesh is bad, a netlist errors.** That is
   ordinary work. `hw-magnetics`, `hw-simulation` and the lint references carry

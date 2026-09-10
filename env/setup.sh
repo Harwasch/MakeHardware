@@ -34,7 +34,7 @@ mkdir -p "${PREFIX}" "${LOGDIR}"
 
 # Opt-in extras. Both need domains that the Trusted allowlist does not cover;
 # see env/allowed-domains.txt.
-: "${MH_ENABLE_KICAD:=${MH_ENABLE_KONNECT:-1}}"  # KiCad 10 + ki-stack (needs ppa.launchpadcontent.net)
+: "${MH_ENABLE_KICAD:=${MH_ENABLE_KONNECT:-1}}"  # KiCad 10 + KiStack (needs ppa.launchpadcontent.net)
 # MH_ENABLE_KONNECT was this switch's name until 0.7.0 and is still honoured
 # above, so an environment carrying the old variable keeps working rather than
 # silently losing KiCad.
@@ -73,13 +73,13 @@ mkdir -p "${PREFIX}" "${LOGDIR}"
 # back for a search string.
 MH_ELMER_PPA_FINGERPRINT="1FE4A88ACFEE8388A409F23A89358ABF9FB7E178"
 
-# ki-stack — the KiCad skill pack. Skills, not an MCP server, so this is a
+# KiStack — the KiCad skill pack. Skills, not an MCP server, so this is a
 # pinned clone rather than a binary install. Pin the revision: the skills are
 # instructions an agent follows, and an unpinned clone means the guidance can
 # change under a project between one session and the next.
-: "${KI_STACK_REPO:=https://github.com/Milind220/ki-stack}"
-: "${KI_STACK_REV:=d5f5d0103e4b2a5572f724fe90cb49dc4f131d37}"
-: "${KI_STACK_DIR:=/opt/ki-stack/skills/ki-stack}"
+: "${KISTACK_REPO:=https://github.com/American-Embedded/KiStack}"
+: "${KISTACK_REV:=73ece96e45a3a202f2ca05af32c66dbcefcf9851}"
+: "${KISTACK_DIR:=/opt/kistack}"
 
 # KiCad PPA signing key. Pinned so we never depend on add-apt-repository.
 KICAD_PPA_FINGERPRINT="FDA854F61C4D0D9572BB95E5245D5502FAD7A805"
@@ -162,7 +162,7 @@ phase_base() {
     # fallback, and the package is not in this image by default.
     #
     # Nothing here needs a compiler toolchain any more: Konnect was the only
-    # thing that was ever built from source, and ki-stack replaced it.
+    # thing that was ever built from source, and a skill pack replaced it.
     local build_deps=()
 
     _apt update -qq
@@ -187,9 +187,9 @@ phase_base() {
 #
 # kicad-python (import name `kipy`) is the KiCad team's own bindings for the
 # IPC API, and since 0.7.0 it is the live action space rather than an escape
-# hatch: `ki-stack-live` drives it directly. It is not optional. PyPI is in the
-# proxy's no_proxy list, so it is also the one KiCad automation path in this
-# environment that depends on nothing GitHub-side.
+# hatch: KiStack tells the agent to prefer them wherever they are available.
+# PyPI is in the proxy's no_proxy list, so it is also the one KiCad automation
+# path in this environment that depends on nothing GitHub-side.
 #
 # Two failure modes are designed around here, both of which cost real time:
 #
@@ -283,7 +283,7 @@ assert abs(b.volume - 6000.0) < 1e-6, b.volume
 # Phase 3 — KiCad 10 from the official PPA
 #
 # Ubuntu 24.04 universe only carries KiCad 7.0.11, which has no IPC API and no
-# `kicad-cli` worth the name, so neither half of ki-stack works against it.
+# `kicad-cli` worth the name, so neither substrate works against it.
 # KiCad 10 must come from the PPA.
 #
 # IMPORTANT: PPA content is served from ppa.launchpadcontent.net, which is NOT
@@ -363,103 +363,73 @@ EOF
 }
 
 # ==========================================================================
-# Phase 4 — ki-stack (KiCad skill pack, measured ~5 s)
+# Phase 4 — KiStack (KiCad skill pack, measured ~4 s)
 #
-# ki-stack is skills, not a server. There is no binary to install and no
-# process to start: the agent gets a set of SKILL.md files teaching it to drive
-# `kicad-python` (live IPC), `kicad-cli` (render, export, DRC, ERC) and
-# `kiutils-rs` (structured offline file edits) directly.
+# KiStack is skills, not a server. There is no binary to install and no process
+# to start: the agent gets ten SKILL.md files of house practice for schematic
+# work, layout, BOM, exports, panelisation and Gerber review, plus 49 reference
+# pages covering every `kicad-cli` verb.
 #
-# This replaced Konnect in 0.7.0. Konnect was an MCP server exposing 214 tools
-# over the same IPC API; the swap trades a fixed tool surface for the agent
-# writing code against the substrate, which is what these files already assume
-# everywhere else — `kicad-cli` has no authoring verb, so *something* has to
-# drive the IPC, and a skill that teaches it costs no context until it loads.
+# This is the second KiCad substrate this file has carried. Konnect (an MCP
+# server, 214 tools) went in 0.7.0; ki-stack went in 0.8.0. What survived both
+# swaps is the shape of the answer: `kicad-cli` has no authoring verb, so the
+# agent drives KiCad through some combination of the CLI, the `kipy` IPC
+# bindings and edits to the files themselves, and what it needs is judgement
+# about which — not a fixed surface of pre-sliced verbs.
 #
 # Pinned to a revision, deliberately. These are instructions an agent follows,
 # so an unpinned clone means the guidance under a project can change between
 # one session and the next with nothing in the repo recording it.
 #
-# The skills are symlinked into ~/.claude/skills rather than copied: the clone
-# is the single source, `ki-stack-version` reports the real revision, and an
-# update is one `git -C /opt/ki-stack fetch`.
+# NOTE the skill names. KiStack's directories are `schematic`, `pcb`, `bom`...
+# but their frontmatter names are `kicad-schematic`, `kicad-pcb`, `kicad-bom`.
+# Frontmatter is what the agent sees, so they are linked under those names —
+# and `kicad-schematic` and `kicad-pcb` are exactly two of the names Konnect
+# used, which is why the leftover check in `hw-repair` matches on content
+# rather than on a filename.
 # ==========================================================================
 phase_kistack() {
-    local log="${LOGDIR}/kistack.log" root=/opt/ki-stack
+    local log="${LOGDIR}/kistack.log"
     : > "${log}"
-    echo ":: ki-stack ${KI_STACK_REV} from ${KI_STACK_REPO}" >>"${log}"
+    echo ":: KiStack ${KISTACK_REV} from ${KISTACK_REPO}" >>"${log}"
 
-    rm -rf "${root}"
+    rm -rf "${KISTACK_DIR}"
     # Not --depth 1: a shallow clone cannot check out an arbitrary revision,
-    # and the pin is the point. The repository is small enough that a full
-    # clone is under a second.
-    git clone -q "${KI_STACK_REPO}" "${root}" >>"${log}" 2>&1 || return 1
-    git -C "${root}" checkout -q "${KI_STACK_REV}" >>"${log}" 2>&1 || return 1
+    # and the pin is the point.
+    git clone -q "${KISTACK_REPO}" "${KISTACK_DIR}" >>"${log}" 2>&1 || return 1
+    git -C "${KISTACK_DIR}" checkout -q "${KISTACK_REV}" >>"${log}" 2>&1 || return 1
 
-    [ -d "${KI_STACK_DIR}" ] || {
-        echo "!! ${KI_STACK_DIR} missing — the pack moved in the pinned revision" \
-            >>"${log}"
+    [ -d "${KISTACK_DIR}/skills" ] || {
+        echo "!! ${KISTACK_DIR}/skills missing — the pack moved in this revision" >>"${log}"
         return 1
     }
 
-    # Its helpers are what the skills actually invoke. The skills find them via
-    # $KI_STACK_DIR; these wrappers are so a human can type `kicad-render`.
-    #
-    # Wrappers, NOT symlinks. Seven of these scripts locate the pack with
-    # `dirname "${0}"/../../..`, which under a symlink in /usr/local/bin
-    # resolves to `/` — `ki-stack-version` then reports "VERSION file not
-    # found" and `kicad-render` looks for its siblings in the wrong place. A
-    # wrapper that execs the real path has no such problem.
-    chmod +x "${KI_STACK_DIR}"/bin/* 2>>"${log}"
-    local helper name
-    for helper in "${KI_STACK_DIR}"/bin/*; do
-        [ -f "${helper}" ] || continue
-        name=$(basename "${helper}")
-        # rm -f FIRST. A previous install left a symlink at this path, and
-        # `cat >` follows a symlink: without this, the wrapper is written
-        # *through* the link and overwrites the upstream script in the clone
-        # with an exec of itself — an infinite loop that hangs the build with
-        # no error. Found the hard way.
-        rm -f "/usr/local/bin/${name}"
-        cat > "/usr/local/bin/${name}" <<EOB
-#!/usr/bin/env bash
-# Wrapper for ki-stack's ${name}. The pack lives at ${KI_STACK_DIR}.
-exec "${helper}" "\$@"
-EOB
-        chmod +x "/usr/local/bin/${name}"
-    done
-
-    # Symlinked into the user skill directory, which is part of the snapshot,
-    # so every session sees them.
-    local skills=/root/.claude/skills sk
+    # Linked under each skill's *frontmatter* name, not its directory name.
+    local skills=/root/.claude/skills src name
     mkdir -p "${skills}"
-    for sk in ki-stack-orient ki-stack-render ki-stack-live \
-              ki-stack-file-surgery ki-stack-verify \
-              ki-stack-pcb ki-stack-schematic ki-stack-symbols \
-              ki-stack-footprints
-    do
-        [ -d "${KI_STACK_DIR}/${sk}" ] || {
-            echo "!! skill ${sk} absent from the pinned revision" >>"${log}"
-            return 2
-        }
-        rm -rf "${skills:?}/${sk}"
-        ln -s "${KI_STACK_DIR}/${sk}" "${skills}/${sk}" || return 1
+    local linked=0
+    for src in "${KISTACK_DIR}"/skills/*/; do
+        [ -f "${src}SKILL.md" ] || continue
+        name=$(sed -n 's/^name:[[:space:]]*//p' "${src}SKILL.md" | head -1)
+        [ -n "${name}" ] || name=$(basename "${src}")
+        rm -rf "${skills:?}/${name}"
+        ln -s "${src%/}" "${skills}/${name}" || return 1
+        linked=$((linked + 1))
     done
+    echo ":: linked ${linked} skill(s)" >>"${log}"
+    [ "${linked}" -ge 8 ] || {
+        echo "!! only ${linked} skills linked; expected 10" >>"${log}"
+        return 2
+    }
 
-    # KI_STACK_DIR is how every skill locates its own bin/ and references/.
-    # Without it they fall back to a relative `skills/ki-stack`, which resolves
-    # against the *project* directory and finds nothing.
-    grep -q 'KI_STACK_DIR' /root/.bashrc 2>/dev/null || cat >> /root/.bashrc <<EOB
-export KI_STACK_DIR=${KI_STACK_DIR}
-EOB
-
-    # kicad-python is the live action space; without it ki-stack-live is a
-    # document about a thing this environment cannot do. phase_python installs
-    # it into the shared venv, so this only confirms it landed.
+    # KiStack says to prefer the IPC bindings wherever they are available, so
+    # confirm they landed. phase_python installs kipy into the shared venv.
     "${VENV}/bin/python" -c 'import kipy' >>"${log}" 2>&1 \
-        || echo "!! kipy not importable — ki-stack-live will be unavailable" >>"${log}"
+        || echo "!! kipy not importable — live IPC will be unavailable" >>"${log}"
 
-    "${KI_STACK_DIR}/bin/ki-stack-version" >>"${log}" 2>&1 || return 2
+    # Its one script. KiCad cannot convert a position file itself, so the
+    # export skill shells out to this; make sure it is runnable.
+    chmod +x "${KISTACK_DIR}"/skills/export/scripts/*.py 2>>"${log}"
     return 0
 }
 
@@ -543,9 +513,8 @@ EOF
     cat > /usr/local/bin/hw-kicad-up <<'EOF'
 #!/usr/bin/env bash
 # Bring up KiCad with a project open so the kicad-python IPC bindings have
-# something to connect to — that is what `ki-stack-live` needs. Only for live
-# board work: render, export, ERC/DRC and structured file edits all run
-# headless and need none of this.
+# something to connect to. Only for live board work: render, export and
+# ERC/DRC all run headless and need none of this.
 set -e
 hw-display-start
 export DISPLAY=:99 QT_QPA_PLATFORM=xcb LIBGL_ALWAYS_SOFTWARE=1

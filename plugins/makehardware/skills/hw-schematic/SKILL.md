@@ -1,6 +1,6 @@
 ---
 name: hw-schematic
-description: House practice for a schematic a human can actually read - how to split a design into sheets from the agreed block diagram, where on the sheet each thing goes, and the gate that checks it. Use before starting schematic capture, whenever a sheet is being laid out or re-laid out, when a schematic needs to go in front of a reviewer, and when asked whether a drawing is readable or why a sheet is too big. ki-stack does the placing and wiring; this decides what goes where and what good looks like.
+description: House practice for a schematic a human can actually read - how to split a design into sheets from the agreed block diagram, where on the sheet each thing goes, and the gate that checks it. Use before starting schematic capture, whenever a sheet is being laid out or re-laid out, when a schematic needs to go in front of a reviewer, and when asked whether a drawing is readable or why a sheet is too big. KiStack's kicad-schematic does the placing and wiring; this decides what goes where and what good looks like, and wins where the two disagree.
 ---
 
 # Drawing a schematic somebody can read
@@ -20,9 +20,9 @@ The rule this skill exists to enforce:
 **Start at `ki-stack-orient`, and work `references/kicad-channels.md` when a
 step fails.** Between them they answer the recurring question: `kicad-cli`
 cannot author — it has no `add`, `place`, `route` or `connect` verb — so
-authoring is either live IPC (`ki-stack-live`, needs `hw-kicad-up`) or a
-structured file edit (`ki-stack-file-surgery`). For a schematic the second is
-usually the better route.
+authoring is either live IPC (`kipy`, needs `hw-kicad-up`) or an edit to the
+file itself. It also has the table of where KiStack's house practice and this
+skill's disagree — the sheet strategy is the one that matters.
 
 Run the gate:
 
@@ -128,11 +128,12 @@ budget is not a rendering problem, it is too much on one page. `SCH-DENSITY`.
 7. **Export and look at it yourself** before showing anyone. Half of what a
    reviewer would catch, you will catch first.
 
-Edits go through the IPC bindings or a **structured parser** —
-`ki-stack-file-surgery` for the offline route. Never hand-roll an S-expression
-edit: `sed` or a regex on a `.kicad_sch` invalidates UUIDs and symbol instance
-paths, the file still opens, and the netlist is quietly wrong. `sch-lint` only
-ever reads.
+Edits go through the **IPC bindings** where a KiCad is running, and through the
+file itself otherwise — that is what KiStack's `kicad-schematic` assumes. Never
+hand-roll an S-expression edit: `sed` or a regex on a `.kicad_sch` invalidates
+UUIDs and symbol instance paths, the file still opens, and the netlist is
+quietly wrong. Change one thing, re-export, and look at the plot. `sch-lint`
+only ever reads.
 
 ## Setting up a new project's schematic
 

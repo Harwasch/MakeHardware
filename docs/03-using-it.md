@@ -96,7 +96,7 @@ it:
 [kicad-happy](https://github.com/aklofas/kicad-happy) is a separate MIT plugin
 that adds deep read-only KiCad analysers (EMC pre-compliance, thermal, voltage
 derating, datasheet cross-reference) and distributor search. It complements
-ki-stack rather than competing with it — ki-stack *changes* the design,
+KiStack rather than competing with it — KiStack *changes* the design,
 kicad-happy *reviews* it. The precedence table is in the project's
 `CLAUDE.md`.
 

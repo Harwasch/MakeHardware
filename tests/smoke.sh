@@ -351,7 +351,7 @@ assert t.count('<') < 220, 'chart is too heavy for the review page'" \
 echo
 echo "== the KiCad channel =="
 
-# 0.7.0 replaced Konnect with ki-stack. The regression these guard against is a
+# Konnect went in 0.7.0 and ki-stack in 0.8.0. The regression these guard against is a
 # half-migration: guidance that still tells an agent to route every `.kicad_*`
 # change through MCP tools the plugin no longer registers, which reads to the
 # agent as a broken environment rather than as stale advice.
@@ -377,6 +377,34 @@ import json
 json.load(open('${ROOT}/plugins/makehardware/templates/kicad/house-defaults.json'))" \
     && pass "the house KiCad defaults parse as JSON a .kicad_pro can take" \
     || fail "house-defaults.json is missing or malformed"
+
+# The subtle one. Konnect shipped skills called `kicad-schematic` and
+# `kicad-pcb`; so does KiStack. `hw-repair kicad` must delete the first and
+# keep the second, so it matches those two names on CONTENT. A regression to
+# name matching would have the repair eat the pack it just installed.
+KTMP=$(mktemp -d)
+mkdir -p "${KTMP}/skills/kicad-schematic" "${KTMP}/skills/kicad-pcb" \
+         "${KTMP}/skills/konnect" "${KTMP}/agents" "${KTMP}/pack/skills/schematic"
+printf -- '---\nname: kicad-schematic\n---\nAll writes go through Konnect MCP tools.\n' \
+    > "${KTMP}/skills/kicad-schematic/SKILL.md"
+printf -- '---\nname: kicad-pcb\n---\nReview KiCad PCB layouts with DRC and layer renders.\n' \
+    > "${KTMP}/skills/kicad-pcb/SKILL.md"
+printf -- '---\nname: konnect\n---\nKonnect operating rules.\n' \
+    > "${KTMP}/skills/konnect/SKILL.md"
+printf -- '---\nname: kicad-schematic\n---\nreplacement\n' \
+    > "${KTMP}/pack/skills/schematic/SKILL.md"
+
+MH_SKILL_DIR="${KTMP}/skills" MH_AGENT_DIR="${KTMP}/agents" \
+  KISTACK_DIR="${KTMP}/pack" bash "${S}/hw-repair.sh" kicad >/dev/null 2>&1
+
+if [ ! -e "${KTMP}/skills/konnect" ] \
+   && [ -e "${KTMP}/skills/kicad-pcb" ] \
+   && [ -L "${KTMP}/skills/kicad-schematic" ]; then
+    pass "hw-repair removes Konnect's kicad-schematic but keeps KiStack's"
+else
+    fail "hw-repair matched a shared skill name instead of its content"
+fi
+rm -rf "${KTMP}"
 
 # The rule that did NOT change. A hand-rolled text edit corrupts these files
 # whatever drives the toolchain, and the reader must stay a reader.

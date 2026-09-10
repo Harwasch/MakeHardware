@@ -196,15 +196,16 @@ not an energy model.
 
 ## 5. Design sprint
 
-Skills: `ki-stack-orient` first — it picks the substrate — then
-`ki-stack-schematic`, `ki-stack-pcb`, `ki-stack-symbols`,
-`ki-stack-footprints`, plus build123d for mechanical and `hw-sourcing` for
-every part choice.
+Skills: KiStack's `kicad-schematic`, `kicad-layout`, `kicad-pcb`,
+`kicad-symbol`, `kicad-footprint`, `kicad-export`, plus build123d for
+mechanical and `hw-sourcing` for every part choice. Where KiStack and
+`hw-schematic` / `hw-pcb-layout` disagree — chiefly the sheet strategy — the
+gate wins; `hw-schematic/references/kicad-channels.md` has the table.
 
-Electrical work is headless by default: structured file edits for schematics
-(`ki-stack-file-surgery`), `kicad-cli` for ERC/DRC/netlist/gerbers/STEP. Live
-board editing escalates to a running KiCad via `hw-kicad-up`, which is what
-`ki-stack-live` needs. Mechanical work is build123d modules under `cad/`.
+Electrical work is headless by default: `kicad-cli` for
+ERC/DRC/netlist/gerbers/STEP, and the design files edited directly with a
+re-render after each change. Live board editing escalates to a running KiCad
+via `hw-kicad-up`. Mechanical work is build123d modules under `cad/`.
 
 Every artefact gets a `File` relation from the requirement it realises, and
 every decision that constrains something downstream gets an ADR in

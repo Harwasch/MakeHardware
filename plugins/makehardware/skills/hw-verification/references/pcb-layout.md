@@ -19,14 +19,13 @@ kicad-python-smoke connect         # prove it answers before scripting against i
 ```
 
 `ipc_connect=failed` means no KiCad, the API server disabled in preferences, a
-busy KiCad, or a version mismatch — `ki-stack-live` has the full list. It is
+busy KiCad, or a version mismatch. It is
 never a reason to fall back to text-editing a `.kicad_pcb`, which is never
 acceptable.
 
-The offline route is a **structured parser** — `ki-stack-file-surgery`, which
-round-trips the file losslessly and preserves tokens it does not understand.
-That distinction is the one to hold on to: **schematic, usually file-based;
-board, usually live.**
+The offline route is the board file itself, one change at a time with a render
+after each. That distinction is the one to hold on to: **schematic, usually
+file-based; board, usually live.**
 
 ---
 
