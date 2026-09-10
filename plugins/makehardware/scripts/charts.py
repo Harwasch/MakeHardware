@@ -35,6 +35,7 @@ Usage:
     hw-chart coverage  coverage.json --out docs/design/coverage.svg
     hw-chart waterfall bom.csv       --out docs/design/cost.svg
     hw-chart stackup   stackup.json  --out docs/design/stackup.svg
+    hw-chart evolution loop.json     --out docs/design/loop-evolution.svg
 
 Run `hw-chart <kind> --schema` to see exactly what columns each one wants.
 """
@@ -128,12 +129,39 @@ def head(width: int, height: int, title: str = "", subtitle: str = "") -> list[s
 
 
 def read_rows(path: str) -> list[dict]:
+    if path.endswith(".jsonl") or path.endswith(".ndjson"):
+        return read_jsonl(path)
     if path.endswith(".json"):
         with open(path) as fh:
             data = json.load(fh)
         return data if isinstance(data, list) else data.get("rows", [])
     with open(path, newline="") as fh:
         return [dict(r) for r in csv.DictReader(fh)]
+
+
+def read_jsonl(path: str) -> list[dict]:
+    out = []
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if line:
+                out.append(json.loads(line))
+    return out
+
+
+def read_object(path: str):
+    """The whole file, for a chart whose data is a document rather than rows.
+
+    `evolution` needs the ledger's objective and limits, not just its
+    iterations — reading it as rows throws away the very thing that turns a
+    line into a judgement.
+    """
+    if path.endswith(".jsonl") or path.endswith(".ndjson"):
+        return read_jsonl(path)
+    if path.endswith(".json"):
+        with open(path) as fh:
+            return json.load(fh)
+    return read_rows(path)
 
 
 def num(row, *keys, default=None):
@@ -778,6 +806,390 @@ def chart_stackup(rows, title, subtitle) -> str:
 
 
 # --------------------------------------------------------------------------
+# evolution — the design loop, not the design
+#
+# Every other chart here shows where a design ended up. This one shows how it
+# got there, which is a different and often more useful thing to put in front
+# of a reviewer: whether the objective is still improving or has plateaued,
+# which change bought the improvement, and what it cost somewhere else.
+#
+# A closed-loop run that reports only its final number is asking to be trusted.
+# The same run with its trajectory drawn is asking to be *checked* — a reviewer
+# can see three iterations of noise around one value and say "that is converged,
+# stop", or see a metric quietly sliding while the objective climbs and say
+# "you are trading away the thing I care about".
+# --------------------------------------------------------------------------
+EVOLUTION_SCHEMA = """\
+evolution — the iteration ledger `hw-iterate` writes. Normally you never build
+this by hand:
+
+  hw-iterate chart <loop-id>
+
+The file is JSON:
+
+  {"loop": "loop-gain",
+   "goal": "phase margin >= 60 deg without giving up bandwidth",
+   "objective": {"metric": "pm_deg", "direction": "max",
+                 "target": 60, "unit": "deg"},
+   "track": [{"metric": "bw_hz", "limit": 1e6, "direction": "max",
+              "unit": "Hz"}],
+   "status": "converged",
+   "iterations": [
+     {"iteration": 1, "vars": {"Rf": 12000, "Cc": 4.7e-12},
+      "metrics": {"pm_deg": 31, "bw_hz": 2.1e6},
+      "verdict": "fail", "note": "baseline from the datasheet values"},
+     ...]}
+
+A `.jsonl` file of iteration records is also read, one object per line.
+`verdict` is pass / fail / partial. `accepted: true` on the iteration that was
+taken forward — otherwise the best iteration against the objective is marked."""
+
+
+def _evo_load(data):
+    """Accept the ledger object, a bare list of iterations, or JSONL rows."""
+    if isinstance(data, dict):
+        meta = data
+        its = data.get("iterations") or []
+    else:
+        meta, its = {}, list(data or [])
+        # A JSONL ledger may lead with a meta record carrying no metrics.
+        if its and not (its[0].get("metrics") or its[0].get("vars")):
+            meta = its.pop(0)
+    out = []
+    for i, r in enumerate(its, 1):
+        if not isinstance(r, dict):
+            continue
+        out.append({
+            "n": int(r.get("iteration") or i),
+            "vars": {k: v for k, v in (r.get("vars") or {}).items()},
+            "metrics": {k: v for k, v in (r.get("metrics") or {}).items()},
+            "verdict": str(r.get("verdict") or "").lower(),
+            "note": str(r.get("note") or ""),
+            "accepted": bool(r.get("accepted")),
+        })
+    return meta, out
+
+
+def _evo_num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _evo_verdict_colour(v):
+    return {"pass": PASS, "fail": FAIL, "partial": WARN}.get(v, SERIES[0])
+
+
+def _clip(s_: str, n: int) -> str:
+    s_ = str(s_)
+    return s_ if len(s_) <= n else s_[:n - 1].rstrip() + "\u2026"
+
+
+def _evo_fmt(v, unit=""):
+    """`2100000, "Hz"` -> "2.1 MHz";  `66.6, "deg"` -> "66.6 deg".
+
+    `si()` alone is not enough here. Told a unit it refuses to prefix, which is
+    right for 41.7 uA and wrong for 2100000 Hz — the axis label then runs off
+    the left of the panel and the reader sees "100000 Hz" for a 2.1 MHz
+    bandwidth. Told to prefix, it produces "66.6deg". So: prefix only where a
+    prefix is what an engineer would write, and always with a space.
+    """
+    if v is None:
+        return "-"
+    a = abs(v)
+    if a >= 1000 or (0 < a < 0.01):
+        # "2.1MHz", not "2.1M Hz" — the prefix belongs to the unit.
+        return si(v, unit, scale=True)
+    return f"{_trim(v)}{(' ' + unit) if unit else ''}"
+
+
+def _evo_panel(o, x0, y0, w, h, xs, series, label, limit=None, direction="",
+               unit="", accent=SERIES[0], notes=None):
+    """One metric against iteration number. Shared x, own y, limit drawn."""
+    pts = [(n, v) for n, v in zip(xs, series) if v is not None]
+    if not pts:
+        return
+    ys = [v for _, v in pts] + ([limit] if limit is not None else [])
+    lo, hi = min(ys), max(ys)
+    pad = (hi - lo) * 0.14 or (abs(hi) * 0.1 or 1.0)
+    lo, hi = lo - pad, hi + pad
+    lo_n, hi_n = min(xs), max(xs)
+
+    def X(n):
+        return x0 + (n - lo_n) / max(hi_n - lo_n, 1e-9) * w
+
+    def Y(v):
+        return y0 + h - (v - lo) / max(hi - lo, 1e-9) * h
+
+    o.append(f'<line class="ax" x1="{x0}" y1="{y0 + h}" x2="{x0 + w}" '
+             f'y2="{y0 + h}" stroke-width="1"/>')
+    o.append(f'<line class="ax" x1="{x0}" y1="{y0}" x2="{x0}" '
+             f'y2="{y0 + h}" stroke-width="1"/>')
+    for v in (lo + pad, hi - pad):
+        o.append(f'<text class="axf" x="{x0 - 6}" y="{Y(v) + 3.5:.1f}" '
+                 f'text-anchor="end" font-size="10">'
+                 f'{esc(_evo_fmt(v, unit))}</text>')
+    o.append(f'<text class="axf" x="{x0}" y="{y0 - 6}" font-size="10.5">'
+             f'{esc(label)}</text>')
+
+    # The limit, and the side of it that is good. A metric plotted without its
+    # limit is a number the reader has to look up somewhere else.
+    if limit is not None:
+        o.append(f'<line x1="{x0}" y1="{Y(limit):.1f}" x2="{x0 + w}" '
+                 f'y2="{Y(limit):.1f}" stroke="{FAIL}" stroke-width="1" '
+                 f'stroke-dasharray="4 3" opacity=".75"/>')
+        # Above the line, not centred on it: the last data value is
+        # direct-labelled at the same x, and a metric that ends up near its
+        # limit — exactly the interesting case — put the two on top of
+        # each other.
+        o.append(f'<text x="{x0 + w + 4}" y="{Y(limit) - 4:.1f}" '
+                 f'font-size="10" fill="{FAIL}">'
+                 f'{esc(("min " if direction == "max" else "max ") + _evo_fmt(limit, unit))}'
+                 f'</text>')
+
+    o.append('<polyline points="' +
+             " ".join(f"{X(n):.1f},{Y(v):.1f}" for n, v in pts) +
+             f'" fill="none" stroke="{accent}" stroke-width="1.8" '
+             f'stroke-linejoin="round"/>')
+    for n, v in pts:
+        note = (notes or {}).get(n, "")
+        o.append(f'<circle cx="{X(n):.1f}" cy="{Y(v):.1f}" r="3" '
+                 f'fill="{accent}"><title>iteration {n}: '
+                 f'{esc(_evo_fmt(v, unit))}'
+                 f'{" — " + esc(note) if note else ""}</title></circle>')
+    # The last value, named at the end of the line rather than in a legend.
+    ln, lv = pts[-1]
+    o.append(f'<text x="{X(ln) + 6:.1f}" y="{Y(lv) + 4:.1f}" font-size="11" '
+             f'font-weight="600" fill="{accent}">'
+             f'{esc(_evo_fmt(lv, unit))}</text>')
+    return X, Y
+
+
+def chart_evolution(data, title, subtitle) -> str:
+    meta, its = _evo_load(data)
+    if not its:
+        return "".join(head(W, 80, title or "Evolution",
+                            "no iterations recorded")) + "</svg>"
+
+    xs = [r["n"] for r in its]
+    notes = {r["n"]: r["note"] for r in its}
+    obj = meta.get("objective") or {}
+    okey = obj.get("metric")
+    if not okey:
+        # No declared objective: take the first metric that every iteration has.
+        common = set(its[0]["metrics"])
+        for r in its[1:]:
+            common &= set(r["metrics"])
+        okey = sorted(common)[0] if common else None
+    direction = (obj.get("direction") or "max").lower()
+    target = _evo_num(obj.get("target"))
+    ounit = obj.get("unit") or ""
+
+    ovals = [_evo_num(r["metrics"].get(okey)) for r in its] if okey else []
+    have = [(r, v) for r, v in zip(its, ovals) if v is not None]
+
+    # Which iteration is the answer: the one explicitly accepted, else the best
+    # against the objective. Never "the last one" — a loop that ended because it
+    # ran out of budget usually did not end on its best pass.
+    best = None
+    accepted = next((r for r in its if r["accepted"]), None)
+    if have:
+        best = (max if direction == "max" else min)(have, key=lambda rv: rv[1])
+    chosen = None
+    if accepted is not None:
+        chosen = (accepted, _evo_num(accepted["metrics"].get(okey)))
+    elif best is not None:
+        chosen = best
+
+    tracks = list(meta.get("track") or [])
+    if not tracks:
+        seen = []
+        for r in its:
+            for k in r["metrics"]:
+                if k != okey and k not in seen:
+                    seen.append(k)
+        tracks = [{"metric": k} for k in seen[:3]]
+    # Filtered here, not in the drawing loop below: the height is computed from
+    # len(tracks) before anything is drawn, so a track that is declared and
+    # never measured would reserve a panel's worth of blank page.
+    tracks = [t for t in tracks
+              if t.get("metric") != okey
+              and any(_evo_num(r["metrics"].get(t.get("metric"))) is not None
+                      for r in its)][:3]
+
+    var_names = []
+    for r in its:
+        for k in r["vars"]:
+            if k not in var_names:
+                var_names.append(k)
+    var_names = var_names[:6]
+
+    top = 62 if (title or subtitle) else 24
+    obj_h = 168
+    trk_h = 74
+    # Kept in step with the layout below by hand, because head() needs the
+    # height before anything is drawn: 20 for the "changed" caption plus 18 a
+    # row, then 26 for the iteration ticks.
+    var_h = (20 + 18 * len(var_names)) if var_names else 0
+    height = top + obj_h + 30 + len(tracks) * (trk_h + 26) + var_h + 26
+
+    # Two lines, never one long one. The goal is the human's sentence and the
+    # outcome is the machine's; concatenated they run off the right edge of the
+    # SVG, and an SVG does not wrap.
+    line1 = subtitle or meta.get("goal") or ""
+    line2 = ""
+    if chosen and chosen[1] is not None:
+        state = meta.get("status") or ""
+        verdict = ""
+        if target is not None:
+            met = (chosen[1] >= target) if direction == "max" else (chosen[1] <= target)
+            verdict = ",  target met" if met else ",  SHORT of target"
+        word = "accepted" if accepted is not None else "best"
+        line2 = (f"{len(its)} iterations  ·  {word} #{chosen[0]['n']}: "
+                 f"{okey} {_evo_fmt(chosen[1], ounit)}{verdict}"
+                 f"{('  ·  ' + state) if state else ''}")
+        if accepted is not None and best is not None and best[0]["n"] != accepted["n"]:
+            # Accepting something other than the best pass is a judgement, and
+            # the reviewer is entitled to see that it was made.
+            line2 += f"  ·  best was #{best[0]['n']} ({_evo_fmt(best[1], ounit)})"
+    if line2:
+        height += 17
+
+    o = head(W, height, title or f'Design loop — {meta.get("loop", "")}',
+             _clip(" ".join(str(line1).split()), 108))
+    if line2:
+        o.append(f'<text class="ink2" x="16" y="62" font-size="12">'
+                 f'{esc(_clip(line2, 108))}</text>')
+        top += 17
+    # The variable names are right-anchored against the left margin, so the
+    # margin has to fit the longest of them or they run off the edge of the
+    # SVG — which is what "ldo_gated" and "comparator" did.
+    x0 = max(58, min(120, int(max((len(v) for v in var_names), default=0) * 5.7) + 14))
+    w = W - x0 - 96
+
+    # --- the objective ---------------------------------------------------
+    if okey and have:
+        _evo_panel(o, x0, top, w, obj_h, xs, ovals,
+                   f"{okey}{(' (' + ounit + ')') if ounit else ''}",
+                   limit=target, direction=direction, unit=ounit,
+                   accent=SERIES[0], notes=notes)
+        lo_n, hi_n = min(xs), max(xs)
+        ys = [v for v in ovals if v is not None] + ([target] if target is not None else [])
+        lo, hi = min(ys), max(ys)
+        pad = (hi - lo) * 0.14 or (abs(hi) * 0.1 or 1.0)
+        lo, hi = lo - pad, hi + pad
+        X = lambda n: x0 + (n - lo_n) / max(hi_n - lo_n, 1e-9) * w
+        Y = lambda v: top + obj_h - (v - lo) / max(hi - lo, 1e-9) * obj_h
+
+        # Verdict is never colour alone: the failing passes carry a cross as
+        # well as a red ring, so the chart survives a mono print.
+        for r, v in zip(its, ovals):
+            if v is None:
+                continue
+            col = _evo_verdict_colour(r["verdict"])
+            if r["verdict"] == "fail":
+                cx, cy = X(r["n"]), Y(v)
+                o.append(f'<path d="M{cx-3.4:.1f},{cy-3.4:.1f}L{cx+3.4:.1f},{cy+3.4:.1f}'
+                         f'M{cx+3.4:.1f},{cy-3.4:.1f}L{cx-3.4:.1f},{cy+3.4:.1f}" '
+                         f'stroke="{col}" stroke-width="1.6"/>')
+            elif r["verdict"] == "partial":
+                o.append(f'<circle cx="{X(r["n"]):.1f}" cy="{Y(v):.1f}" r="4.5" '
+                         f'fill="none" stroke="{col}" stroke-width="1.4"/>')
+
+        if chosen and chosen[1] is not None:
+            cr, cv = chosen
+            col = PASS if (target is None or
+                           ((cv >= target) if direction == "max" else (cv <= target))) else WARN
+            o.append(f'<circle cx="{X(cr["n"]):.1f}" cy="{Y(cv):.1f}" r="6.5" '
+                     f'fill="none" stroke="{col}" stroke-width="2"/>')
+            lbl = "accepted" if accepted is not None else "best"
+            anchor = "end" if X(cr["n"]) > x0 + w * 0.7 else "start"
+            dx = -9 if anchor == "end" else 9
+            o.append(f'<text x="{X(cr["n"]) + dx:.1f}" y="{Y(cv) - 10:.1f}" '
+                     f'text-anchor="{anchor}" font-size="11" font-weight="600" '
+                     f'fill="{col}">#{cr["n"]} {lbl}</text>')
+
+        # The plateau is the reason to stop, so say it on the chart rather than
+        # leaving the reader to measure three dots with their eye.
+        tail = [v for v in ovals[-3:] if v is not None]
+        if len(tail) == 3:
+            span = max(tail) - min(tail)
+            scale_ = max(abs(v) for v in tail) or 1.0
+            if span / scale_ < 0.02:
+                o.append(f'<text class="ink2" x="{x0 + w}" y="{top + obj_h - 6}" '
+                         f'text-anchor="end" font-size="10.5">'
+                         f'last 3 within {span / scale_ * 100:.1f}% — plateau</text>')
+
+    # --- the metrics it was allowed to cost ------------------------------
+    y = top + obj_h + 30
+    for i, t in enumerate(tracks):
+        key = t.get("metric")
+        vals = [_evo_num(r["metrics"].get(key)) for r in its]
+        _evo_panel(o, x0, y + 14, w, trk_h, xs, vals,
+                   f'{key}{(" (" + t["unit"] + ")") if t.get("unit") else ""}',
+                   limit=_evo_num(t.get("limit")),
+                   direction=(t.get("direction") or "max").lower(),
+                   unit=t.get("unit") or "", accent=SERIES[(i + 1) % len(SERIES)],
+                   notes=notes)
+        y += trk_h + 26
+
+    # --- what was actually changed ---------------------------------------
+    # The point of the strip: an objective that moved without a variable moving
+    # is measurement noise, and a variable that moved without the objective
+    # moving is a knob that does nothing. Both are visible only side by side.
+    if var_names:
+        lo_n, hi_n = min(xs), max(xs)
+        X = lambda n: x0 + (n - lo_n) / max(hi_n - lo_n, 1e-9) * w
+        o.append(f'<text class="axf" x="{x0}" y="{y + 10}" font-size="10.5">'
+                 f'changed</text>')
+        y += 20
+        for name in var_names:
+            o.append(f'<text class="ink2" x="{x0 - 6}" y="{y + 4}" '
+                     f'text-anchor="end" font-size="10.5">{esc(name)}</text>')
+            prev = None
+            for r in its:
+                v = r["vars"].get(name)
+                cx = X(r["n"])
+                if v is None:
+                    prev = None
+                    continue
+                moved = prev is None or v != prev
+                o.append(f'<circle cx="{cx:.1f}" cy="{y:.1f}" r="{3 if moved else 1.6}" '
+                         f'fill="{INK2["light"]}" opacity="{1 if moved else .35}">'
+                         f'<title>iteration {r["n"]}: {esc(name)} = '
+                         f'{esc(_evo_fmt(_evo_num(v)) if _evo_num(v) is not None else str(v))}'
+                         f'</title></circle>')
+                prev = v
+            first = next((r["vars"].get(name) for r in its
+                          if r["vars"].get(name) is not None), None)
+            last = next((r["vars"].get(name) for r in reversed(its)
+                         if r["vars"].get(name) is not None), None)
+            def _fmt(v):
+                n_ = _evo_num(v)
+                return _evo_fmt(n_) if n_ is not None else str(v)
+            # A variable that never moved says so by being one value, not by
+            # being written twice with an arrow between it.
+            span = (f"{_fmt(first)} \u2192 {_fmt(last)}"
+                    if _fmt(first) != _fmt(last) else _fmt(first))
+            o.append(f'<text class="ink2" x="{x0 + w + 8}" y="{y + 4}" '
+                     f'font-size="10.5">{esc(span)}</text>')
+            y += 18
+
+    # x axis, once, at the bottom of the stack
+    lo_n, hi_n = min(xs), max(xs)
+    for n in xs:
+        cx = x0 + (n - lo_n) / max(hi_n - lo_n, 1e-9) * w
+        o.append(f'<text class="axf" x="{cx:.1f}" y="{height - 12}" '
+                 f'text-anchor="middle" font-size="10">{n}</text>')
+    # To the right of the last tick, not on top of it.
+    o.append(f'<text class="axf" x="{x0 + w + 10}" y="{height - 12}" '
+             f'font-size="10.5">iteration</text>')
+    o.append("</svg>")
+    return "\n".join(o)
+
+
+# --------------------------------------------------------------------------
 KINDS = {
     "budget": (chart_budget, BUDGET_SCHEMA),
     "corners": (chart_corners, CORNERS_SCHEMA),
@@ -786,6 +1198,7 @@ KINDS = {
     "coverage": (chart_coverage, COVERAGE_SCHEMA),
     "waterfall": (chart_waterfall, WATERFALL_SCHEMA),
     "stackup": (chart_stackup, STACKUP_SCHEMA),
+    "evolution": (chart_evolution, EVOLUTION_SCHEMA),
 }
 
 
@@ -818,11 +1231,12 @@ def main() -> int:
         print(f"hw-chart: no such file: {cfg.data}", file=sys.stderr)
         return 2
 
-    rows = read_rows(cfg.data)
-    if cfg.kind in ("trace", "bode"):
-        svg = fn(rows, cfg.title, cfg.subtitle, cfg)
+    if cfg.kind == "evolution":
+        svg = fn(read_object(cfg.data), cfg.title, cfg.subtitle)
+    elif cfg.kind in ("trace", "bode"):
+        svg = fn(read_rows(cfg.data), cfg.title, cfg.subtitle, cfg)
     else:
-        svg = fn(rows, cfg.title, cfg.subtitle)
+        svg = fn(read_rows(cfg.data), cfg.title, cfg.subtitle)
 
     if cfg.out:
         os.makedirs(os.path.dirname(os.path.abspath(cfg.out)), exist_ok=True)

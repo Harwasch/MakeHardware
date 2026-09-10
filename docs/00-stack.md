@@ -15,10 +15,13 @@ estimated.
 | Circuit simulation | **ngspice 42** via **ltspice-mcp** 0.5.0 | Headless, no Wine, first-class backend in the MCP server. Returns parsed measurements, not plots. |
 | Circuit simulation (opt-in) | **LTspice** under Wine | Only for vendor-encrypted ADI models and `.asc` editing. Off by default. |
 | 3D CAD | **build123d** 0.11.1 + **build123d-mcp** | Parametric Python CAD on OCCT. Models are code, so they diff, review and re-render on a changed number. |
+| Cloud CAD (opt-in) | **Onshape FeatureScript MCP** | For a live CAD document the human opens in a browser tab, and for authoring reusable custom features — the one thing build123d has no equivalent of. Remote HTTP server; Claude Code runs the sign-in on first use, against the human's own account and API allocation. |
 | Meshing / FEA | **gmsh** 4.12.1 + **CalculiX** 2.21 | Both in the Ubuntu archive, both headless. Thermal and structural. |
-| Magnetics | **FastHenry** 3.0.1 + **Elmer** 26.2 + **GetDP** 3.2.0 | SPICE cannot tell you an inductance. FastHenry is PEEC — no air mesh, seconds for L, M, k and R_ac of air-core conductors; Elmer does the cases with ferrite in them. See the `hw-magnetics` skill for which answers what. |
+| Magnetics | **FastHenry** 3.0.1 + **Elmer** 26.2 (`elmerfem-csc`, elmer-csc PPA) + **GetDP** 3.2.0 | SPICE cannot tell you an inductance. FastHenry is PEEC — no air mesh, seconds for L, M, k and R_ac of air-core conductors; Elmer does the cases with ferrite in them. See the `hw-magnetics` skill for which answers what. |
 | Design gates | **`sch-lint`**, **`pcb-lint`**, **`cad-export`** | In-tree, read-only, no KiCad and no MCP server needed. They measure the things ERC and DRC have no opinion about: whether a human can read the drawing, whether the net classes are physically routable, whether the CAD file is an assembly or a lump. |
-| Figures | **`hw-chart`** | Seven engineering plots as themed SVG, 2-7 kB each, generated from the file that owns the numbers. |
+| Figures | **`hw-chart`** | Eight engineering plots as themed SVG, 2-9 kB each, generated from the file that owns the numbers. |
+| Design loops | **`hw-iterate`** | A ledger of every verify-and-refine pass — variables, measured metrics, the run file each number came from — and the evolution chart drawn from it. What turns "it meets the target" into something a reviewer can check. |
+| Environment repair | **`hw-repair`** | Installs, at run time, what the environment build failed to. A degraded snapshot is otherwise a dead session until somebody rebuilds the environment. |
 | Design review | **kicad-happy** (MIT) | Read-only analysers Konnect does not have: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference, distributor search. Pure Python, needs no KiCad install. |
 | Vision renders | **matplotlib** + build123d tessellation | Shaded views and isometric line art from real geometry. |
 | Vision styling | **Hugging Face Spaces** (FLUX Kontext, Qwen) | Restyles a geometry render without inventing new proportions. No API key needed. |
@@ -197,7 +200,8 @@ starting structure, not shared code, so divergence there is correct.
 | Mirroring Konnect on our own repo | Would work — the proxy serves attached repos — but re-hosting the binary carries an AGPL source-offer obligation, and the upstream asset is directly fetchable anyway. |
 | LTspice as the default | Blocked domain, ~2 GB, and unnecessary — ngspice covers the loop. |
 | NGSolve, Kratos, scikit-fem | Nothing has needed them yet, and every tool in the image is one more thing that can fail the build. Add them when a project needs one. |
-| Elmer from source | ~20 minutes on 1 vCPU, against under a second to extract the prebuilt tarball. Kept as the documented fallback for a changed base image, pinned to a commit — never an unpinned clone of the default branch. |
+| Elmer from source | ~20 minutes on 1 vCPU against ~70 s for the packaged build, and it does not fit the setup budget. |
+| Elmer from a prebuilt tarball on our own releases | **This is what shipped, and the asset never existed.** The pinned URL 404'd on every build in every environment; `phase_magnetics` degraded silently every time and the environment came up looking healthy with no `ElmerSolver` in it. The lesson is not "publish the asset" — it is that a private artefact nobody can verify from this repo alone is worse than a slower install. The elmer-csc PPA is upstream's own build, it is on the same host KiCad 10 already needs, and apt says loudly when it cannot fetch it. |
 | `pip` for the Python stack | `uv` does the same install in **10 s** vs. minutes. |
 | Doorstop, sphinx-needs | Weaker typed grammars and no ReqIF path out. |
 | A template repo instead of a plugin | Copies diverge; a practice learned on one project never reaches the others. |

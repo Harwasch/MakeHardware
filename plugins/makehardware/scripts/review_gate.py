@@ -272,6 +272,76 @@ def state(review: dict) -> str:
 # ---------------------------------------------------------------------------
 # Packet — the page the human is actually pointed at
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# concision
+#
+# A review is a decision, not a report. The failure this budget exists to stop
+# is the one that reads like diligence: four paragraphs restating what the
+# figures already show, three of which the reviewer skims and the fourth of
+# which they skip — and then they miss the rail that is over budget, because
+# nobody plotted it and it was in the middle of the third paragraph.
+#
+# So the rule is a ratio, not a style note. Text has to earn its place against
+# a picture that could have carried the same number, and the budget is what
+# makes an agent choose the picture. Every figure below has a tool that
+# generates it from the file that owns the data: hw-chart, sch-lint --svg,
+# pcb-lint --svg, cad-export, req-trace --map, plan-render, block-diagram,
+# hw-iterate chart.
+#
+# The numbers are deliberately generous against what a good review already
+# does — the worked example's five reviews run 24 to 46 words of summary and
+# 5 to 14 words a question. If a request does not fit, the problem is almost
+# never that the design is complicated. It is that the summary is doing a
+# figure's job.
+# ---------------------------------------------------------------------------
+SUMMARY_WORDS = 60
+QUESTION_WORDS = 25
+WORDS_PER_FIGURE = 80
+
+
+def _words(text_: str) -> int:
+    return len((text_ or "").split())
+
+
+def concision(review: dict) -> list[tuple[str, str]]:
+    """(severity, message) for everything over budget. Empty means it is fine.
+
+    "hard" is refused at `open`, because the fix is to shorten text that has
+    not been sent yet. "soft" is reported but written, because it usually means
+    a figure has not been rendered *yet* rather than that one is not coming.
+    Both fail `check --gate`.
+    """
+    out = []
+    n = _words(review.get("summary"))
+    if n > SUMMARY_WORDS:
+        out.append(("hard",
+                    f"summary is {n} words against a {SUMMARY_WORDS}-word "
+                    f"budget. Whatever is in there that a figure could carry, "
+                    f"generate the figure and delete the sentence."))
+    for i, q in enumerate(review.get("questions") or [], 1):
+        qn = _words(q)
+        if qn > QUESTION_WORDS:
+            out.append(("hard",
+                        f"question {i} is {qn} words against {QUESTION_WORDS}. "
+                        f"A question a reviewer has to re-read is one they "
+                        f"answer vaguely. Lead with the decision; put the "
+                        f"context in the figure."))
+    prose = _words(review.get("summary")) + sum(
+        _words(q) for q in review.get("questions") or [])
+    figures = sum(1 for p in all_paths(review) if viewable(p))
+    if prose and not figures:
+        out.append(("soft",
+                    f"{prose} words and nothing that renders in a browser. "
+                    f"That is a memo, not a review."))
+    elif figures and prose > figures * WORDS_PER_FIGURE:
+        out.append(("soft",
+                    f"{prose} words against {figures} viewable artefact(s) — "
+                    f"over the {WORDS_PER_FIGURE}-words-per-figure budget. "
+                    f"Either there is a figure missing, or the text is doing "
+                    f"its job badly."))
+    return out
+
+
 def packet_path(rid: str) -> str:
     return os.path.join(PACKET_DIR, f"{rid}.md")
 
@@ -425,6 +495,25 @@ def cmd_open(args) -> int:
     data = load(args.ledger)
     rid = args.id
     files = expand(args.artifact or [])
+    # Checked before the packet is written, because the fix is always to
+    # shorten the text you were about to send, and that is easier to do now
+    # than after it is on a page with a link already handed over.
+    over = concision({
+        "summary": args.summary,
+        "questions": list(args.question or []),
+        "artifacts": [{"path": f} for f in files if os.path.exists(f)],
+        "references": [],
+    })
+    hard = [m for sev, m in over if sev == "hard"]
+    if hard and not args.long:
+        print("review not opened — too much prose for what it shows:\n")
+        for m in hard:
+            print(textwrap.fill(m, 76, initial_indent="  - ",
+                                subsequent_indent="    "))
+        print("\n  Shorten it, or generate the figure that makes the words "
+              "unnecessary.\n  --long overrides this, and every use of it is "
+              "a review somebody skimmed.")
+        return 1
     missing = [f for f in files if not os.path.exists(f)]
     present = [f for f in files if os.path.exists(f)]
 
@@ -487,6 +576,10 @@ def cmd_open(args) -> int:
         if app_only:
             print("  These need an application to open: "
                   + ", ".join(app_only[:6]))
+
+    for sev, m in concision(review):
+        if sev == "soft" or args.long:
+            print("\n  " + textwrap.fill(m, 74, subsequent_indent="  "))
 
     unpushed = uncommitted([review["packet"], *present, *refs])
     if unpushed:
@@ -624,6 +717,8 @@ def cmd_check(args) -> int:
         elif st == "stale":
             for p in drifted(review):
                 problems.append(f"{rid}: approved, then {p} changed")
+        for _sev, m in concision(review):
+            problems.append(f"{rid}: {m}")
 
     if problems:
         print("Review gate: not clear\n")
@@ -676,6 +771,9 @@ def main() -> int:
                    help="linked in the packet but not part of the agreement — "
                         "source files that legitimately churn, like a live "
                         ".kicad_sch or plan.yaml; repeatable")
+    p.add_argument("--long", action="store_true",
+                   help="open a review that exceeds the prose budget. There is "
+                        "almost always a figure that would have been shorter.")
     p.add_argument("--question", action="append",
                    help="a question the human must answer; repeatable")
     p.set_defaults(func=cmd_open)

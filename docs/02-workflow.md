@@ -243,6 +243,19 @@ A failed simulation loops back to stage 4. A simulation that cannot meet the
 number loops back to stage 3 — the requirement moves, with the human's
 agreement, and the `RATIONALE` says why.
 
+**A first run that misses is the start of a loop, not a result.** Skill:
+`hw-optimize`. Open one with `hw-iterate`, name what the objective is not
+allowed to cost *before* you start optimising, and record every pass with the
+run file its numbers came from — including the passes that got worse, which are
+the ones that carry information. `hw-iterate chart` puts the trajectory on the
+review page, which is what lets a reviewer tell a converged design from one
+that ran out of budget: both otherwise report a number.
+
+`hw-optimize` also holds the line between pushing through and stopping. A
+missing tool, a failed solve, an approach that did not work — those are
+obstacles, and they are yours. A trade between two things the human said they
+wanted is a decision, and it is theirs.
+
 ## 7. Verification
 
 Skill: `hw-verification`

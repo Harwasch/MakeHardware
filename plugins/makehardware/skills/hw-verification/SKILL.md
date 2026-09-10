@@ -129,3 +129,12 @@ github.com while you work in a cloud VM, so the verification report belongs in
 `docs/design/`, committed, with the ERC and DRC counts as numbers in the text.
 Before claiming the design is done, open the review — see `hw-review`. A
 verification report nobody has read is not a verification.
+
+## Evidence from a design loop
+
+Where a requirement was met by iterating rather than by a single run, cite
+the accepted pass, not the loop: `hw-iterate status <loop> --gate` exits 1
+unless the accepted iteration meets the target and names the run file it
+was read from. That gate passing is what makes the loop's number usable as
+evidence here. Attach the evolution chart to the verification review — see
+`hw-optimize`.

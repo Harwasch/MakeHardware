@@ -7,6 +7,117 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.5.0
+
+Two tools that had never worked, one that failed for a reason nobody had
+looked at, a CAD path the human can open in a browser — and the loop itself:
+an agent iterating toward a target now leaves a record a reviewer can check
+instead of a number they have to trust.
+
+### Fixed
+
+* **Elmer had never installed. In any session, in any environment.** The
+  pinned tarball URL — a release asset on this repository — 404s, and always
+  did: there are no releases on this repository at all. `phase_magnetics`
+  degraded on every build, and because a degraded phase still exits 0 the
+  environment came up looking healthy with no `ElmerSolver` in it. It now
+  installs `elmerfem-csc` from the upstream elmer-csc PPA, which is on
+  `ppa.launchpadcontent.net` — the host KiCad 10 already needs, so it costs no
+  new allowlist entry. Verified end to end: v26.2, ~70 s, and a coupled
+  magnetostatic/thermal/stress solve of `CoilOnIronCore` in 16 s. The packaged
+  build is self-contained, so the `LD_LIBRARY_PATH` export the old one needed
+  is gone from both the setup script and the `hw-magnetics` skill.
+
+* **Konnect's two subagents launched with no tools.** `konnect init` writes
+  them with `tools: [mcp__konnect__*]`, which is right for a standalone
+  install and wrong for ours: Claude Code namespaces a plugin's MCP servers,
+  so under this plugin every Konnect tool is
+  `mcp__plugin_makehardware_konnect__*` and that glob matched nothing. The
+  agents did not error — they came back having "reviewed" a board they could
+  not open, which is the worst shape a failure can take. Both patterns are now
+  written, at build time and by `hw-repair konnect` for environments already
+  snapshotted with the broken files.
+
+* **`hw-doctor` reported build123d as failed when it was fine.** Its first
+  import pulls in OCCT and takes ~25 s cold; the probe timeout was 20 s, so
+  the one command whose job is to say whether the toolchain works said the CAD
+  stack was broken. Ceiling raised to 45 s.
+
+* **An ad-hoc review showed its questions and none of its evidence.** A review
+  with no `STANDARD` phase of its own — a design loop, a simulation campaign —
+  rendered its title, summary and questions on the review page and dropped its
+  artefacts. They were on the markdown packet, but the page is what the
+  request links to first.
+
+### Added
+
+* **`hw-optimize` and `hw-iterate` — the closed design loop.** An agent given
+  "get the phase margin above 60 degrees without losing the bandwidth" changes
+  a value, simulates, reads the number and repeats; by default none of that
+  survives, and the repository ends up with the last netlist and a sentence
+  claiming a figure. `hw-iterate` records every pass — the variables changed,
+  the metrics measured, and the run file each number was read out of — and
+  `hw-chart evolution` draws the trajectory: the objective against its target,
+  each tracked metric against its own limit, and a strip of which knob moved
+  when. A reviewer reads three things off it that no paragraph delivers: that
+  it converged rather than stopped, which change bought the improvement, and
+  what it cost elsewhere.
+
+  `--track` is the half that matters. An objective alone is a licence to wreck
+  everything else to satisfy it, and a loop that does exactly that looks like a
+  success from the inside. `hw-iterate record` says when the last three passes
+  are within 2% of each other — the signal to change approach rather than run a
+  fourth variation of the same idea — and `status --gate` exits 1 unless the
+  accepted pass meets the target and names its evidence.
+
+* **The perseverance/escalation policy**, in `hw-optimize`. The two failure
+  modes are symmetric: an agent that stops at the first obstacle wastes the
+  human's time on things it could have solved, and one that never stops burns a
+  day building the wrong thing confidently. The line is drawn where a
+  well-informed human could reasonably disagree with either answer — that is a
+  decision, and it goes to them. A missing tool, a failed solve, an approach
+  that did not work: those are obstacles, and they are the agent's.
+
+* **The Onshape FeatureScript MCP server**, at
+  `https://fs-mcp.labs.onshape.app/mcp`. Claude Code runs the sign-in on first
+  use, against the human's own account. build123d stays the default — it is in
+  the repository, it diffs, and `cad-export --check` gates it; Onshape is for a
+  live CAD document the human keeps working in, and for authoring reusable
+  custom features, which build123d has no equivalent of. `hw-cad` carries the
+  comparison and the warning that every call spends the account's Onshape API
+  allocation.
+
+* **`hw-repair`** — run-time repair for what the environment build missed.
+  The environment is a snapshot taken once, before any session starts; when a
+  phase degrades, every session made from it is missing the tool and the clean
+  fix is a rebuild that an agent mid-task cannot do. `hw-repair elmer` is
+  ninety seconds. `hw-doctor` now names it where it would help.
+
+* **`hw-schematic/references/kicad-channels.md`** — which of Konnect,
+  `kicad-cli` and the lint tools may touch a `.kicad_*` file, and the recovery
+  list to work before escalating a Konnect failure. It also answers the
+  recurring question with a fact: `kicad-cli` has no `add`, `place`, `route` or
+  `connect` verb on KiCad 10, so there is no direct CLI to use instead of
+  Konnect. Konnect authors; `kicad-cli` exports and checks, and you may call it
+  yourself for those.
+
+### Changed
+
+* **`review-gate` now enforces concision.** A 60-word budget on `--summary`, 25
+  on each question, and 80 words per viewable artefact. Over budget on the
+  first two and the review is refused before the packet is written — the fix is
+  always to shorten text that has not been sent yet, or to generate the figure
+  that makes the words unnecessary. The worked example's five reviews run 24-46
+  words of summary and 5-14 a question, and none of them are thin. `--long`
+  overrides it, and every use of it is a review somebody skimmed.
+
+* **The example project now carries a design loop.** `examples/thermal-probe`
+  ends its standby write-up with "the reference could be duty-cycled ... that
+  is the obvious lever and it has not been modelled". It is modelled now, as
+  five recorded passes: #2 met the current target and was rejected on wake
+  time, #4 was better still and rejected harder, and the accepted pass is not
+  the best one on the objective. That is the shape the chart exists to show.
+
 ## 0.4.0
 
 Drawings somebody can read, files somebody can open, and pictures instead of

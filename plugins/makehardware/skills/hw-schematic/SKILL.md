@@ -17,6 +17,12 @@ The rule this skill exists to enforce:
 > let a human find a circuit, follow it, and judge it. If it does not do that,
 > it does not matter that it is correct.
 
+**When a Konnect call fails, work `references/kicad-channels.md` before
+escalating.** It has the failure list, and it answers the recurring question:
+`kicad-cli` cannot author — it has no `add`, `place`, `route` or `connect` verb
+— so there is no direct CLI to reach for instead. Konnect authors; `kicad-cli`
+exports and checks, and you may call it yourself for those.
+
 Run the gate:
 
 ```bash

@@ -125,3 +125,13 @@ Put the DRC count in the review as a number, and the stackup as a table. See
 All board edits go through **Konnect**, or through KiCad's own `pcbnew` Python
 API when the IPC socket is not responding. Never text-edit a `.kicad_pcb`.
 `pcb-lint` only ever reads.
+
+## When Konnect fails mid-layout
+
+`hw-schematic/references/kicad-channels.md` has the recovery list — the same
+one applies to `pcb_*` toolsets. The short version: `hw-repair konnect` if the
+subagents come back with nothing, `list_toolboxes` if a tool seems missing (the
+routing and export toolsets are not loaded by default), and
+`~/.konnect/logs/calls.jsonl` for what actually failed. `kicad-cli pcb` can do
+your DRC, your Gerbers and your 3D render directly, but it cannot place or
+route anything — there is no headless authoring CLI to fall back to.

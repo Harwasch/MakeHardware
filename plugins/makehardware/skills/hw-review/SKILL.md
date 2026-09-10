@@ -5,7 +5,30 @@ description: Get a human to actually look at and agree to the work, at every mil
 
 # Human review
 
-The one rule: **an artefact the human has not seen is not a deliverable.**
+Two rules, and the second is enforced as hard as the first.
+
+**An artefact the human has not seen is not a deliverable.**
+
+**A review is a decision, not a report.** Lead with the interactive figure;
+keep the words to what the figure cannot say. `review-gate` will refuse a
+review that is more prose than it is evidence:
+
+| | Budget | Why |
+|---|---|---|
+| `--summary` | **60 words** | It orients the reviewer. It does not brief them — the page does that. |
+| each `--question` | **25 words** | A question someone has to re-read gets answered vaguely. |
+| prose per viewable artefact | **80 words** | Text has to earn its place against a picture carrying the same number. |
+
+The worked example's five reviews run 24-46 words of summary and 5-14 a
+question, and none of them are thin. If a request will not fit, the problem is
+almost never that the design is complicated — it is that the summary is doing a
+figure's job. Every figure this toolbox needs has a generator: `hw-chart`,
+`sch-lint --svg`, `pcb-lint --svg`, `cad-export`, `req-trace --map`,
+`plan-render`, `block-diagram`, `hw-iterate chart`. `--long` overrides the
+budget, and every use of it is a review somebody skimmed.
+
+The same restraint applies to what you say in the session. The link and one
+line beat a summary of the page you are linking to.
 
 This exists because the workflow used to state an exit condition for every
 stage — "the human points at one concept", "the human has looked at the image
@@ -239,7 +262,11 @@ Short, specific, and answerable without opening a terminal:
   there.
 * **Show, do not describe.** If a number can be plotted, plot it. `hw-chart`
   covers the standard ones. A paragraph explaining which rail is tight is a
-  paragraph that a bar chart would have made unnecessary.
+  paragraph that a bar chart would have made unnecessary — and the bar chart is
+  the one that gets looked at.
+* **If you iterated, show the iteration.** A loop that reports only its final
+  number is asking to be trusted; the same loop with `hw-iterate chart` on the
+  page is asking to be checked. See `hw-optimize`.
 
 ## What this is not
 

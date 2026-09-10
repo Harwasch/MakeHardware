@@ -1,16 +1,19 @@
-# Review — Block diagram, power tree and buses
+# Review — Standby current, after five passes
 
-`architecture` · requested 2026-09-10 · branch `claude/dreamy-darwin-cc8sz4`
+`standby` · requested 2026-09-10 · branch `claude/dreamy-darwin-cc8sz4`
 
-Four rails. VBUS is the tight one at 90% of the USB-C default
-500 mA while charging, which is fine because it is a charge-only rail — but it
-is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.
+Duty-cycling the reference gets the +40 C corner to 6.4 uA. #5
+was lower and #3 was faster to wake; I took #3.
 
 ## What you are agreeing to
 
-**block-diagram.svg**
+**standby-corners.svg**
 
-![block-diagram.svg](../design/block-diagram.svg)
+![standby-corners.svg](../design/standby-corners.svg)
+
+**standby-evolution.svg**
+
+![standby-evolution.svg](../design/standby-evolution.svg)
 
 ## For context
 
@@ -18,14 +21,13 @@ Sources and working files. Not part of the agreement — these change as work go
 
 | File | Opens in |
 |---|---|
-| [hw/block-diagram.drawio](https://github.com/Harwasch/MakeHardware/blob/claude/dreamy-darwin-cc8sz4/hw/block-diagram.drawio) | draw.io / VS Code extension |
-| [hw/block-diagram.yaml](https://github.com/Harwasch/MakeHardware/blob/claude/dreamy-darwin-cc8sz4/hw/block-diagram.yaml) | plain text on GitHub |
+| [docs/design/iterations/standby.json](https://github.com/Harwasch/MakeHardware/blob/claude/dreamy-darwin-cc8sz4/docs/design/iterations/standby.json) | plain text on GitHub |
+| [docs/design/standby-results.md](https://github.com/Harwasch/MakeHardware/blob/claude/dreamy-darwin-cc8sz4/docs/design/standby-results.md) | renders on GitHub |
 
 ## What we need decided
 
-1. Is a rail or a part missing?
-2. SPI1 shares flash and LCD on one bus — acceptable, or separate them?
-3. Is charging at 450 mA off a 500 mA port too close?
+1. Take #3 at 6.4 uA, or #5 at 4.8 uA for a second comparator part?
+2. Is 4.2 ms wake-up inside what the one-minute log interval needs?
 
 ## Decision
 
@@ -40,8 +42,8 @@ Say which option you want **and why**: the reason is worth more than the choice,
 The agent writes your decision, in your words, into [`docs/review/reviews.yaml`](https://github.com/Harwasch/MakeHardware/blob/claude/dreamy-darwin-cc8sz4/docs/review/reviews.yaml):
 
 ```bash
-review-gate sign architecture --approve --by <name> --note "..."
-review-gate sign architecture --changes "what to change"
+review-gate sign standby --approve --by <name> --note "..."
+review-gate sign standby --changes "what to change"
 ```
 
 Until that happens, any chunk of work depending on this review cannot be marked done.

@@ -573,6 +573,13 @@ class Phase:
         return review_gate.state(self.review) if self.review else "none"
 
 
+# What render_phase can actually put on the page, as opposed to what GitHub
+# can render. The two are not the same set and conflating them is how a review
+# ends up with an apology box where a link belonged.
+EMBEDDABLE = {".svg", ".png", ".jpg", ".jpeg", ".gif", ".glb", ".gltf", ".pdf",
+              ".stl", ".step", ".stp", ".3mf", ".kicad_sch", ".kicad_pcb",
+              ".drawio"}
+
 VIEWER = {".pdf": "GitHub's PDF viewer", ".stl": "GitHub's 3D viewer",
           ".step": "a CAD application", ".3mf": "a slicer or a CAD application",
           ".step": "any CAD package", ".stp": "any CAD package",
@@ -1046,12 +1053,42 @@ def collect(root: str, cfg: dict) -> list[Phase]:
     ledger = review_gate.load(os.path.join(root, review_gate.LEDGER))
     for p in phases:
         p.review = review_gate.find(ledger, p.id)
-    # A review with no phase of its own still belongs on the page.
+    # A review with no phase of its own still belongs on the page — and so do
+    # its figures. Without this, an ad-hoc review (a design loop, a simulation
+    # campaign, a stage with no `STANDARD` collector) showed its title, its
+    # summary and its questions on the page and none of the evidence: the
+    # reviewer got the ask without the thing they were being asked about, which
+    # is the exact failure the page exists to prevent. The artefacts are on the
+    # markdown packet, but the page is what the request links to first.
     known = {p.id for p in phases}
     for r in ledger.get("reviews", []):
         if r.get("id") not in known and r.get("id") not in hide:
             p = Phase(r["id"], r.get("title", r["id"]).split(",")[0], "")
             p.review = r
+            # Only things this page can actually draw go through figure().
+            # A .md or a .json is "viewable" in review_gate's sense — GitHub
+            # renders it — but embedding one here produces a "nothing on this
+            # page can show it" box, which reads as a broken export rather than
+            # as a link to a document. Those belong in the table below.
+            arts = [a["path"] for a in r.get("artifacts") or []]
+            drawable = [a for a in arts if os.path.splitext(a)[1].lower()
+                        in EMBEDDABLE]
+            p.add("figures", [f for f in (figure(root, a) for a in drawable) if f])
+            downloads = [a for a in arts if a not in set(drawable)]
+            downloads += list(r.get("references") or [])
+            if downloads:
+                p.add("links", {
+                    "title": "Everything else in this review",
+                    "note": "The agreed artefacts are above. These are the "
+                            "sources behind them — reading, not agreeing.",
+                    "rows": [{"label": _humanise(path), "path": path,
+                              "why": VIEWER.get(os.path.splitext(path)[1].lower(),
+                                                "plain text on GitHub"),
+                              "group": "", "url": blob_url(path),
+                              "drawio": drawio_url(path),
+                              "missing": not os.path.exists(
+                                  os.path.join(root, path))}
+                             for path in downloads]})
             phases.append(p)
     return phases
 

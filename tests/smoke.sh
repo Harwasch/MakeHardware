@@ -349,6 +349,94 @@ assert t.count('<') < 220, 'chart is too heavy for the review page'" \
     || fail "hw-chart budget output is wrong"
 
 echo
+echo "== the closed design loop =="
+
+# hw-iterate is the ledger a review's evolution chart is drawn from, so the
+# things checked here are the ones that make it trustworthy rather than
+# decorative: engineering notation read as written, an objective that must be
+# measured, and a gate that refuses an unattributed claim.
+L="${WORK}/loops"
+check "${PY}" "${S}/iterate.py" --dir "${L}" open margin \
+    --goal "phase margin over 60 deg" --objective pm --direction max \
+    --target 60 --unit deg --track bw --track-limit bw=1M --track-unit bw=Hz \
+    && pass "a loop opens with an objective and a limit it must not cost" \
+    || fail "hw-iterate open failed"
+
+says "objective" "${PY}" "${S}/iterate.py" --dir "${L}" record margin \
+    --metric bw=1.2M --verdict fail \
+    && pass "a pass that never measured the objective is refused" \
+    || fail "a pass with no objective metric was accepted"
+
+"${PY}" "${S}/iterate.py" --dir "${L}" record margin --var Cc=4.7p \
+    --metric pm=31 --metric bw=2.1M --verdict fail --note base >/dev/null 2>&1
+"${PY}" "${S}/iterate.py" --dir "${L}" record margin --var Cc=1k5 \
+    --metric pm=66 --metric bw=1.35M --verdict pass --note zero >/dev/null 2>&1
+check "${PY}" -c "
+import json
+d = json.load(open('${L}/margin.json'))
+v = [i['vars'] for i in d['iterations']]
+assert v[0]['Cc'] == 4.7e-12, v[0]
+assert v[1]['Cc'] == 1500.0, v[1]     # RKM: 1k5 is 1500, not the string '1k5'
+assert d['iterations'][1]['metrics']['bw'] == 1.35e6" \
+    && pass "engineering and RKM notation are read as numbers" \
+    || fail "hw-iterate mis-parsed an engineering value"
+
+# The gate is the whole point: a number nobody can trace to a run is not
+# evidence, however good it looks on the chart.
+"${PY}" "${S}/iterate.py" --dir "${L}" close margin --accept 2 \
+    --status converged >/dev/null 2>&1
+says "no evidence" "${PY}" "${S}/iterate.py" --dir "${L}" status margin --gate \
+    && pass "the loop gate refuses an accepted pass with no evidence" \
+    || fail "the loop gate passed an unattributed claim"
+
+touch "${WORK}/run.raw"
+"${PY}" "${S}/iterate.py" --dir "${L}" record margin --var Cc=1k5 \
+    --metric pm=66 --metric bw=1.35M --verdict pass --note zero \
+    --evidence "${WORK}/run.raw" >/dev/null 2>&1
+"${PY}" "${S}/iterate.py" --dir "${L}" close margin --accept 3 \
+    --status converged >/dev/null 2>&1
+check "${PY}" "${S}/iterate.py" --dir "${L}" status margin --gate \
+    && pass "…and clears once the accepted pass names its run file" \
+    || fail "the loop gate failed a properly attributed loop"
+
+"${PY}" "${S}/iterate.py" --dir "${L}" chart margin \
+    --out "${WORK}/evo.svg" >/dev/null 2>&1
+check "${PY}" -c "
+import xml.etree.ElementTree as ET
+t = open('${WORK}/evo.svg').read()
+ET.fromstring(t)
+assert 'accepted' in t, 'the accepted iteration is not marked'
+assert 'min 60 deg' in t, 'the target line is not drawn'
+assert '2.1MHz' in t, 'a large value was not SI-prefixed and will overrun its axis'
+assert t.count('<') < 400, 'chart is too heavy for the review page'" \
+    && pass "the evolution chart draws the target, the accepted pass and SI units" \
+    || fail "the evolution chart output is wrong"
+
+echo
+echo "== review concision =="
+
+# The budget exists because a review that is mostly prose gets skimmed, and a
+# skimmed review is a sign-off nobody really gave.
+cd "${WORK}"
+LONG=$("${PY}" -c "print(' '.join(['word'] * 90))")
+says "not opened" "${PY}" "${S}/review_gate.py" open architecture \
+    --title T --summary "${LONG}" --artifact docs/plan.svg \
+    && pass "a review whose summary blows the word budget is refused" \
+    || fail "an over-long summary was accepted"
+
+says "not opened" "${PY}" "${S}/review_gate.py" open architecture \
+    --title T --summary "Three rails." --artifact docs/plan.svg \
+    --question "${LONG}" \
+    && pass "…and so is one whose question does" \
+    || fail "an over-long question was accepted"
+
+check "${PY}" "${S}/review_gate.py" open architecture --title T \
+    --summary "Three rails off one buck. 3V3_ANA is the tight one." \
+    --artifact docs/plan.svg --question "Split the analogue rail?" \
+    && pass "a review that leads with the figure opens" \
+    || fail "a concise review was refused"
+
+echo
 if [ "${fails}" -eq 0 ]; then
     echo "all checks passed"
 else

@@ -117,3 +117,42 @@ at what you just made, instead of re-running a script and hoping. Write the
 finished model back out as a module with `ASSEMBLY` in it, and run
 `cad-export --check` over that. The module is what gets committed and reviewed;
 the session is scratch.
+
+## Onshape, when the human wants to open the model themselves
+
+The plugin ships the **Onshape FeatureScript MCP server**
+(`fs-mcp.labs.onshape.app`). On first use Claude Code runs the sign-in flow and
+the human authorises it against their own Onshape account; until they do, the
+`onshape` tools are present but every call fails as unauthenticated. That is a
+prompt to pass on, not an error to work around — say what you are about to
+model and let them approve it. Two prerequisites are theirs, not yours: an
+Onshape account, and the Onshape Labs FeatureScript MCP subscription from the
+Onshape App Store.
+
+**Every call spends the account's Onshape API allocation** — the same quota
+their API keys draw on. Say so before a long session of it, and do not sit in a
+polling loop against `test_featurescript`.
+
+Which one to reach for:
+
+| | build123d | Onshape |
+|---|---|---|
+| The model lives | in a `.py` module in the repo | in the human's Onshape document |
+| The human opens it | after downloading a STEP | in a browser tab, immediately |
+| Constraints survive the handoff | no — STEP carries no mates | yes, natively |
+| Reviewable without an account | yes — renders, STL, GLB | only what you export |
+| Under version control here | yes | no |
+| Costs the human a quota | no | yes |
+
+So: **build123d stays the default** — it is in the repository, it is diffable,
+`cad-export --check` gates it, and the review artefacts come out of it. Reach
+for Onshape when the deliverable is a live CAD document the human will keep
+working in, or when the task is genuinely a *custom feature* — a parametric
+operation they want to reuse across parts, which is what FeatureScript is for
+and what build123d has no equivalent of.
+
+Do not model the same part in both. Pick one as authoritative and say which in
+the review request, or the two drift and nobody can tell which is the design.
+
+Whichever you use, the review rule is unchanged: a `.step` is a download, not a
+review. Export the renders and put the interactive viewer on the page.

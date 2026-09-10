@@ -127,3 +127,10 @@ computes the crossover and both margins from the data rather than taking them
 from a caption. See `hw-visuals`.
 
 Lead the summary with the corner that fails, never with the average.
+
+## When the first run misses the target
+
+A simulation that does not meet its number is the start of a loop, not a
+result. Open one with `hw-optimize` — `hw-iterate` records each pass and
+`hw-iterate chart` puts the trajectory in the review, which is what lets a
+reviewer tell a converged design from one that ran out of time.

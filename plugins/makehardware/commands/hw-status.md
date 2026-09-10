@@ -18,6 +18,10 @@ report what they say rather than a summary impression:
    and the review image if the spec is newer than them.
 5. **Design checks** — if a KiCad project exists, `kicad-cli sch erc` and
    `kicad-cli pcb drc` against the *current* files.
+5b. **Design loops** — `hw-iterate list`. A loop still `running` is unfinished
+   work nobody can see; one that closed `escalated` is a decision waiting on the
+   human that may never have been asked. Re-render the evolution chart for any
+   loop whose ledger is newer than its SVG.
 6. **The review page** — `review-artifact` to rebuild it from everything the
    steps above just refreshed, then `review-artifact --check`. A status run is
    exactly when the page goes stale, because the numbers on it come from files

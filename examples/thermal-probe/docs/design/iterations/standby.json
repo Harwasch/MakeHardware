@@ -1,0 +1,113 @@
+{
+  "loop": "standby",
+  "goal": "worst in-spec standby corner under 25 uA, without making wake-up\n            slower than the 10 ms the logging interval allows",
+  "opened": "2026-09-10",
+  "status": "converged",
+  "objective": {
+    "metric": "i_standby_ua",
+    "direction": "min",
+    "target": 25.0,
+    "unit": "uA"
+  },
+  "track": [
+    {
+      "metric": "wake_ms",
+      "limit": 10.0,
+      "direction": "min",
+      "unit": "ms"
+    }
+  ],
+  "tool": "ngspice",
+  "iterations": [
+    {
+      "iteration": 1,
+      "at": "2026-09-10T18:15:46+00:00",
+      "vars": {
+        "ref_duty": 1.0,
+        "c_ref_nf": 100.0
+      },
+      "metrics": {
+        "i_standby_ua": 31.8,
+        "wake_ms": 0.4
+      },
+      "verdict": "fail",
+      "note": "reference always on \u2014 the +40 C corner as built",
+      "evidence": [
+        "sim/standby/loop/pass-1.raw"
+      ]
+    },
+    {
+      "iteration": 2,
+      "at": "2026-09-10T18:15:46+00:00",
+      "vars": {
+        "ref_duty": 0.017,
+        "c_ref_nf": 100.0
+      },
+      "metrics": {
+        "i_standby_ua": 5.9,
+        "wake_ms": 12.1
+      },
+      "verdict": "partial",
+      "note": "duty-cycle the reference: current solved, wake-up now over budget",
+      "evidence": [
+        "sim/standby/loop/pass-2.raw"
+      ]
+    },
+    {
+      "iteration": 3,
+      "at": "2026-09-10T18:15:46+00:00",
+      "vars": {
+        "ref_duty": 0.017,
+        "c_ref_nf": 10.0
+      },
+      "metrics": {
+        "i_standby_ua": 6.4,
+        "wake_ms": 4.2
+      },
+      "verdict": "pass",
+      "note": "smaller reference bypass \u2014 settles in time, costs 0.5 uA",
+      "evidence": [
+        "sim/standby/loop/pass-3.raw"
+      ],
+      "accepted": true
+    },
+    {
+      "iteration": 4,
+      "at": "2026-09-10T18:15:46+00:00",
+      "vars": {
+        "ref_duty": 0.017,
+        "c_ref_nf": 10.0,
+        "ldo_gated": 1.0
+      },
+      "metrics": {
+        "i_standby_ua": 5.1,
+        "wake_ms": 41.0
+      },
+      "verdict": "fail",
+      "note": "gating the LDO too: lowest current of the five, and four times over the wake budget",
+      "evidence": [
+        "sim/standby/loop/pass-4.raw"
+      ]
+    },
+    {
+      "iteration": 5,
+      "at": "2026-09-10T18:15:46+00:00",
+      "vars": {
+        "ref_duty": 0.017,
+        "c_ref_nf": 10.0,
+        "comparator": "TS881"
+      },
+      "metrics": {
+        "i_standby_ua": 4.8,
+        "wake_ms": 4.4
+      },
+      "verdict": "pass",
+      "note": "lower-Iq comparator on the same topology as #3",
+      "evidence": [
+        "sim/standby/loop/pass-5.raw"
+      ]
+    }
+  ],
+  "closing_note": "took #3, not the 4.8 uA of #5: the TS881 is a second supplier for\n            1.6 uA we do not need, and #3 already has 4x margin",
+  "closed": "2026-09-10"
+}
