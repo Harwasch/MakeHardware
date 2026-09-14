@@ -14,10 +14,26 @@
 #   hw-repair            what is missing and what can be repaired
 #   hw-repair elmer      install Elmer (~70 s, needs ppa.launchpadcontent.net)
 #   hw-repair kicad      install KiStack and clear out any previous pack
+#   hw-repair base       re-install the base OS packages phase_base installs
+#   hw-repair python     which Python groups are missing
+#   hw-repair python cad re-run one of phase_python's install groups
 #   hw-repair all        everything repairable that is currently missing
 #
 # Every repair is idempotent and re-verifies the tool afterwards. A repair that
 # cannot verify its tool fails loudly rather than reporting success.
+#
+# WHAT A REPAIR CANNOT REACH, and the line is sharp:
+#
+#   An agent can repair anything consumed by a SUBPROCESS IT SPAWNS — apt
+#   packages, Python packages, cloned repos, files in /usr/local/bin. Those
+#   work the moment the install finishes.
+#
+#   It cannot repair anything consumed by the SESSION'S OWN TOOL REGISTRY —
+#   MCP servers, skills, slash commands, bin/ on PATH, environment variables.
+#   Those are read once when the session starts. Installing build123d-mcp
+#   mid-session gives you a working binary and no MCP tools, which looks
+#   exactly like a failed repair and is not one. Every repair that lands on
+#   that side of the line says "restart the session" and means it.
 set -uo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
@@ -51,6 +67,32 @@ KONNECT_AGENTS="kicad-schematic-build-agent kicad-design-review-agent"
 # into a clone this repair is about to delete.
 OLD_KI_STACK_ROOT=/opt/ki-stack
 OLD_KI_STACK_HELPERS="ki-stack-version ki-stack-update-check ki-stack-install-opencode kicad-version kicad-project-find kicad-cli-path kicad-python-smoke kicad-render kicad-svg-to-png kicad-drc-json kicad-erc-json kiutils-inspect"
+
+# --------------------------------------------------------------------------
+# The two tables that mirror env/setup.sh
+#
+# setup.sh is pasted into the environment dialog as one self-contained file
+# and cannot source anything from this repo; this script ships inside the
+# plugin. They are physically unable to share a definition, so they are
+# duplicated and `tests/python-groups.sh` greps both and fails when they
+# disagree. Hand-syncing is how they drift; checking is the house answer.
+#
+# Format: <group>:<packages>:<import probe>. Keep the groups, their order and
+# their packages identical to phase_python's `_uvpip "${VENV}" ...` lines.
+# --------------------------------------------------------------------------
+VENV="${MH_VENV:-/opt/hw-py}"
+VENV_B123D="${MH_VENV_B123D:-/opt/hw-py-b123d}"
+VENV_SPICE="${MH_VENV_SPICE:-/opt/hw-py-spice}"
+
+PY_GROUPS="essential:strictdoc pyyaml:import yaml
+pdf:pypdf:import pypdf
+cad:build123d:import build123d
+numerics:numpy scipy matplotlib:import numpy, scipy, matplotlib
+mesh:gmsh meshio:import gmsh, meshio
+kicad:kicad-python:import kipy"
+
+# Mirrors phase_base's apt list. Same rule: tests/python-groups.sh checks it.
+BASE_PKGS="ca-certificates curl wget unzip jq git xz-utils xvfb xauth x11-utils x11-xserver-utils libgl1-mesa-dri libglu1-mesa libegl1 fonts-dejavu-core ngspice gmsh calculix-ccx graphviz poppler-utils socat"
 
 _have() { command -v "$1" >/dev/null 2>&1; }
 _say()  { printf '%s\n' "$*"; }
@@ -225,6 +267,133 @@ repair_kicad() {
 }
 
 # --------------------------------------------------------------------------
+# base OS packages
+# --------------------------------------------------------------------------
+repair_base() {
+    _need_root
+    _say "base: installing the phase_base package set..."
+    apt-get update -qq >>"${LOG}" 2>&1
+    # shellcheck disable=SC2086
+    if ! apt-get install -y --no-install-recommends ${BASE_PKGS} >>"${LOG}" 2>&1; then
+        _die "apt could not install the base set. See ${LOG}."
+    fi
+    local missing=""
+    for c in ngspice gmsh ccx pdftotext socat; do
+        _have "${c}" || missing="${missing} ${c}"
+    done
+    if [ -n "${missing}" ]; then
+        _die "installed, but still missing:${missing}"
+    fi
+    _say "base: ok — ngspice, gmsh, calculix, poppler-utils and socat all answer"
+    return 0
+}
+
+# --------------------------------------------------------------------------
+# python groups
+#
+# phase_python installs in named groups precisely so one flaky group cannot
+# take out the rest; this re-runs one of them. cadquery-ocp is a ~400 MB wheel
+# and by far the most likely thing in the build to time out — and it is MORE
+# likely to succeed here than it was at build time, because the five-minute
+# snapshot budget does not apply to a session.
+# --------------------------------------------------------------------------
+_uv_bin() {
+    # setup.sh runs with /root/.cargo/bin on PATH; a session does not, so
+    # `uv` is routinely absent from PATH in exactly the place this runs.
+    local c
+    for c in uv /root/.local/bin/uv /root/.cargo/bin/uv /usr/local/bin/uv; do
+        if [ "${c}" = uv ]; then _have uv && { command -v uv; return 0; }
+        elif [ -x "${c}" ]; then printf '%s\n' "${c}"; return 0; fi
+    done
+    return 1
+}
+
+_py_group_field() {  # _py_group_field <group> <1=pkgs|2=probe>
+    printf '%s\n' "${PY_GROUPS}" | while IFS=: read -r g pkgs probe; do
+        [ "${g}" = "$1" ] || continue
+        [ "$2" = 1 ] && printf '%s\n' "${pkgs}" || printf '%s\n' "${probe}"
+    done
+}
+
+_py_group_ok() {  # _py_group_ok <group>
+    local probe; probe="$(_py_group_field "$1" 2)"
+    [ -n "${probe}" ] || return 1
+    "${VENV}/bin/python" -c "${probe}" >/dev/null 2>&1
+}
+
+repair_python() {
+    local group="${1:-}"
+
+    # NEVER recreate the venv here. `uv venv` on an existing /opt/hw-py would
+    # throw away a working strictdoc to fix matplotlib, and the caller asked
+    # for a repair, not a rebuild.
+    if [ ! -x "${VENV}/bin/python" ]; then
+        _die "${VENV} has no interpreter in it. That is a bootstrap, not a
+  repair — this script will not create the venv, because doing so on a
+  partially-good one destroys what still works. Rebuild the environment, or
+  run env/bootstrap.sh on a bare container."
+    fi
+
+    if [ -z "${group}" ]; then
+        _say "python groups in ${VENV}:"
+        _say ""
+        printf '%s\n' "${PY_GROUPS}" | while IFS=: read -r g pkgs _; do
+            if _py_group_ok "${g}"; then
+                _say "  ok        ${g}"
+            else
+                _say "  MISSING   ${g}  hw-repair python ${g}    (${pkgs})"
+            fi
+        done
+        _say ""
+        _say "\`hw-repair python all-groups\` re-runs every missing one."
+        return 0
+    fi
+
+    if [ "${group}" = all-groups ]; then
+        local rc=0 g
+        for g in $(printf '%s\n' "${PY_GROUPS}" | cut -d: -f1); do
+            _py_group_ok "${g}" || { repair_python "${g}" || rc=1; }
+        done
+        return "${rc}"
+    fi
+
+    local pkgs; pkgs="$(_py_group_field "${group}" 1)"
+    if [ -z "${pkgs}" ]; then
+        _die "unknown python group '${group}' — try: $(printf '%s\n' "${PY_GROUPS}" | cut -d: -f1 | tr '\n' ' ')all-groups"
+    fi
+
+    local uv; uv="$(_uv_bin)" || _die "uv is not on PATH and is not in
+  /root/.local/bin or /root/.cargo/bin. There is deliberately no pip fallback:
+  \`uv venv\` creates a venv WITHOUT pip, so \`${VENV}/bin/python -m pip\` does
+  not exist and the error it gives says nothing useful."
+
+    _need_root
+    _say "python: installing group '${group}' (${pkgs})..."
+    # shellcheck disable=SC2086
+    if ! VIRTUAL_ENV="${VENV}" "${uv}" pip install ${pkgs} >>"${LOG}" 2>&1; then
+        _die "group '${group}' did not install. See ${LOG}."
+    fi
+
+    # Verify by import, not by exit code — a resolver can succeed and leave an
+    # import broken, which is the failure hw-doctor's chkpy exists to name.
+    if ! _py_group_ok "${group}"; then
+        _die "group '${group}' installed but still does not import. That is
+  usually two packages fighting over one venv, and reinstalling will not fix
+  it — see \`hw-doctor\`."
+    fi
+    _say "python: ok — group '${group}' imports"
+
+    if [ "${group}" = cad ]; then
+        _say ""
+        _say "  NOTE: this fixed build123d for scripts and for"
+        _say "  ${VENV}/bin/python. It did NOT fix the build123d MCP server,"
+        _say "  which lives in ${VENV_B123D} and whose process started with"
+        _say "  this session. Restart the session to get its tools back."
+    fi
+    return 0
+}
+
+# --------------------------------------------------------------------------
 # report
 # --------------------------------------------------------------------------
 report() {
@@ -242,10 +411,34 @@ report() {
     else
         _say "  ok        kistack    installed, no leftovers"
     fi
+    if [ -x "${VENV}/bin/python" ]; then
+        local miss=""
+        local g
+        for g in $(printf '%s\n' "${PY_GROUPS}" | cut -d: -f1); do
+            _py_group_ok "${g}" || miss="${miss} ${g}"
+        done
+        if [ -n "${miss}" ]; then
+            _say "  MISSING   python    hw-repair python all-groups  (${miss# })"
+        else
+            _say "  ok        python     every install group imports"
+        fi
+    else
+        _say "  MISSING   python     ${VENV} has no interpreter — rebuild, or env/bootstrap.sh"
+    fi
+    if _have ngspice && _have socat; then
+        _say "  ok        base       ngspice and socat present"
+    else
+        _say "  MISSING   base      hw-repair base      (OS packages)"
+    fi
     _say ""
     _say "Run \`hw-doctor\` for the full picture. A repair here fixes this"
     _say "container only — the environment's snapshot is unchanged, so the next"
     _say "session starts degraded again until env/setup.sh is rebuilt."
+    _say ""
+    _say "And a repair reaches subprocesses, not this session's tool registry."
+    _say "MCP servers, skills, commands and environment variables are read once"
+    _say "at session start; restart the session after any repair that installs"
+    _say "one, or it will look like the repair failed when it did not."
 }
 
 : > "${LOG}"
@@ -253,6 +446,14 @@ case "${1:-}" in
     ""|-h|--help|status) report ;;
     elmer)               repair_elmer ;;
     kicad)               repair_kicad ;;
-    all)                 repair_kicad; repair_elmer ;;
-    *) _die "unknown repair '$1' — try: elmer, kicad, all" ;;
+    base)                repair_base ;;
+    python)              repair_python "${2:-}" ;;
+    all)                 repair_kicad; repair_elmer; repair_python all-groups ;;
+    bootstrap)
+        _die "there is no bootstrap subcommand, and there cannot be: this
+  script ships inside the plugin, so a container bare enough to need a
+  bootstrap does not have it. Use env/bootstrap.sh from the repo:
+
+    curl -fsSL https://raw.githubusercontent.com/Harwasch/MakeHardware/main/env/bootstrap.sh | bash" ;;
+    *) _die "unknown repair '$1' — try: elmer, kicad, base, python, all" ;;
 esac

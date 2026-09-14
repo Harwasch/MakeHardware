@@ -161,6 +161,11 @@ phase_base() {
     # within the compressed PDF content stream". pdftotext/pdftoppm are the
     # fallback, and the package is not in this image by default.
     #
+    # socat is here for `claude plugin eval`, which runs any Bash it grants
+    # under an OS sandbox and needs bubblewrap AND socat. bwrap is in the
+    # image; socat is not, and without it every sandboxed run refuses rather
+    # than running unconfined — which reads as the eval being broken.
+    #
     # Nothing here needs a compiler toolchain any more: Konnect was the only
     # thing that was ever built from source, and a skill pack replaced it.
     local build_deps=()
@@ -174,6 +179,7 @@ phase_base() {
         gmsh calculix-ccx \
         graphviz \
         poppler-utils \
+        socat \
         "${build_deps[@]}" \
         >"${LOGDIR}/base.log" 2>&1
 }
@@ -587,6 +593,46 @@ phase_plugin() {
     # An install that loads with a bad manifest still reports success, so
     # confirm the plugin actually reached "enabled" rather than trusting rc.
     "${claude_bin}" plugin list 2>>"${log}" | grep -q "enabled" || return 2
+
+    # The permission allowlist, at USER scope, for the same reason the plugin
+    # is installed here rather than left to the project repo: a cloud session
+    # has no trust dialog, an untrusted workspace ignores project-scope
+    # `permissions.allow` ENTIRELY, and the tools that then prompt on every
+    # call are the gates — the things an agent runs most often. Fixing the
+    # three checked-in settings.json files does nothing for a cloud session;
+    # this is the copy that is actually read.
+    #
+    # Merged with jq, never overwritten: /root/.claude/settings.json may
+    # already hold the user's own settings, and clobbering those to add a
+    # convenience is a bad trade. Absent or unparseable, we start from {}.
+    #
+    # hw-repair is deliberately NOT in this list. It writes apt sources,
+    # imports GPG keys and installs packages as root; the prompt is the
+    # review. See tests/settings-allowlist.sh.
+    mh_merge_allowlist >>"${log}" 2>&1 || return 2
+}
+
+MH_ALLOW='["Bash(ngspice:*)","Bash(kicad-cli:*)","Bash(gmsh:*)","Bash(ccx:*)",
+"Bash(pdftotext:*)","Bash(pdftoppm:*)","Bash(hw-doctor:*)","Bash(hw-display-start:*)",
+"Bash(plan-render:*)","Bash(req-trace:*)","Bash(block-diagram:*)","Bash(vision-board:*)",
+"Bash(review-gate:*)","Bash(imagegen:*)","Bash(cad-export:*)","Bash(hw-chart:*)",
+"Bash(hw-feedback:*)","Bash(hw-iterate:*)","Bash(pcb-lint:*)","Bash(review-artifact:*)",
+"Bash(sch-lint:*)","Bash(/opt/hw-py/bin/python:*)","Bash(/opt/hw-py/bin/strictdoc:*)"]'
+
+mh_merge_allowlist() {
+    local f=/root/.claude/settings.json tmp
+    mkdir -p /root/.claude
+    [ -s "${f}" ] || printf '{}\n' > "${f}"
+    # A settings.json we cannot parse is one we must not rewrite.
+    jq -e . "${f}" >/dev/null 2>&1 || {
+        echo "/root/.claude/settings.json does not parse — leaving it alone"
+        return 0
+    }
+    tmp=$(mktemp)
+    jq --argjson add "${MH_ALLOW}" \
+       '.permissions.allow = ((.permissions.allow // []) + $add | unique)' \
+       "${f}" > "${tmp}" && mv "${tmp}" "${f}" || { rm -f "${tmp}"; return 1; }
+    echo "merged the allow list into ${f} ($(jq '.permissions.allow | length' "${f}") entries)"
 }
 
 # ==========================================================================

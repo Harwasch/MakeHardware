@@ -115,6 +115,39 @@ PYEOF
     || fail "a doc page quotes a stale allowlist entry"
 
 echo
+echo "the copy a cloud session actually reads"
+
+# phase_plugin merges this into /root/.claude/settings.json at user scope,
+# which is the only allowlist an untrusted workspace honours. It is a fourth
+# copy of the same list and drifts like the others.
+"${PY}" - "${DENY[@]}" -- env/setup.sh <<'MHALLOW'
+import json, re, sys
+deny = set(sys.argv[1:sys.argv.index("--")])
+setup = open(sys.argv[sys.argv.index("--") + 1]).read()
+m = re.search(r"^MH_ALLOW='(.*?)'$", setup, re.S | re.M)
+if not m:
+    print("      env/setup.sh has no MH_ALLOW list — phase_plugin merges nothing")
+    sys.exit(1)
+try:
+    got = set(json.loads(m.group(1)))
+except ValueError as exc:
+    print(f"      MH_ALLOW is not valid JSON: {exc}"); sys.exit(1)
+want = set(json.load(open(".claude/settings.json"))["permissions"]["allow"])
+missing, extra = sorted(want - got), sorted(got - want)
+if missing:
+    print(f"      setup.sh MH_ALLOW is missing: {', '.join(missing)}")
+if extra:
+    print(f"      setup.sh MH_ALLOW has entries the settings files lack: {', '.join(extra)}")
+banned = sorted({f"Bash({n}:*)" for n in deny} & got)
+if banned:
+    print(f"      MH_ALLOW must NOT carry {', '.join(banned)} — read this file's header")
+sys.exit(1 if (missing or extra or banned) else 0)
+MHALLOW
+[ $? -eq 0 ] \
+    && pass "setup.sh merges exactly the same list at user scope" \
+    || fail "the user-scope list in setup.sh has drifted from the settings files"
+
+echo
 echo "the cloud caveat is still written down"
 
 if grep -q "hasTrustDialogAccepted" docs/01-environment.md; then

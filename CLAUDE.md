@@ -34,6 +34,7 @@ tests/smoke.sh              # scaffolds a throwaway project and drives the gates
 tests/real-tool-output.sh   # what the review page does with real exporter output
 tests/feedback.sh           # the loop back to this repo: gate, prefill, round-trip
 tests/settings-allowlist.sh # every bin/ tool runs without a permission prompt
+tests/python-groups.sh      # setup.sh and hw-repair still agree on what installs what
 tests/version-bump.sh       # the release check above
 ```
 

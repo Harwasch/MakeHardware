@@ -4,6 +4,23 @@ Everything here goes into the environment dialog at
 [claude.ai/code](https://claude.ai/code). Three fields matter: **Network
 access**, **Environment variables**, and **Setup script**.
 
+## Nothing to paste into: `env/bootstrap.sh`
+
+The three fields below are the cloud-environment path. Where there is no
+environment dialog — a Codex or ChatGPT workspace, a local container, a build
+that was killed at the time budget — there is one URL instead:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Harwasch/MakeHardware/main/env/bootstrap.sh | bash
+```
+
+It fetches the same `setup.sh` and runs it against the running container,
+skipping KiCad and magnetics unless you pass `--full`. Two things it cannot
+do, and both are worth knowing before you run it: the environment's snapshot
+is unchanged, so on the cloud environment the next session starts degraded
+again; and MCP servers, skills and commands are read once at session start, so
+**restart the session afterwards** or they are installed and invisible.
+
 ## Why the original setup script failed
 
 The reported failure was:

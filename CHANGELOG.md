@@ -7,6 +7,101 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.10.0
+
+`hw-repair` could repair two of the seven things `setup.sh` installs, and
+`hw-repair kicad` installed the skill pack rather than KiCad. The phase most
+likely to fail was the one it could not touch at all: `phase_python` pulls
+`cadquery-ocp`, a ~400 MB wheel and by far the most likely thing in the build
+to time out. A session learned its toolchain was broken and could do nothing
+but wait for somebody to rebuild the environment.
+
+### Added
+
+* **`hw-repair python [group]`** — re-run one of `phase_python`'s install
+  groups. The groups exist so one flaky dependency cannot take out the rest;
+  this finishes the thought by letting a session re-run the one that failed.
+  `hw-repair python` with no argument lists which groups import and which do
+  not; `all-groups` does every missing one.
+
+  It is more likely to work than the build was: the five-minute snapshot
+  budget does not apply to a session, which is exactly the constraint that
+  makes cadquery-ocp time out at build time.
+
+  Three refusals, all deliberate. It **will not `uv venv`** — recreating
+  `/opt/hw-py` to fix matplotlib would throw away a working strictdoc, and
+  that is a rebuild, not a repair. It **resolves `uv` explicitly** across
+  `/root/.local/bin` and `/root/.cargo/bin` and fails loudly when it is
+  absent, with **no pip fallback**, because `uv venv` creates a venv without
+  pip and `python -m pip` then fails with an error that explains nothing. And
+  it **verifies by import**, not by exit code — a resolver can succeed and
+  leave an import broken, which is a different problem with a different fix.
+
+* **`hw-repair base`** — re-install `phase_base`'s package set.
+
+* **`env/bootstrap.sh`** — bring a container up from nothing.
+
+  Not a `hw-repair` subcommand, and it cannot be one: `hw-repair` ships inside
+  the plugin, so a container bare enough to need a bootstrap does not have it.
+  The only entry point that works from nothing is a URL, so that is what it is:
+
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/Harwasch/MakeHardware/main/env/bootstrap.sh | bash
+  ```
+
+  It installs `uv` if the container lacks it, fetches the same `setup.sh`, and
+  runs it with KiCad and magnetics off unless you pass `--full` — those are
+  minutes each and both need `ppa.launchpadcontent.net`, and failing there
+  should not cost you the Python environment too. This is the Codex path,
+  where the plugin manifest imports but there is no environment dialog and no
+  setup-script field, so the skills arrive and the tools they name do not.
+
+* **`tests/python-groups.sh`** — `setup.sh` and `hw-repair.sh` still agree
+  about what installs what.
+
+  They cannot share a definition: `setup.sh` is pasted into the environment
+  dialog as one self-contained file and cannot source anything from this repo,
+  while `hw-repair.sh` ships inside the plugin. So the tables are duplicated
+  and checked instead of hand-synced, which is the same answer
+  `tests/version-bump.sh` gives for the two version files.
+
+### Changed
+
+* **`phase_base` installs `socat`.** `claude plugin eval` runs any Bash it
+  grants under an OS sandbox and needs bubblewrap *and* socat. `bwrap` is in
+  the image; socat was not, and without it every sandboxed run refuses rather
+  than running unconfined — which reads as the eval being broken rather than
+  as a missing package.
+
+* **`phase_plugin` merges the permission allowlist into
+  `/root/.claude/settings.json` at user scope.** This is the fix 0.9.0 could
+  not make. A cloud session has no trust dialog, an untrusted workspace
+  ignores project-scope `permissions.allow` entirely, and so the three
+  checked-in `settings.json` files — the ones 0.9.0 corrected — do nothing
+  there. This is the copy that is actually read.
+
+  Merged with `jq`, never overwritten: that file may already hold the user's
+  own settings, and clobbering those to add a convenience is a bad trade. A
+  file that does not parse is left alone rather than replaced.
+  `tests/settings-allowlist.sh` now checks this fourth copy of the list too,
+  including that `hw-repair` stays out of it.
+
+* **`hw-repair` says where the line is, and `hw-doctor` and the docs agree.**
+  A repair reaches anything consumed by a **subprocess it spawns** — apt
+  packages, Python packages, cloned repos, `/usr/local/bin`. It reaches
+  nothing consumed by the **session's own tool registry** — MCP servers,
+  skills, slash commands, `bin/` on PATH, environment variables — because
+  those are read once at session start.
+
+  That distinction is why `hw-repair python cad` now prints, in as many
+  words, that it fixed `build123d` for scripts and did **not** fix the
+  build123d MCP server, which lives in its own venv and whose process started
+  with the session. Without the line, the agent repairs, sees no MCP tools,
+  and concludes the repair failed when it did not.
+
+  `hw-repair bootstrap` is a recognised argument purely so it can explain
+  why it does not exist and point at `env/bootstrap.sh`.
+
 ## 0.9.0
 
 The loop back to this repository had no plumbing in it. `hw-retro` has told the
