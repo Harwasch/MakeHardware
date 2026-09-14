@@ -169,6 +169,17 @@ if [ -n "${_mh_stale_kicad}" ]; then
     printf '  \033[33m!!\033[0m   %-22s stale %s skills present — \033[1mhw-repair kicad\033[0m\n' \
         "kicad leftovers" "${_mh_stale_kicad}"
 fi
+# KI_STACK_DIR is the 0.7.0 variable and pointed into /opt/ki-stack, which
+# `hw-repair kicad` now deletes as a leftover. It comes from the environment
+# dialog, not from any file in this repo, so nothing here can unset it and
+# editing env/environment-variables.env fixes nothing for an environment that
+# already exists. Saying so is the only thing that reaches a running session.
+if [ -n "${KI_STACK_DIR:-}" ] && [ ! -d "${KI_STACK_DIR}" ]; then
+    printf '  \033[33m!!\033[0m   %-22s set to %s, which does not exist\n' \
+        "KI_STACK_DIR" "${KI_STACK_DIR}"
+    printf '       %-22s remove it from the environment'"'"'s variables; the pack is at %s\n' \
+        "" "${KISTACK_DIR}"
+fi
 chkpy ltspice-mcp  "${VENV}/bin/ltspice-mcp" --help
 
 echo
@@ -217,6 +228,10 @@ chk review-gate    "${VENV}/bin/python" \
     "$(dirname "$(readlink -f "$0")")/review_gate.py" --help
 chk review-artifact "${VENV}/bin/python" \
     "$(dirname "$(readlink -f "$0")")/review_artifact.py" --help
+# Probed on the system python, not the venv, because it is stdlib-only by
+# design — it has to work in the degraded session that produced the finding.
+chk hw-feedback    python3 \
+    "$(dirname "$(readlink -f "$0")")/hw_feedback.py" --help
 
 echo
 echo "Design gates and figures:"

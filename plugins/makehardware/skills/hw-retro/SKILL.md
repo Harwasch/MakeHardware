@@ -78,14 +78,59 @@ on boards with a fixed enclosure envelope typically need double the estimate.
 ## Closing the loop
 
 The retro lives in the *project* repo, but the changes it proposes are to
-**MakeHardware**. Do not leave it there to rot:
+**MakeHardware**. Do not leave it there to rot.
 
-1. Write `docs/design/retro.md` and commit it.
-2. Offer to file the proposed changes as a GitHub issue on
-   `Harwasch/MakeHardware`, one issue per proposed change, each naming the
-   file and the edit. Ask first — the human may want to batch or reword them.
-3. If the human is working in the MakeHardware repo itself, offer to make the
-   edits directly instead.
+### What counts as a system finding
+
+The test is mechanical: **the edit changes a file in the plugin.** A finding
+qualifies if you can name a path under `skills/`, `scripts/`, `references/`,
+`templates/` or `env/` and say what it should say instead.
+
+Not this: "the motor housing conducts 35% more heat through the bearing
+carrier than we modelled." True, expensive, and about *this design* — it
+belongs in an ADR. The system finding hiding next to it is "the thermal
+skill never prompts for conduction through mounting hardware", and that one
+names `skills/hw-magnetics/SKILL.md`.
+
+### Record first, publish second
+
+```bash
+hw-feedback new --file skills/hw-sourcing/references/connectors.md \
+    --title "Connector choice is relitigated every project" \
+    --edit "Fill in the board-to-wire row with Molex PicoBlade, and say why" \
+    --evidence "friction log 2026-08-28, 2026-09-02; commits a1b2c3, d4e5f6" \
+    --cost "about one session" --kind "Missing guidance"
+```
+
+The friction log's third line — *where it belongs* — is exactly what
+`--file` takes, so entries feed the tool directly.
+
+This writes `docs/design/feedback/<date>-<slug>.md` in **this** repo and
+commits with the work. It needs no network, no GitHub account and no
+credentials, which is the point: the finding is cheapest to capture at the
+moment it happens, and that moment is never one where somebody wants to open
+a browser.
+
+Then, at the retro:
+
+1. Write `docs/design/retro.md` and commit it, along with the records.
+2. Run `hw-feedback publish`. It prepares one issue for the batch and prints
+   a link, a dedup search, and the body to paste.
+3. **The human files it.** Unless the session happens to have a working `gh`
+   channel to the plugin's repo, `hw-feedback` cannot — a cloud session's
+   token is scoped to this project repo. It will say `NOT FILED`.
+4. When they tell you the issue URL, `hw-feedback mark <slug> <url>` so the
+   record knows where it went. A record whose `published:` stays empty
+   forever is a finding that did not make it.
+
+**Never report a prepared issue as filed.** "I've filed the issue" when what
+exists is a URL is the most likely way this goes wrong, and it is the kind of
+wrong nobody catches until they go looking for an issue that was never there.
+Say "prepared", give the link, and wait.
+
+If the human is working in the MakeHardware repo itself, offer to make the
+edits directly instead — the record is still worth writing, because it is the
+evidence the edit rests on.
 
 ## Be honest about your own performance
 

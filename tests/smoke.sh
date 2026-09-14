@@ -44,6 +44,22 @@ git add -A && git -c user.email=t@t -c user.name=t commit -qm scaffold
 echo "MakeHardware smoke test"
 echo
 
+echo "the scaffold"
+# These were documented in three places and scaffolded in none, so `/hw-retro`
+# step 1 read a friction log that never existed and the loop had nowhere to
+# write. A file the workflow depends on is part of the template or it is a
+# sentence in a README.
+[ -s docs/design/friction-log.md ] \
+    && pass "the scaffold includes the friction log the retro reads" \
+    || fail "docs/design/friction-log.md is not scaffolded"
+[ -d docs/design/feedback ] \
+    && pass "…and somewhere for hw-feedback to write" \
+    || fail "docs/design/feedback/ is not scaffolded"
+says "no records" "${PY}" "${S}/hw_feedback.py" list \
+    && pass "…and hw-feedback reads it on a fresh project" \
+    || fail "hw-feedback cannot read the scaffolded feedback directory"
+
+echo
 echo "plan-render"
 check "${PY}" "${S}/plan_render.py" --check \
     && pass "the scaffolded template validates" \

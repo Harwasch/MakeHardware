@@ -20,7 +20,7 @@ estimated.
 | Design gates | **`sch-lint`**, **`pcb-lint`**, **`cad-export`** | In-tree, read-only, no KiCad and no MCP server needed. They measure the things ERC and DRC have no opinion about: whether a human can read the drawing, whether the net classes are physically routable, whether the CAD file is an assembly or a lump. |
 | Figures | **`hw-chart`** | Eight engineering plots as themed SVG, 2-9 kB each, generated from the file that owns the numbers. |
 | Design loops | **`hw-iterate`** | A ledger of every verify-and-refine pass — variables, measured metrics, the run file each number came from — and the evolution chart drawn from it. What turns "it meets the target" into something a reviewer can check. |
-| Environment repair | **`hw-repair`** | Installs, at run time, what the environment build failed to. A degraded snapshot is otherwise a dead session until somebody rebuilds the environment. |
+| Environment repair | **`hw-repair`** | Installs, at run time, what the environment build failed to — base packages, any one of phase_python's install groups, Elmer, the KiCad skill pack. A degraded snapshot is otherwise a dead session until somebody rebuilds the environment. `env/bootstrap.sh` is the from-nothing case. |
 | Design review | **kicad-happy** (MIT) | Read-only analysers nothing else here has: EMC pre-compliance, thermal, voltage derating, datasheet cross-reference, distributor search. Pure Python, needs no KiCad install. |
 | Vision renders | **matplotlib** + build123d tessellation | Shaded views and isometric line art from real geometry. |
 | Vision styling | **Hugging Face Spaces** (FLUX Kontext, Qwen) | Restyles a geometry render without inventing new proportions. No API key needed. |

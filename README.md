@@ -93,7 +93,7 @@ are all deliverables in name only.
 | **Skills** | `hw-vision`, `hw-planning`, `hw-requirements`, `hw-block-diagram`, `hw-schematic`, `hw-pcb-layout`, `hw-cad`, `hw-optimize`, `hw-review`, `hw-visuals`, `hw-sourcing`, `hw-simulation`, `hw-magnetics`, `hw-verification`, `hw-documentation`, `hw-imagegen`, `hw-retro` |
 | **Commands** | `/hw-new-project`, `/hw-status`, `/hw-review`, `/hw-retro` |
 | **Gates** | `sch-lint`, `pcb-lint`, `cad-export --check`, `req-trace --gate`, `block-diagram --check`, `plan-render --check`, `review-gate check`, `hw-iterate status --gate` |
-| **Tools on PATH** | `hw-doctor`, `hw-repair`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `review-gate`, `review-artifact`, `sch-lint`, `pcb-lint`, `cad-export`, `hw-chart`, `hw-iterate`, `imagegen` |
+| **Tools on PATH** | `hw-doctor`, `hw-repair`, `plan-render`, `req-trace`, `block-diagram`, `vision-board`, `review-gate`, `review-artifact`, `sch-lint`, `pcb-lint`, `cad-export`, `hw-chart`, `hw-iterate`, `hw-feedback`, `imagegen` |
 | **MCP servers** | `spice` (ngspice/LTspice), `build123d` |
 | **Templates** | An A3 KiCad drawing sheet and the house grid, text sizes and net classes |
 | **Practices** | House standards for schematic and board drawing, sourcing, connectors, passives and charts — edited over time to steer the agent |

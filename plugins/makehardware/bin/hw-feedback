@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# MakeHardware wrapper — record a toolbox finding and prepare it for the tracker.
+exec "${HARDWARE_PYTHON:-/opt/hw-py/bin/python}" \
+  "$(dirname "$(dirname "$(readlink -f "$0")")")/scripts/hw_feedback.py" "$@"
