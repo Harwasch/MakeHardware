@@ -1,0 +1,4 @@
+# Adding an ISSUE_TEMPLATE directory turns on the template chooser for every
+# issue anyone files by hand. Without this line, reporting an ordinary bug
+# means fighting a form written for something else.
+blank_issues_enabled: true

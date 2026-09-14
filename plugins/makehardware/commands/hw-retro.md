@@ -23,6 +23,16 @@ Be specific about your own failures: where you guessed, where you were wrong,
 where the human had to push back more than once. If nothing went badly, say so
 in a sentence and stop rather than padding it.
 
-Finally, ask the human whether to file the proposed changes as issues on
-`Harwasch/MakeHardware` — one per proposed change, each naming the file and the
-edit. Do not file them without asking.
+Then turn each entry under "what cost time" into a record:
+
+```bash
+hw-feedback new --file <the plugin file> --title <one line> \
+    --edit <what it should say> --evidence <sessions, commits> --cost <roughly>
+```
+
+Commit the records with the retro. Then run `hw-feedback publish` and give the
+human the link it prints.
+
+**`publish` prepares an issue; it does not file one** — say "prepared", never
+"filed". When they come back with the issue URL, run
+`hw-feedback mark <slug> <url>` so the record shows where it went.

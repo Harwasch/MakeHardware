@@ -39,7 +39,6 @@ import fnmatch
 import hashlib
 import os
 import re
-import subprocess
 import sys
 import textwrap
 
@@ -88,59 +87,10 @@ def _today() -> str:
 # ---------------------------------------------------------------------------
 # git — the repository is the review surface, so we need its coordinates
 # ---------------------------------------------------------------------------
-def _git(*args: str) -> str:
-    try:
-        r = subprocess.run(["git", *args], capture_output=True, text=True, timeout=20)
-    except (OSError, subprocess.SubprocessError):
-        return ""
-    return r.stdout.strip() if r.returncode == 0 else ""
-
-
-def repo_slug() -> str | None:
-    """`owner/repo` from whichever remote this clone actually has."""
-    for remote in ("origin", "upstream"):
-        url = _git("remote", "get-url", remote)
-        if not url:
-            continue
-        m = re.search(r"github\.com[:/]+([^/]+/[^/]+?)(?:\.git)?/?$", url)
-        if m:
-            return m.group(1)
-    return None
-
-
-def head_ref() -> str:
-    """The branch to link at, falling back to the commit when detached."""
-    branch = _git("rev-parse", "--abbrev-ref", "HEAD")
-    if branch and branch != "HEAD":
-        return branch
-    return _git("rev-parse", "HEAD") or "HEAD"
-
-
-def blob_url(path: str, slug: str | None = None, ref: str | None = None) -> str | None:
-    slug = slug or repo_slug()
-    if not slug:
-        return None
-    ref = ref or head_ref()
-    kind = "tree" if os.path.isdir(path) else "blob"
-    return f"https://github.com/{slug}/{kind}/{ref}/{path.strip('/')}"
-
-
-def uncommitted(paths: list[str]) -> list[str]:
-    """Which of these paths git does not yet have — i.e. are not on GitHub.
-
-    A link to an uncommitted file is a 404, and that is the single most likely
-    way a review request wastes the human's time. Two git calls for the whole
-    set, not two per path: a vision review carries a directory of renders.
-    """
-    paths = [os.path.normpath(p) for p in paths]
-    if not paths:
-        return []
-    tracked = {os.path.normpath(line)
-               for line in _git("ls-files", "--", *paths).splitlines() if line}
-    dirty = {os.path.normpath(line[3:].strip().strip('"').split(" -> ")[-1])
-             for line in _git("status", "--porcelain", "--", *paths).splitlines()
-             if len(line) > 3}
-    return [p for p in paths if p not in tracked or p in dirty]
+# These live in `_gh.py` so `hw_feedback.py` can use them without importing
+# this module, which needs `yaml`. Re-exported here because `plan_render.py`
+# and `review_artifact.py` reach them as `review_gate.repo_slug` and friends.
+from _gh import _git, blob_url, head_ref, repo_slug, uncommitted  # noqa: E402,F401
 
 
 # ---------------------------------------------------------------------------

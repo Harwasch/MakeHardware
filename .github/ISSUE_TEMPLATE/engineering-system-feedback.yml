@@ -1,0 +1,58 @@
+name: Engineering system feedback
+description: A finding about the MakeHardware toolbox itself, from a project retro or friction log
+labels: ["engineering-system", "from-retro"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Usually prepared by `hw-feedback publish`. The form carries a summary;
+        paste the full body it printed underneath. Edit freely before submitting.
+
+        A finding belongs here when the edit changes a file in **this** repo.
+        Something true only of one design belongs in that project's own notes.
+  - type: input
+    id: file
+    attributes:
+      label: The file this would change
+      description: Plugin-relative, e.g. `skills/hw-sourcing/references/connectors.md`
+    validations:
+      required: true
+  - type: textarea
+    id: edit
+    attributes:
+      label: The edit
+      description: What to change it to — not that it needs changing.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Sessions, commits, log entries. Paste it; do not link to a private repo.
+    validations:
+      required: false
+  - type: input
+    id: cost
+    attributes:
+      label: What it cost
+      description: Roughly — loops, minutes, a re-layout.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+    validations:
+      required: false
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Missing guidance
+        - Wrong guidance
+        - Tool defect
+        - Missing tool
+        - Environment
+    validations:
+      required: false

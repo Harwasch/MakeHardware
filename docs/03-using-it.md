@@ -292,9 +292,13 @@ happened, and finds requirements that moved after they were agreed. It writes
 change and what the edit is** — an observation without a named file doesn't go
 in, because "communication could be better" improves nothing.
 
-Then it offers to file those as issues on MakeHardware, one per change. You
-review and apply them. That's the loop closing: work on project N makes
-project N+1 better.
+Each entry becomes a record under `docs/design/feedback/`, written by
+`hw-feedback new` and committed with the retro. Then `hw-feedback publish`
+prepares an issue on MakeHardware and hands you the link — it prepares, it
+does not file, because a cloud session's GitHub token reaches this project
+and nothing else. You click it, and `hw-feedback mark` records where it went.
+
+That's the loop closing: work on project N makes project N+1 better.
 
 ## Improving the toolbox as you go
 

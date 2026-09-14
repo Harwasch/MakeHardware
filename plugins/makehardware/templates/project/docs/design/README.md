@@ -12,6 +12,9 @@ How and why this system was built, written as the work happens.
   correction or an avoidable loop happens, each naming the MakeHardware file
   that should change. See the `hw-retro` skill.
 * `retro.md` — the synthesis, written by `/hw-retro` at a milestone.
+* `feedback/` — one file per finding about the **toolbox**, written by
+  `hw-feedback new` and published as an issue on the plugin's repo at the
+  retro. Findings about *this design* are not these; they are ADRs.
 
 An ADR has: Status, Context, Decision, Consequences, Alternatives considered.
 Write the Consequences honestly, the bad ones included — that section is what a

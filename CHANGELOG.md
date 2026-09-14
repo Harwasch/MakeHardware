@@ -7,6 +7,124 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.9.0
+
+The loop back to this repository had no plumbing in it. `hw-retro` has told the
+agent to "offer to file the proposed changes as a GitHub issue on
+`Harwasch/MakeHardware`" since 0.5.0 and never named a mechanism, because there
+isn't one: `gh` is not in the environment, and a cloud session's GitHub token is
+scoped to the project repo, so it cannot reach this one at all. Every retro that
+ever ran finished by offering something impossible.
+
+### Added
+
+* **`hw-feedback`** — a finding about the toolbox becomes a record here and an
+  issue there.
+
+  The design decision worth arguing with: **an issue tracker is the right place
+  to publish a finding and the wrong place to capture one.** Issues are good at
+  what nothing else gives free — evidence accumulating on one finding,
+  discussion, labels, search, PR linkage. They are bad at capture, because they
+  want an account, a browser and a context switch at exactly the moment —
+  mid-work, mid-correction — when a finding is cheapest to write down and most
+  likely to be lost.
+
+  So capture is local and always, and publication is batched at the retro:
+
+  ```bash
+  hw-feedback new --file skills/hw-sourcing/references/connectors.md \
+      --title "Connector choice is relitigated every project" \
+      --edit "Fill in the board-to-wire row with Molex PicoBlade, and say why" \
+      --evidence "friction log 2026-08-28; commits a1b2c3, d4e5f6"
+  hw-feedback list       # every record and its state
+  hw-feedback publish    # prepare the unpublished ones
+  hw-feedback mark <slug> <url>   # where it actually went
+  ```
+
+  `new` writes `docs/design/feedback/<date>-<slug>.md` in the project repo with
+  no network and no credentials. `publish` prepares one issue for the batch:
+  a prefilled link, a dedup search, and the body to paste. It **prepares** —
+  it prints `NOT FILED` and the skill forbids the word "filed", because
+  claiming an issue exists when what exists is a URL is the kind of wrong
+  nobody catches until they go looking for it. Where the session does have a
+  working `gh` channel to this repo, which locally it often does, it files
+  directly and marks the record itself.
+
+  Two things it does deliberately. It **inlines evidence rather than linking**
+  — the project repo is usually private, so a blob URL 404s for whoever has to
+  act on the finding. And it **prefills a summary, not the issue**: GitHub
+  answers an over-long GET with 414 and percent-encoding inflates markdown
+  1.8-3.0x, so a real finding does not fit in a URL. The form arrives
+  pre-addressed and the body is pasted.
+
+  The gate is structural and nothing more: a `--file` that resolves under the
+  plugin, a non-empty `--edit`, a non-empty `--evidence`. Whether a finding is
+  about the system or about one design is a judgement, it is carried in
+  `hw-retro`, and a keyword classifier would get it wrong in both directions.
+
+* **`.github/ISSUE_TEMPLATE/`** — the form `hw-feedback` prefills, plus a
+  `config.yml` keeping blank issues on, because adding the directory turns on
+  the template chooser for everyone filing by hand.
+
+* **`tests/feedback.sh`** — the gate refuses an observation with no named file;
+  the URL's query parameters round-trip back to the exact input text; every
+  parameter names a real field `id`; the `kind` value is an exact option match;
+  an oversize finding still yields a clickable link. The last three are the
+  silent ones: GitHub prefills a form by matching the query parameter name
+  against the element's `id`, and a name or a dropdown value it does not
+  recognise renders the field blank with no error on any side.
+
+* **`tests/settings-allowlist.sh`** — every tool in `bin/` is allowed in all
+  three settings files, the three lists agree as sets, and no doc page quotes
+  an entry that does not exist.
+
+### Fixed
+
+* **The friction log is scaffolded.** It was documented in three places —
+  `docs/design/README.md`, the project `CLAUDE.md`, and `hw-retro` — and
+  created by nothing, so `/hw-retro` step 1 read a file that never existed.
+  `templates/project/` now carries it, along with `docs/design/feedback/`, and
+  `tests/smoke.sh` asserts both survive a scaffold.
+
+* **Six tools were missing from every allowlist.** `sch-lint`, `pcb-lint`,
+  `hw-chart`, `cad-export`, `review-artifact` and `hw-iterate` — which is to
+  say every gate added after the list was first written — prompted for
+  permission on every call. The cost was not one prompt: the gates are what an
+  agent runs most often, so the omission taxed exactly the workflow the gates
+  exist to enforce.
+
+  `hw-repair` is deliberately **not** added. It writes apt sources, imports GPG
+  keys and installs packages as root; the prompt is the review. The test
+  asserts it stays out, with the reasoning in its header, so the omission does
+  not get "fixed" later.
+
+  Worth knowing what this does not fix: a cloud session's workspace is
+  untrusted, and an untrusted workspace ignores project-scope
+  `permissions.allow` entirely. The durable fix is at user scope from the
+  setup script, and it is not in this release.
+
+* **`KI_STACK_DIR` is gone from `env/environment-variables.env`.** It belonged
+  to ki-stack, the pack 0.8.0 replaced, and pointed into `/opt/ki-stack` —
+  which `hw-repair kicad` now deletes as a leftover. Anyone pasting the current
+  file into a new environment was setting a variable aimed at a directory the
+  repair tool treats as stale.
+
+  Removing it only helps environments built from here on. That file is pasted
+  into the environment dialog once and the dialog is the source of truth
+  afterwards, so an environment that already sets it still does. `hw-doctor`
+  now says so when the path does not exist, which is the only thing that
+  reaches a running session.
+
+### Changed
+
+* `scripts/_gh.py` — `repo_slug`, `head_ref`, `blob_url` and `uncommitted`
+  moved out of `review_gate.py`, which imports `yaml` at module level.
+  `hw_feedback.py` is stdlib-only on purpose: it is the tool you reach for
+  *because* the Python environment degraded, so depending on `/opt/hw-py`
+  having landed would make it fail in exactly the session that produced the
+  finding. `review_gate` re-exports them, so `plan_render` and
+  `review_artifact` are unchanged.
+
 ## 0.8.0
 
 The KiCad skill pack is now [KiStack](https://github.com/American-Embedded/KiStack)

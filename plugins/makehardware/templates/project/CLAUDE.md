@@ -60,6 +60,8 @@ block-diagram --check     # architecture gate; exit 1 on an over-budget rail
 vision-board concepts/*.py            # renders + docs/design/vision.md
 review-gate list          # where every human review stands
 review-gate check --gate  # exit 1 while a milestone is unsigned or stale
+hw-feedback new --file .. # record a finding about the toolbox itself
+hw-feedback publish       # prepare it as an issue on the plugin's repo
 ```
 
 Python for CAD and analysis is `/opt/hw-py/bin/python`. Do not `pip install`
@@ -149,6 +151,10 @@ takes far more loops than it should, or when you had to guess — append three
 lines to `docs/design/friction-log.md` naming the MakeHardware file that should
 change. See `hw-retro`. This is the only way the toolbox gets better; a
 correction that lives only in a chat transcript is one you will make again.
+
+Once a finding is worth carrying upstream, `hw-feedback new --file <that file>`
+turns it into a record under `docs/design/feedback/`. Write the record where
+the work is; publishing it as an issue is the human's click at the retro.
 
 **Numbers and units, always.** "Low power" is not a requirement; "<= 40 uA in
 standby" is. Put the reasoning in `RATIONALE` — it is what gets re-read when

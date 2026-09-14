@@ -313,8 +313,13 @@ against actuals and requirements that moved after being agreed, into
 The rule that makes it useful: **every entry names a file and an edit.** An
 observation like "communication could be better" improves nothing. "Fill in the
 board-to-wire row of `hw-sourcing/references/connectors.md`, because connectors
-were relitigated three times" is a change someone can make. Those become issues
-on MakeHardware, and project N makes project N+1 better.
+were relitigated three times" is a change someone can make — and it is exactly
+what `hw-feedback new --file` takes.
+
+The record is written here and committed; `hw-feedback publish` prepares the
+issue on MakeHardware for you to file. Capture is local because that is when
+it is cheap; publication is a click because that is the only part that needs
+an account. Project N makes project N+1 better.
 
 ## Review, throughout
 
