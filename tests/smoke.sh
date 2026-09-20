@@ -486,6 +486,84 @@ check "${PY}" "${S}/iterate.py" --dir "${L}" status margin --gate \
     && pass "…and clears once the accepted pass names its run file" \
     || fail "the loop gate failed a properly attributed loop"
 
+# --- the closed half: run it, do not type it ---------------------------------
+# The loop's numbers used to be typed on the command line from whatever the
+# agent read off a simulator. These check the machine path instead: a command
+# runs, its output is the evidence, and the figure is read back out of it.
+cat > "${WORK}/fake-sim.sh" <<'SIM'
+#!/usr/bin/env bash
+# Stands in for a simulator: emits ngspice's own .meas line format.
+printf 'Doing analysis at TEMP = 27.000000\n'
+printf 'pm                  =  %e\n' "$1"
+printf 'bw                  =  1.350000e+06\n'
+SIM
+chmod +x "${WORK}/fake-sim.sh"
+
+R="${WORK}/runloop"
+"${PY}" "${S}/iterate.py" --dir "${R}" open comp \
+    --goal "margin over 60" --objective pm --direction max --target 60 --unit deg \
+    >/dev/null 2>&1
+"${PY}" "${S}/iterate.py" --dir "${R}" run comp \
+    --cmd "${WORK}/fake-sim.sh 31" --var Cc=4.7p \
+    --metric pm=meas:pm --metric bw=meas:bw --note baseline >/dev/null 2>&1
+check "${PY}" -c "
+import json
+d = json.load(open('${R}/comp.json'))
+r = d['iterations'][0]
+assert r['metrics']['pm'] == 31.0, r['metrics']
+assert r['verdict'] == 'fail', r['verdict']          # derived from the target
+assert r['extractors']['pm'] == 'meas:pm', r
+assert r['evidence'], 'no evidence file recorded'" \
+    && pass "run extracts the metric and derives the verdict from the target" \
+    || fail "hw-iterate run did not record an extracted pass"
+
+"${PY}" "${S}/iterate.py" --dir "${R}" run comp \
+    --cmd "${WORK}/fake-sim.sh 66" --var Cc=22p \
+    --metric pm=meas:pm --metric bw=meas:bw --note zero >/dev/null 2>&1
+check "${PY}" "${S}/iterate.py" --dir "${R}" verify comp \
+    && pass "every recorded number re-derives from its evidence" \
+    || fail "verify could not re-derive a number run had just written"
+
+# The one that matters: a figure nobody can reproduce must not pass the gate.
+"${PY}" -c "
+import json; p='${R}/comp.json'; d=json.load(open(p))
+d['iterations'][1]['metrics']['pm'] = 999.0
+json.dump(d, open(p,'w'), indent=2)"
+says "now reads" "${PY}" "${S}/iterate.py" --dir "${R}" verify comp \
+    && pass "a tampered figure is caught against its evidence" \
+    || fail "verify accepted a number its evidence does not support"
+
+"${PY}" "${S}/iterate.py" --dir "${R}" close comp --accept 2 --status converged \
+    >/dev/null 2>&1
+says "now reads" "${PY}" "${S}/iterate.py" --dir "${R}" status comp --gate \
+    && pass "…and the loop gate refuses it" \
+    || fail "the gate passed a loop whose figures do not reproduce"
+
+# An objective that cannot be read is not an iteration: record nothing, say so.
+says "could not read the objective" "${PY}" "${S}/iterate.py" --dir "${R}" run comp \
+    --cmd "echo nothing useful here" --metric pm=meas:pm \
+    && pass "run refuses a pass whose objective is not in the output" \
+    || fail "run recorded a pass with no objective measurement"
+
+echo
+echo "== metric extraction =="
+printf 'fc                  =  9.986000e+02\ngain = -4.33e-04\n' > "${WORK}/ng.log"
+check "${PY}" "${S}/extract.py" "${WORK}/ng.log" --metric fc=meas:fc --metric g=meas:gain \
+    && pass "hw-extract reads both ngspice measurement line forms" \
+    || fail "hw-extract could not read an ngspice .meas line"
+
+printf 'ElectroMagnetic Field Energy:  1.2345E-05\n' > "${WORK}/elmer.log"
+check "${PY}" -c "
+import sys; sys.path.insert(0, '${S}')
+import extract
+v, e = extract.extract('${WORK}/elmer.log',
+                       {'energy': 'line:ElectroMagnetic Field Energy'})
+assert abs(v['energy'] - 1.2345e-5) < 1e-12, v
+v, e = extract.extract('${WORK}/ng.log', {'pm': 'meas:pm'})
+assert 'pm' in e and not v, (v, e)" \
+    && pass "…an Elmer result line, and it fails loudly on a missing metric" \
+    || fail "hw-extract mis-read a solver line or swallowed a missing metric"
+
 "${PY}" "${S}/iterate.py" --dir "${L}" chart margin \
     --out "${WORK}/evo.svg" >/dev/null 2>&1
 check "${PY}" -c "

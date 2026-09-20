@@ -30,12 +30,13 @@ So the loop is recorded as it runs, in the file that renders as its chart.
         +---> change ONE thing ----+
         |                          |
         |                          v
-        |                   run the verifier
+        |                   the verifier runs
         |                (ngspice, Elmer, FastHenry,
         |                 build123d measure, sch-lint...)
         |                          |
         |                          v
-        |                  hw-iterate record
+        |                   hw-iterate run
+        |              (runs it, extracts, records)
         |                          |
         +--- not there yet <-------+
                     |
@@ -67,21 +68,47 @@ like a success from the inside. Name what the objective is not allowed to cost
 If you cannot say what the target is, you do not have a loop — you have an
 open question, and that goes to the human now, not after ten iterations.
 
-### 2. One pass, one change, one recorded result
+### 2. One pass: run it, and let the tool read its own numbers
 
 ```bash
-hw-iterate record loop-gain \
+hw-iterate run loop-gain \
+    --cmd "ngspice -b sim/loop.cir" \
     --var Cc=22p --var Rz=1k5 \
-    --metric pm_deg=66 --metric bw_hz=1.35M --metric iq_ua=205 \
-    --verdict pass --note "zero in series with Cc buys the margin without the bandwidth" \
-    --evidence sim/loop-04.raw
+    --metric pm_deg=meas:pm --metric bw_hz=meas:bw --metric iq_ua=meas:iq \
+    --note "zero in series with Cc buys the margin without the bandwidth"
 ```
 
-* **Every number comes from a run.** `--evidence` names the file it was read
-  out of. A metric you reasoned your way to is not a measurement, and
-  `hw-iterate status --gate` refuses a loop whose accepted pass has no evidence
-  behind it.
-* **Record the passes that got worse.** They are the ones that carry
+`run` executes the verifier, keeps its output as the evidence file, reads each
+number out with a named extractor, and records the pass — one call, and no
+number passes through your hands.
+
+**Never type a measured number into `--metric`.** That is what the extractors
+are for:
+
+| | reads |
+|---|---|
+| `meas:NAME` | an ngspice `.meas` or `print` line — the default form |
+| `line:PREFIX` | the number after a literal prefix, e.g. Elmer's `ElectroMagnetic Field Energy:` |
+| `json:a.b.c` | a dotted path — build123d `measure()`, `req-trace --json` |
+| `csv:COL[:how]` | a column reduced by `last`/`max`/`min`/`mean`/`absmax` |
+| `re:PATTERN` | first capture group, for anything else |
+
+`hw-extract <file> --metric ...` runs one on its own, which is how you get the
+spec right before wiring it into a loop.
+
+* **The verdict is derived, not asserted.** With a `--target`, `run` decides
+  pass/fail from the objective. Override with `--verdict` only when the number
+  is not the whole story, and say why in `--note`.
+* **Every number is re-derivable.** `hw-iterate verify` re-reads each recorded
+  figure from the file it came from, and `status --gate` fails the loop if one
+  no longer reproduces. A deck edited after the run, an extractor that changed
+  meaning, a figure someone typed — all of it surfaces here rather than on the
+  review page.
+* `record` still exists, and is right for a measurement with no machine-readable
+  output: a bench reading, a scope photograph, a supplier's quoted figure. It
+  takes numbers on the command line, and `verify` reports those passes as
+  unverifiable rather than as wrong.
+* **Run the passes that got worse, and keep them.** They are the ones that carry
   information — they say which direction is wrong, and they are what stops the
   next session repeating them. A ledger of only wins is a ledger nobody can
   check.

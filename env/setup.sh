@@ -615,7 +615,7 @@ phase_plugin() {
 MH_ALLOW='["Bash(ngspice:*)","Bash(kicad-cli:*)","Bash(gmsh:*)","Bash(ccx:*)",
 "Bash(pdftotext:*)","Bash(pdftoppm:*)","Bash(hw-doctor:*)","Bash(hw-display-start:*)",
 "Bash(plan-render:*)","Bash(req-trace:*)","Bash(block-diagram:*)","Bash(vision-board:*)",
-"Bash(review-gate:*)","Bash(imagegen:*)","Bash(cad-export:*)","Bash(hw-chart:*)",
+"Bash(review-gate:*)","Bash(imagegen:*)","Bash(cad-export:*)","Bash(hw-chart:*)", "Bash(hw-extract:*)",
 "Bash(hw-feedback:*)","Bash(hw-iterate:*)","Bash(pcb-lint:*)","Bash(review-artifact:*)",
 "Bash(sch-lint:*)","Bash(/opt/hw-py/bin/python:*)","Bash(/opt/hw-py/bin/strictdoc:*)"]'
 

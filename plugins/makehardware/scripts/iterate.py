@@ -20,11 +20,16 @@ So every pass is recorded, in the file that will render as a chart:
         --objective pm_deg --direction max --target 60 --unit deg \\
         --track bw_hz --track-limit bw_hz=1e6 --track-direction bw_hz=max
 
-    hw-iterate record loop-gain \\
+    hw-iterate run loop-gain \\
+        --cmd "ngspice -b sim/loop.cir" \\
         --var Rf=12k --var Cc=4.7p \\
-        --metric pm_deg=31 --metric bw_hz=2.1M \\
-        --verdict fail --note "datasheet values as the baseline" \\
-        --evidence sim/loop-01.raw
+        --metric pm_deg=meas:pm --metric bw_hz=meas:bw \\
+        --note "datasheet values as the baseline"
+
+`run` executes the verifier, reads each number out of its output with a named
+extractor, and records the pass. `record` still exists for a measurement that
+genuinely has no machine-readable output — a scope photograph, a bench reading
+— and takes the numbers on the command line as it always did.
 
     hw-iterate status loop-gain      # where it stands, and whether to stop
     hw-iterate chart  loop-gain      # the SVG a review shows
@@ -32,9 +37,9 @@ So every pass is recorded, in the file that will render as a chart:
 
 The two rules this enforces:
 
-* **Every number comes from a run, not from a belief.** `--evidence` names the
-  file the metrics were read out of, and `status` refuses to call a loop
-  converged if the accepted iteration has no evidence behind it.
+* **Every number comes from a run, not from a belief.** `run` reads it out of
+  the file; `verify` re-derives every recorded number from that file, and
+  `status --gate` will not pass a loop whose figures no longer reproduce.
 * **The loop reports its trajectory, not just its answer.** `chart` is what
   goes in the review. A single final number is the thing this exists to stop.
 """
@@ -44,6 +49,8 @@ import argparse
 import json
 import os
 import re
+import shlex
+import subprocess
 import sys
 from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -153,12 +160,20 @@ def objective_values(data: dict):
 
 
 def best_iteration(data: dict):
+    """The best pass that respected its limits, falling back to the best overall.
+
+    The verdict carries the breach: `run` downgrades a pass that met its target
+    by breaking a --track limit. So filtering on it here is the same rule the
+    chart uses, and it stops a loop reporting as its best a number it was told
+    not to buy.
+    """
     key, pairs = objective_values(data)
     have = [(r, v) for r, v in pairs if v is not None]
     if not have:
         return None
     direction = ((data.get("objective") or {}).get("direction") or "max").lower()
-    return (max if direction == "max" else min)(have, key=lambda rv: rv[1])
+    clean = [(r, v) for r, v in have if r.get("verdict") == "pass"]
+    return (max if direction == "max" else min)(clean or have, key=lambda rv: rv[1])
 
 
 def meets_target(data: dict, value) -> bool | None:
@@ -168,6 +183,27 @@ def meets_target(data: dict, value) -> bool | None:
         return None
     return value >= target if (obj.get("direction") or "max").lower() == "max" \
         else value <= target
+
+
+def breached(data: dict, metrics: dict) -> list[str]:
+    """Which --track limits this pass broke.
+
+    The objective alone cannot decide a verdict. `--track` exists precisely
+    because an objective on its own is a licence to wreck everything else to
+    satisfy it, so a pass that hits its target by breaching a limit is the
+    trade the loop was opened to catch — and recording it as a clean `pass`
+    hides the one thing worth looking at.
+    """
+    out = []
+    for t in data.get("track") or []:
+        key, limit = t.get("metric"), num(t.get("limit"))
+        got = num(metrics.get(key))
+        if limit is None or got is None:
+            continue
+        low_is_bad = (t.get("direction") or "max").lower() == "max"
+        if (got < limit) if low_is_bad else (got > limit):
+            out.append(key)
+    return out
 
 
 def plateaued(data: dict) -> tuple[bool, float | None]:
@@ -278,6 +314,179 @@ def cmd_record(args) -> int:
     return 0
 
 
+def _extractors():
+    """extract.py lives beside this file; no install step, no import at module
+    load, so `hw-iterate` keeps working if the extractor is ever broken."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import extract  # noqa: E402
+    return extract
+
+
+def cmd_run(args) -> int:
+    """Run the verifier, read its numbers out of its output, record the pass.
+
+    This is the verb the loop was missing. Before it, `record` took metrics on
+    the command line, which meant every number on an evolution chart had been
+    read off a simulator by the agent and typed back in -- a transcription,
+    unchecked, of a figure nobody could re-derive. The chart looked like
+    evidence and was testimony.
+
+    One call per pass instead of four, and the number comes from the file.
+    """
+    ex = _extractors()
+    data = load(args.loop, args.dir)
+    specs = ex.parse_metric_args(args.metric)
+    n = len(data["iterations"]) + 1
+
+    evidence_dir = args.evidence_dir or os.path.join(args.dir, "runs")
+    os.makedirs(evidence_dir, exist_ok=True)
+    log_path = os.path.join(evidence_dir, f"{data['loop']}-{n:02d}.log")
+
+    print(f"#{n} running: {args.cmd}")
+    try:
+        proc = subprocess.run(args.cmd, shell=True, capture_output=True,
+                              text=True, timeout=args.timeout)
+    except subprocess.TimeoutExpired:
+        raise SystemExit(
+            f"hw-iterate: the command did not finish in {args.timeout}s.\n"
+            f"  Nothing was recorded. A pass whose run timed out is not a data\n"
+            f"  point about the design; raise --timeout or make the run smaller.")
+    combined = (proc.stdout or "") + (proc.stderr or "")
+    with open(log_path, "w") as fh:
+        fh.write(combined)
+
+    # A non-zero exit is worth saying out loud and is NOT on its own a reason
+    # to refuse: ngspice exits 0 on decks it half-ran, and some solvers exit
+    # non-zero on a perfectly good result. What decides is whether the numbers
+    # are in the output.
+    if proc.returncode != 0:
+        print(f"   command exited {proc.returncode} — see {log_path}")
+
+    source = args.source or log_path
+    values, errors = ex.extract(source, specs)
+
+    okey = (data.get("objective") or {}).get("metric")
+    if okey and okey in errors:
+        print(f"\n   {log_path}", file=sys.stderr)
+        raise SystemExit(
+            f"hw-iterate: could not read the objective {okey!r} from "
+            f"{source}:\n    {errors[okey]}\n"
+            f"  Nothing was recorded. A pass with no objective is not an "
+            f"iteration —\n  fix the deck or the extractor and run it again.")
+    for name, err in errors.items():
+        print(f"   {name}: {err}", file=sys.stderr)
+    if not values:
+        raise SystemExit(f"hw-iterate: no metric could be read from {source}")
+
+    verdict = args.verdict
+    broke = breached(data, values)
+    if verdict == "auto":
+        hit = meets_target(data, values.get(okey)) if okey else None
+        verdict = {True: "pass", False: "fail", None: "partial"}[hit]
+        # Met the target by breaking something it was told not to break. That
+        # is not a pass, and calling it one is how a loop converges on a
+        # design nobody would build.
+        if verdict == "pass" and broke:
+            verdict = "partial"
+
+    rec = {
+        "iteration": n,
+        "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "vars": kv(args.var, "var"),
+        "metrics": values,
+        "verdict": verdict,
+        "note": args.note or "",
+        "evidence": sorted({log_path, source}),
+        # Stored so `status --gate` can re-derive these numbers later. A
+        # recorded figure whose extractor is unknown cannot be checked, and an
+        # unde-derivable figure is the thing this verb exists to stop.
+        "extractors": specs,
+        "command": args.cmd,
+        "exit_code": proc.returncode,
+    }
+    data["iterations"].append(rec)
+    save(data, args.dir)
+
+    print(f'#{n} {verdict}' + (f'  {okey}={values[okey]:g}' if okey in values else ""))
+    if rec["vars"]:
+        print("   changed  " + ", ".join(f"{k}={v}" for k, v in rec["vars"].items()))
+    for key in broke:
+        t = next(t for t in data["track"] if t.get("metric") == key)
+        print(f"   BREACHED {key} = {values[key]:g}"
+              f"{(' ' + t['unit']) if t.get('unit') else ''} against its "
+              f"limit of {num(t.get('limit')):g}")
+    print(f"   read from {source}")
+
+    if meets_target(data, values.get(okey) if okey else None):
+        print(f'\n   Target met. Close the loop: hw-iterate close {args.loop} '
+              f'--accept {n} --status converged')
+    flat, span = plateaued(data)
+    if flat and not meets_target(data, values.get(okey) if okey else None):
+        print(f"\n   The last {PLATEAU_RUNS} passes are within {span * 100:.1f}% of "
+              f"each other and\n   the target is not met. Do not run a fourth "
+              f"variation of the same idea:\n   change the approach, or escalate "
+              f"with what you have — see hw-optimize.")
+    return 0
+
+
+def verify(data: dict) -> list[str]:
+    """Re-derive every recorded number from the file it was read out of.
+
+    `--evidence` named a file and nothing ever opened it, so the ledger could
+    carry a number that no longer appears anywhere — a deck edited after the
+    run, an extractor that changed meaning, a figure typed in by hand. This is
+    what makes the evidence column mean something.
+
+    Passes recorded before `run` existed carry no extractors and are reported
+    as unverifiable rather than as wrong.
+    """
+    ex = _extractors()
+    problems = []
+    for r in data.get("iterations") or []:
+        specs = r.get("extractors")
+        ev = r.get("evidence") or []
+        if not specs:
+            continue
+        source = next((e for e in ev if os.path.exists(e)), None)
+        if source is None:
+            problems.append(f'#{r["iteration"]}: evidence is gone — '
+                            f'{", ".join(ev) or "none recorded"}')
+            continue
+        values, errors = ex.extract(source, specs)
+        for name, recorded in (r.get("metrics") or {}).items():
+            if name not in specs:
+                continue
+            if name in errors:
+                problems.append(f'#{r["iteration"]}: {name} is no longer in '
+                                f'{source} — {errors[name]}')
+                continue
+            got, want = values[name], num(recorded)
+            if want is None:
+                continue
+            scale = max(abs(want), abs(got), 1e-30)
+            if abs(got - want) / scale > 1e-6:
+                problems.append(
+                    f'#{r["iteration"]}: {name} recorded as {want:g} but '
+                    f'{source} now reads {got:g}')
+    return problems
+
+
+def cmd_verify(args) -> int:
+    data = load(args.loop, args.dir)
+    problems = verify(data)
+    checked = sum(1 for r in data.get("iterations") or [] if r.get("extractors"))
+    total = len(data.get("iterations") or [])
+    if problems:
+        print(f"{data['loop']}: {len(problems)} problem(s)\n")
+        for p in problems:
+            print(f"  - {p}")
+        return 1
+    print(f"{data['loop']}: {checked} of {total} pass(es) re-derive from their "
+          f"evidence" + (f"; {total - checked} predate `run` and carry no "
+                         f"extractor" if total - checked else ""))
+    return 0
+
+
 def cmd_status(args) -> int:
     data = load(args.loop, args.dir)
     its = data.get("iterations") or []
@@ -323,6 +532,9 @@ def cmd_status(args) -> int:
         elif meets_target(data, num((acc.get("metrics") or {}).get(okey))) is False:
             problems.append(f'accepted iteration #{acc["iteration"]} does not meet '
                             f'the target')
+        # A number nobody can re-derive is not evidence, whatever the ledger
+        # says about where it came from.
+        problems += verify(data)
         if problems:
             print("\n  Loop gate: not clear")
             for p in problems:
@@ -435,6 +647,34 @@ def main() -> int:
                    help="the run output the metrics were read from")
     p.add_argument("--allow-missing-objective", action="store_true")
     p.set_defaults(fn=cmd_record)
+
+    p = sub.add_parser("run", help="run the verifier, read its numbers, record the pass")
+    p.add_argument("loop")
+    p.add_argument("--cmd", required=True,
+                   help="the command that verifies a pass, e.g. "
+                        "'ngspice -b sim/loop.cir'")
+    p.add_argument("--metric", action="append", metavar="NAME=SPEC", required=True,
+                   help="how to read each number out of the output — "
+                        "meas:NAME, line:PREFIX, re:PATTERN, json:a.b.c, "
+                        "csv:COL[:how]. `hw-extract --help` lists them.")
+    p.add_argument("--var", action="append", metavar="NAME=VALUE",
+                   help="what you changed; engineering notation is fine (12k, 4.7p)")
+    p.add_argument("--source", metavar="FILE",
+                   help="read the metrics from this file instead of the "
+                        "command's own output")
+    p.add_argument("--evidence-dir", metavar="DIR",
+                   help="where the run log is kept (default <--dir>/runs)")
+    p.add_argument("--verdict", choices=["pass", "fail", "partial", "auto"],
+                   default="auto",
+                   help="default auto: derived from the objective against its target")
+    p.add_argument("--note", help="one line: what you changed and why")
+    p.add_argument("--timeout", type=float, default=900,
+                   help="seconds before the run is abandoned (default 900)")
+    p.set_defaults(fn=cmd_run)
+
+    p = sub.add_parser("verify", help="re-derive every recorded number from its evidence")
+    p.add_argument("loop")
+    p.set_defaults(fn=cmd_verify)
 
     p = sub.add_parser("status", help="where the loop stands, and whether to stop")
     p.add_argument("loop")

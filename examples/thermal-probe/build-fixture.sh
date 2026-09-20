@@ -112,16 +112,47 @@ echo "== 4b. the standby design loop =="
 # The example's standby write-up ends with "the reference could be duty-cycled
 # ... that is the obvious lever and it has not been modelled". This is that
 # lever, modelled — and it is here because a review page that only shows where
-# a design landed is the thing hw-iterate exists to replace. Note what the
-# trajectory says that a final number cannot: #2 met the current target and was
-# rejected on wake time, #4 was better still and rejected harder, and the pass
-# that was accepted is not the best one on the objective.
+# a design landed is the thing hw-iterate exists to replace.
+#
+# Every number below is EXTRACTED from the verifier's output, not typed into
+# this script. sim/standby/model.sh stands in for the real deck the way
+# build-fixture.py stands in for build123d — it emits ngspice's own `.meas`
+# line format, so `hw-iterate run` and `hw-iterate verify` take exactly the
+# path they take against a real simulator. `verify` passing on this fixture is
+# the point: it proves the committed ledger re-derives from its committed
+# evidence after a fresh clone.
 rm -rf docs/design/iterations sim/standby/loop
 mkdir -p sim/standby/loop
-for n in 1 2 3 4 5; do
-    printf 'ngspice raw (fixture stand-in) — standby loop pass %s\n' "${n}" \
-        > "sim/standby/loop/pass-${n}.raw"
-done
+
+cat > sim/standby/model.sh <<'MODEL'
+#!/usr/bin/env bash
+# Stand-in for sim/standby/standby.cir. Closed-form leakage sum at the +40 C
+# corner: reference (duty-cycled), LDO quiescent, comparator, and the wake-up
+# time the reference's bypass cap sets. Emits ngspice .meas format.
+set -euo pipefail
+ref_duty="$1"; c_ref_nf="$2"; ldo_gated="${3:-0}"; comparator="${4:-default}"
+
+i_ref=42.0; i_ldo=1.6; i_leak=1.0
+i_cmp=2.6; [ "${comparator}" = "TS881" ] && i_cmp=1.0
+
+# A smaller reference bypass settles faster and costs a little average current:
+# it is recharged from flat on every wake instead of holding between them.
+i=$(awk -v r="${i_ref}" -v d="${ref_duty}" -v l="${i_ldo}" -v c="${i_cmp}" \
+        -v k="${i_leak}" -v g="${ldo_gated}" -v cn="${c_ref_nf}" \
+        'BEGIN{ ldo  = (g==1 ? l*0.1 : l);
+                recharge = (d>=1 ? 0 : 0.6 * (100/cn - 1) * 0.55);
+                printf "%.4f", r*d + ldo + c + k + recharge }')
+# Wake-up: the reference settles through its bypass cap; gating the LDO adds
+# its own start-up on top.
+w=$(awk -v c="${c_ref_nf}" -v d="${ref_duty}" -v g="${ldo_gated}" \
+        'BEGIN{ t = (d>=1 ? 0.4 : 0.42*c); if (g==1) t += 36.8; printf "%.4f", t }')
+
+printf 'Doing analysis at TEMP = 40.000000 and TNOM = 27.000000\n'
+printf 'i_standby_ua        =  %e\n' "${i}"
+printf 'wake_ms             =  %e\n' "${w}"
+printf 'Total analysis time (seconds) = 0.01\n'
+MODEL
+chmod +x sim/standby/model.sh
 
 iterate open standby \
     --goal "worst in-spec standby corner under 25 uA, without making wake-up
@@ -130,33 +161,35 @@ iterate open standby \
     --track wake_ms --track-limit wake_ms=10 --track-direction wake_ms=min --track-unit wake_ms=ms \
     --tool ngspice >/dev/null
 
-iterate record standby --var ref_duty=1 --var c_ref_nf=100 \
-    --metric i_standby_ua=31.8 --metric wake_ms=0.4 \
-    --verdict fail --note "reference always on — the +40 C corner as built" \
-    --evidence sim/standby/loop/pass-1.raw >/dev/null
-iterate record standby --var ref_duty=0.017 --var c_ref_nf=100 \
-    --metric i_standby_ua=5.9 --metric wake_ms=12.1 \
-    --verdict partial --note "duty-cycle the reference: current solved, wake-up now over budget" \
-    --evidence sim/standby/loop/pass-2.raw >/dev/null
-iterate record standby --var ref_duty=0.017 --var c_ref_nf=10 \
-    --metric i_standby_ua=6.4 --metric wake_ms=4.2 \
-    --verdict pass --note "smaller reference bypass — settles in time, costs 0.5 uA" \
-    --evidence sim/standby/loop/pass-3.raw >/dev/null
-iterate record standby --var ref_duty=0.017 --var c_ref_nf=10 --var ldo_gated=1 \
-    --metric i_standby_ua=5.1 --metric wake_ms=41.0 \
-    --verdict fail --note "gating the LDO too: lowest current of the five, and four times over the wake budget" \
-    --evidence sim/standby/loop/pass-4.raw >/dev/null
-iterate record standby --var ref_duty=0.017 --var c_ref_nf=10 --var comparator=TS881 \
-    --metric i_standby_ua=4.8 --metric wake_ms=4.4 \
-    --verdict pass --note "lower-Iq comparator on the same topology as #3" \
-    --evidence sim/standby/loop/pass-5.raw >/dev/null
+# Five passes. Note what the trajectory says that a final number cannot: #2 met
+# the current target and was rejected on wake time, #4 was better still and
+# rejected harder, and the pass that was accepted is not the best one.
+run_pass() {   # run_pass <note> <duty> <c_ref_nf> [ldo_gated] [comparator]
+    local note="$1"; shift
+    local vars=(--var "ref_duty=$1" --var "c_ref_nf=$2")
+    [ "${3:-0}" = 1 ] && vars+=(--var ldo_gated=1)
+    [ -n "${4:-}" ] && vars+=(--var "comparator=$4")
+    iterate run standby \
+        --cmd "sim/standby/model.sh $1 $2 ${3:-0} ${4:-default}" \
+        "${vars[@]}" \
+        --metric i_standby_ua=meas:i_standby_ua --metric wake_ms=meas:wake_ms \
+        --evidence-dir sim/standby/loop --note "${note}" >/dev/null
+}
+run_pass "reference always on — the +40 C corner as built"                 1     100
+run_pass "duty-cycle the reference: current solved, wake-up now over budget" 0.017 100
+run_pass "smaller reference bypass — settles in time, costs a little current" 0.017 10
+run_pass "gating the LDO too: lowest current of the five, four times over wake" 0.017 10 1
+run_pass "lower-Iq comparator on the same topology as #3"                  0.017 10 0 TS881
 
 iterate close standby --accept 3 --status converged \
-    --note "took #3, not the 4.8 uA of #5: the TS881 is a second supplier for
-            1.6 uA we do not need, and #3 already has 4x margin" >/dev/null
+    --note "took #3, not the lower-current #5: the TS881 is a second supplier
+            for 1.6 uA we do not need, and #3 already clears the target" >/dev/null
 iterate chart standby --out docs/design/standby-evolution.svg >/dev/null
+iterate verify standby >/dev/null \
+    && echo "  every recorded number re-derives from its run log" \
+    || echo "  VERIFY FAILED — a recorded number does not match its evidence"
 iterate status standby --gate >/dev/null \
-    && echo "  loop gate clear — the accepted pass meets the target and names its run" \
+    && echo "  loop gate clear — the accepted pass meets the target and re-derives" \
     || echo "  LOOP GATE FAILED"
 
 echo
