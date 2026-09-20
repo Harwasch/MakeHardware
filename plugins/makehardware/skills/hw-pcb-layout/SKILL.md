@@ -137,3 +137,33 @@ canonical board; a failed IPC connect means no KiCad is running, so
 pack itself is missing. `kicad-cli pcb` can do your DRC, your Gerbers and your 3D
 render directly, but it cannot place or route anything — there is no headless
 authoring CLI to fall back to.
+
+## The board documentation gate
+
+The nine layout rules ask whether the board works. Four more ask whether
+anybody can build, stuff, test and trace it — the half a contract manufacturer
+and a bring-up engineer see first, and the half that is invisible until the
+boards arrive and nobody can tell rev B from rev C.
+
+```bash
+pcb-lint hw/board.kicad_pcb --only PCB-IDENT,PCB-FIDUCIAL,PCB-TESTPOINT,PCB-PIN1
+```
+
+| | what it wants, and why |
+|---|---|
+| `PCB-IDENT` | A part number and a revision **in silkscreen**, plus a serial and a date/lot field. A bare board with nothing printed on it cannot be told from the previous spin the moment it leaves its bag, and every later question — which rev is this fault on, which build shipped — becomes guesswork. The fab will not add it and it costs nothing now. |
+| `PCB-FIDUCIAL` | Three global fiducials, not collinear, and one on the back if anything SMD is placed there. Two fix translation and rotation; the third resolves scale and mirror; three in a row resolve nothing. Without them the placer registers on the board outline, which is routed to a looser tolerance than the copper. |
+| `PCB-TESTPOINT` | Every rail and bring-up signal reachable with a probe. A through-hole pad counts. A rail whose only copper is under a QFN gets probed by soldering a wire to a via, which is how a first article dies on the bench. |
+| `PCB-PIN1` | A silkscreen polarity mark within 2 mm of pin 1 on every polarised part — not in copper, where the part covers it, and not only in the assembly drawing, which the operator correcting a reel at 2 am does not have. |
+
+`PCB-PIN1` looks for silkscreen geometry near pin 1 and is honest about being
+a proxy for a real marker. It is right far more often than it is wrong, and
+the failure it catches — a part that was never marked at all — is the one that
+costs a build.
+
+**Go further than the gate.** It checks what can be computed; the bar is what
+a good board carries. Connector orientation and mate direction on silk. A
+polarity legend beside every electrolytic and diode. Net names at test points
+so a probe does not need the schematic. Mounting holes with their keepout
+drawn. A "do not populate" convention that survives the BOM. An orientation
+arrow. None of that is enforced and all of it is noticed.

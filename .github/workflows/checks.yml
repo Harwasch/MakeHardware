@@ -1,0 +1,53 @@
+# The suites exist; nothing ran them.
+#
+# CLAUDE.md opens by insisting the version moves on every plugin change, and
+# `tests/version-bump.sh` enforces it — but only when somebody remembers to
+# type it. That is the same gap every gate in this repository was built to
+# close, left open in the repository itself.
+#
+# None of these need the hardware toolchain: python3 with pyyaml is enough,
+# which is why this runs on a stock runner in under a minute.
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # version-bump.sh diffs the plugin against origin/main, so a shallow
+          # clone would leave it with nothing to compare and silently pass.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install --quiet pyyaml
+
+      - name: smoke
+        run: tests/smoke.sh
+      - name: real tool output
+        run: tests/real-tool-output.sh
+      - name: feedback
+        run: tests/feedback.sh
+      - name: settings allowlist
+        run: tests/settings-allowlist.sh
+      - name: python groups
+        run: tests/python-groups.sh
+      - name: version bump
+        run: tests/version-bump.sh
+
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: plugin manifest and components
+        # --strict so an unrecognised field fails rather than warns. The
+        # community review pipeline runs this same check on submission.
+        run: npx --yes @anthropic-ai/claude-code plugin validate ./plugins/makehardware --strict
