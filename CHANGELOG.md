@@ -7,6 +7,62 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.13.0
+
+The board documentation gate, the design at every zoom level, and CI.
+
+### Added
+
+* **Four rules that ask whether anybody can build, stuff, test and trace the
+  board.** The nine layout rules ask whether it works. These ask about the
+  half a contract manufacturer and a bring-up engineer see first — and the
+  half that is invisible until the boards arrive and nobody can tell rev B
+  from rev C. All four are computed off the board; none is a reminder.
+
+  | | |
+  |---|---|
+  | `PCB-IDENT` | part number and revision in silkscreen, plus serial and date/lot fields |
+  | `PCB-FIDUCIAL` | three global fiducials, not collinear, and one on the back if anything SMD is placed there |
+  | `PCB-TESTPOINT` | every rail and bring-up signal reachable with a probe |
+  | `PCB-PIN1` | a silkscreen polarity mark within 2 mm of pin 1 on every polarised part |
+
+  `PCB-FIDUCIAL` measures collinearity as the height of the thinnest triangle
+  the fiducials form, because three in a row fix no more than two do and the
+  placer cannot tell you so. `PCB-PIN1` looks for silk geometry near pin 1 and
+  is honest in the skill about being a proxy — right far more often than
+  wrong, and the failure it catches is a part that was never marked at all.
+
+  Tested in **both** directions: a board carrying PN, rev, serial, fiducials,
+  test points and a pin-1 mark is silent, and the same board with each of
+  those removed fails and names why. A gate that fires on everything teaches
+  an agent to ignore it, which is worse than not having one.
+
+* **The design strip.** The review page showed the architecture in one tab,
+  the schematic in another and the enclosure in a third, so seeing what the
+  thing *is* took three clicks and a good memory. It now sits in one row,
+  coarse to fine — Architecture, Circuit, Board, Object — each opening its own
+  tab for the detail. The circuit thumbnail is `sch-lint`'s overlay, found by
+  name rather than hardcoded: a real `kicad-cli` plot is tens of thousands of
+  elements and will not embed, and the overlay is a few hundred and was built
+  for exactly this.
+
+* **CI.** Six suites existed and nothing ran them, so `tests/version-bump.sh`
+  — the check `CLAUDE.md` opens by insisting on — only fired when someone
+  remembered to type it. That is the gap every gate here was built to close,
+  left open in the repository itself. A workflow now runs all six plus
+  `claude plugin validate --strict` on every push and pull request. It checks
+  out with `fetch-depth: 0`, because `version-bump.sh` diffs against
+  `origin/main` and a shallow clone would leave it nothing to compare and
+  silently pass.
+
+### Changed
+
+* **`/hw-new-project`, `/hw-review` and `/hw-retro` no longer fire on the
+  model's own initiative.** Each scaffolds a repository, commits and pushes,
+  or files feedback; the plugin documentation names an unguarded side-effect
+  command as an antipattern in as many words. `/hw-status` is read-only and
+  stays model-invocable.
+
 ## 0.12.0
 
 The review page now opens on the question a reviewer actually has.

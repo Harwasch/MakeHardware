@@ -1139,6 +1139,29 @@ a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
 code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
   padding:0.1em 0.35em;border-radius:3px}
 
+/* ---- the design strip: coarse to fine, in one row ----
+   Four different aspect ratios (a wide block diagram, a tall render) have to
+   read as one row, so the art box is a fixed height and each drawing is
+   contained inside it rather than cropped. */
+.strip-design{margin:16px 0 0;border:1px solid var(--rule);background:var(--panel)}
+.lvl-head{padding:14px 20px 12px;border-bottom:1px solid var(--rule)}
+.lvl-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-0.01em}
+.lvl-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.lvls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.lvl-link{display:block;text-decoration:none;color:inherit}
+.lvl-link:hover .lvl-art{background:var(--sunk)}
+.lvl{margin:0;padding:14px 16px 16px;border-right:1px solid var(--rule-soft)}
+.lvls > *:last-child .lvl,.lvls > .lvl:last-child{border-right:0}
+.lvl figcaption{display:flex;flex-direction:column;gap:1px;margin-bottom:9px}
+.lvl figcaption b{font-size:13.5px;font-weight:600}
+.lvl figcaption span{color:var(--muted);font-size:12px}
+.lvl-art{height:132px;display:grid;place-items:center;overflow:hidden;
+  border:1px solid var(--rule-soft);background:var(--ground);padding:6px}
+.lvl-art .svgwrap{display:block;width:100%;height:100%}
+.lvl-art svg{width:100%;height:100%;display:block}
+.lvl-art img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+@media (max-width:620px){.lvl{border-right:0;border-bottom:1px solid var(--rule-soft)}}
+
 /* ---- the parameter board: what the page opens on ----
    A dashboard is scanned, not read, so state is carried in form as well as in
    number: a severity stripe down the left edge, a word, and a signed margin.
@@ -1635,8 +1658,88 @@ def render_parameters(params: list[Param]) -> str:
     return "\n".join(o)
 
 
+# ---------------------------------------------------------------------------
+# The design strip
+#
+# The second thing a reviewer wants, after "how is it doing", is "what IS it" —
+# and the page made them click three tabs to find out, holding a block diagram
+# in their head while they looked at a schematic in another.
+#
+# So: the design at every zoom level it exists at, in one row, in the order a
+# person actually thinks in. Architecture, then the circuit, then the board,
+# then the object. Each one links through to its own tab for the detail.
+# ---------------------------------------------------------------------------
+# First existing file wins, so a project shows whatever it has got so far and
+# the strip fills in as the design does.
+DESIGN_LEVELS = [
+    ("Architecture", "what it is made of", [
+        "docs/design/block-diagram.svg"]),
+    ("Circuit", "how it is wired", [
+        "@lint-sheet",          # sch-lint's overlay: a few hundred elements
+        "docs/design/schematic/sheet-1-main.svg",
+        "docs/design/schematic/sheet-1.svg"]),
+    ("Board", "where it goes", [
+        "docs/design/lint/board.lint.svg",
+        "docs/design/pcb-top.png",
+        "docs/design/stackup.svg"]),
+    ("Object", "what it becomes", [
+        "docs/design/cad/enclosure-render.png",
+        "docs/design/cad/enclosure-iso.svg"]),
+]
+
+_LEVEL_TAB = {"Architecture": "architecture", "Circuit": "schematic",
+              "Board": "layout", "Object": "cad"}
+
+
+def design_strip(root: str, phases: list) -> str:
+    known = {p.id for p in phases}
+    cells = []
+    for name, blurb, candidates in DESIGN_LEVELS:
+        path = None
+        for c in candidates:
+            if c == "@lint-sheet":
+                # Named after the sheet, so found rather than hardcoded. The
+                # board's own overlay is a different level and is excluded.
+                d = os.path.join(root, "docs/design/lint")
+                hits = sorted(f for f in os.listdir(d)
+                              if f.endswith(".lint.svg") and f != "board.lint.svg"
+                              ) if os.path.isdir(d) else []
+                if hits:
+                    path = f"docs/design/lint/{hits[0]}"
+                    break
+            elif os.path.exists(os.path.join(root, c)):
+                path = c
+                break
+        if not path:
+            continue
+        fig = figure(root, path)
+        if not fig or fig.get("warn"):
+            # A level whose figure will not embed is left out rather than
+            # shown as an apology box: the strip is a glance, and a hole in it
+            # reads as a missing design rather than a missing export.
+            continue
+        tab = _LEVEL_TAB.get(name)
+        body = fig.get("svg") or (
+            f'<img src="{esc(fig["uri"])}" alt="{esc(name)}">'
+            if fig.get("uri") else "")
+        if not body:
+            continue
+        inner = (f'<figure class="lvl"><figcaption><b>{esc(name)}</b>'
+                 f'<span>{esc(blurb)}</span></figcaption>'
+                 f'<div class="lvl-art">{body}</div></figure>')
+        cells.append(
+            f'<a class="lvl-link" href="#p-{tab}" data-goto="{tab}">{inner}</a>'
+            if tab in known else inner)
+    if not cells:
+        return ""
+    return ('<section class="strip-design" aria-label="The design, at every '
+            'level it exists at"><div class="lvl-head"><h2>The design</h2>'
+            '<p>Coarse to fine. Each one opens its own tab.</p></div>'
+            '<div class="lvls">' + "".join(cells) + "</div></section>")
+
+
 def render_page(project: dict, phases: list[Phase],
-                params: list | None = None) -> str:
+                params: list | None = None, strip: str = "") -> str:
     o: list[str] = []
     a = o.append
     a(f"<title>{esc(project['title'])} Review</title>")
@@ -1692,6 +1795,7 @@ def render_page(project: dict, phases: list[Phase],
     # page that answers "how is it doing" without a click, and a reviewer who
     # reads nothing else should still leave with that.
     a(render_parameters(params or []))
+    a(strip or "")
 
     # ---- tabs ------------------------------------------------------------
     a('<div class="tabs" role="tablist">')
@@ -2469,8 +2573,9 @@ def main() -> int:
     out = args.out if os.path.isabs(args.out) else os.path.join(root, args.out)
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     params = parameters(root, cfg)
+    strip = design_strip(root, phases)
     with open(out, "w") as fh:
-        fh.write(render_page(project, phases, params))
+        fh.write(render_page(project, phases, params, strip))
 
     size = os.path.getsize(out)
     print(f"wrote {os.path.relpath(out, cwd)}  ({size // 1024} kB, "

@@ -39,6 +39,29 @@ a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
 code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
   padding:0.1em 0.35em;border-radius:3px}
 
+/* ---- the design strip: coarse to fine, in one row ----
+   Four different aspect ratios (a wide block diagram, a tall render) have to
+   read as one row, so the art box is a fixed height and each drawing is
+   contained inside it rather than cropped. */
+.strip-design{margin:16px 0 0;border:1px solid var(--rule);background:var(--panel)}
+.lvl-head{padding:14px 20px 12px;border-bottom:1px solid var(--rule)}
+.lvl-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-0.01em}
+.lvl-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.lvls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.lvl-link{display:block;text-decoration:none;color:inherit}
+.lvl-link:hover .lvl-art{background:var(--sunk)}
+.lvl{margin:0;padding:14px 16px 16px;border-right:1px solid var(--rule-soft)}
+.lvls > *:last-child .lvl,.lvls > .lvl:last-child{border-right:0}
+.lvl figcaption{display:flex;flex-direction:column;gap:1px;margin-bottom:9px}
+.lvl figcaption b{font-size:13.5px;font-weight:600}
+.lvl figcaption span{color:var(--muted);font-size:12px}
+.lvl-art{height:132px;display:grid;place-items:center;overflow:hidden;
+  border:1px solid var(--rule-soft);background:var(--ground);padding:6px}
+.lvl-art .svgwrap{display:block;width:100%;height:100%}
+.lvl-art svg{width:100%;height:100%;display:block}
+.lvl-art img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+@media (max-width:620px){.lvl{border-right:0;border-bottom:1px solid var(--rule-soft)}}
+
 /* ---- the parameter board: what the page opens on ----
    A dashboard is scanned, not read, so state is carried in form as well as in
    number: a severity stripe down the left edge, a word, and a signed margin.
@@ -283,8 +306,8 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <h1>Thermal Probe</h1>
 <p>A handheld logger for walk-in freezers. A week on one charge, readable through a glove.</p>
 </div><div class='fields'>
-<div class="field"><span class="k">Revision</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/commit/7da342d" target="_blank" rel="noopener">7da342d ↗</a></span></div>
-<div class="field"><span class="k">Branch</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/tree/claude/parameter-board" target="_blank" rel="noopener">claude/parameter-board ↗</a></span></div>
+<div class="field"><span class="k">Revision</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/commit/9f31024" target="_blank" rel="noopener">9f31024 ↗</a></span></div>
+<div class="field"><span class="k">Branch</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/tree/claude/board-docs" target="_blank" rel="noopener">claude/board-docs ↗</a></span></div>
 <div class="field"><span class="k">Generated</span><span class="v">2026-09-20</span></div>
 <div class="field"><span class="k">Phases</span><span class="v">10</span></div>
 <div class="field"><span class="k">Awaiting you</span><span class="v"><a href="#p-review" data-goto="review">3 →</a></span></div>
@@ -295,13 +318,562 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <section class="board" aria-label="Key performance parameters">
 <div class="board-head"><h2>Where the design stands</h2><p>Every number read from the file that owns it. Worst first.</p></div>
 <div class="params">
-<div class="param t-warn"><div class="p-name">VBUS rail<span class="p-note">worst case at 5 V, from J1</span></div><div class="p-val">450 mA</div><div class="p-bar"><i style="width:90%"></i></div><div class="p-lim">max 500 mA</div><div class="p-margin">+10%<span class="p-state">tight</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
-<div class="param t-ok"><div class="p-name">Wake</div><div class="p-val">4.2 ms</div><div class="p-bar"><i style="width:42%"></i></div><div class="p-lim">max 10 ms</div><div class="p-margin">+58%<span class="p-state">clear</span></div><div class="p-trail"><svg class="spark" viewBox="0 0 104 26" width="104" height="26" aria-hidden="true"><polyline points="1.0,22.0 26.5,4.0 52.0,20.4 77.5,4.4 103.0,20.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><circle cx="103.0" cy="20.4" r="2.6" fill="currentColor"/></svg></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/iterations/standby.json" target="_blank" rel="noopener">standby loop, #3 ↗</a></div></div>
-<div class="param t-ok"><div class="p-name">I standby<span class="p-note">worst in-spec standby corner under 25 uA, without making wake-up</span></div><div class="p-val">8.884 uA</div><div class="p-bar"><i style="width:36%"></i></div><div class="p-lim">max 25 uA</div><div class="p-margin">+64%<span class="p-state">clear</span></div><div class="p-trail"><svg class="spark" viewBox="0 0 104 26" width="104" height="26" aria-hidden="true"><polyline points="1.0,4.0 26.5,22.0 52.0,20.7 77.5,21.3 103.0,21.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><circle cx="103.0" cy="21.4" r="2.6" fill="currentColor"/></svg></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/iterations/standby.json" target="_blank" rel="noopener">standby loop, #3 ↗</a></div></div>
-<div class="param t-ok"><div class="p-name">V3P3 rail<span class="p-note">worst case at 3.3 V, from U2</span></div><div class="p-val">12.38 mA</div><div class="p-bar"><i style="width:5%"></i></div><div class="p-lim">max 250 mA</div><div class="p-margin">+95%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
-<div class="param t-ok"><div class="p-name">VREF rail<span class="p-note">worst case at 2.5 V, from U4</span></div><div class="p-val">0.25 mA</div><div class="p-bar"><i style="width:2%"></i></div><div class="p-lim">max 10 mA</div><div class="p-margin">+98%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
-<div class="param t-ok"><div class="p-name">VBAT rail<span class="p-note">worst case at 3.7 V, from BT1</span></div><div class="p-val">0.01105 A</div><div class="p-bar"><i style="width:1%"></i></div><div class="p-lim">max 1.2 A</div><div class="p-margin">+99%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-warn"><div class="p-name">VBUS rail<span class="p-note">worst case at 5 V, from J1</span></div><div class="p-val">450 mA</div><div class="p-bar"><i style="width:90%"></i></div><div class="p-lim">max 500 mA</div><div class="p-margin">+10%<span class="p-state">tight</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">Wake</div><div class="p-val">4.2 ms</div><div class="p-bar"><i style="width:42%"></i></div><div class="p-lim">max 10 ms</div><div class="p-margin">+58%<span class="p-state">clear</span></div><div class="p-trail"><svg class="spark" viewBox="0 0 104 26" width="104" height="26" aria-hidden="true"><polyline points="1.0,22.0 26.5,4.0 52.0,20.4 77.5,4.4 103.0,20.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><circle cx="103.0" cy="20.4" r="2.6" fill="currentColor"/></svg></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/iterations/standby.json" target="_blank" rel="noopener">standby loop, #3 ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">I standby<span class="p-note">worst in-spec standby corner under 25 uA, without making wake-up</span></div><div class="p-val">8.884 uA</div><div class="p-bar"><i style="width:36%"></i></div><div class="p-lim">max 25 uA</div><div class="p-margin">+64%<span class="p-state">clear</span></div><div class="p-trail"><svg class="spark" viewBox="0 0 104 26" width="104" height="26" aria-hidden="true"><polyline points="1.0,4.0 26.5,22.0 52.0,20.7 77.5,21.3 103.0,21.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><circle cx="103.0" cy="21.4" r="2.6" fill="currentColor"/></svg></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/iterations/standby.json" target="_blank" rel="noopener">standby loop, #3 ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">V3P3 rail<span class="p-note">worst case at 3.3 V, from U2</span></div><div class="p-val">12.38 mA</div><div class="p-bar"><i style="width:5%"></i></div><div class="p-lim">max 250 mA</div><div class="p-margin">+95%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">VREF rail<span class="p-note">worst case at 2.5 V, from U4</span></div><div class="p-val">0.25 mA</div><div class="p-bar"><i style="width:2%"></i></div><div class="p-lim">max 10 mA</div><div class="p-margin">+98%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">VBAT rail<span class="p-note">worst case at 3.7 V, from BT1</span></div><div class="p-val">0.01105 A</div><div class="p-bar"><i style="width:1%"></i></div><div class="p-lim">max 1.2 A</div><div class="p-margin">+99%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
 </div></section>
+<section class="strip-design" aria-label="The design, at every level it exists at"><div class="lvl-head"><h2>The design</h2><p>Coarse to fine. Each one opens its own tab.</p></div><div class="lvls"><a class="lvl-link" href="#p-architecture" data-goto="architecture"><figure class="lvl"><figcaption><b>Architecture</b><span>what it is made of</span></figcaption><div class="lvl-art"><span id="ge0935ab" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1410 872" font-family="ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" role="img" aria-label="Electrical block diagram: Thermal Probe, 10 blocks, 4 rails, 4 buses" preserveAspectRatio="xMidYMid meet">
+<style>#ge0935ab .s{fill:#fcfcfb}#ge0935ab .bx{fill:#ffffff;stroke:#c3c2b7}#ge0935ab .ink{fill:#0b0b0b}#ge0935ab .ink2{fill:#52514e}#ge0935ab .ax{stroke:#c3c2b7}#ge0935ab .gt{fill:#c3c2b7}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #ge0935ab .s{fill:#1a1a19}:root:not([data-theme="light"]) #ge0935ab .bx{fill:#242422;stroke:#383835}:root:not([data-theme="light"]) #ge0935ab .ink{fill:#ffffff}:root:not([data-theme="light"]) #ge0935ab .ink2{fill:#c3c2b7}:root:not([data-theme="light"]) #ge0935ab .ax{stroke:#383835}:root:not([data-theme="light"]) #ge0935ab .gt{fill:#383835}}:root[data-theme="dark"] #ge0935ab .s{fill:#1a1a19}:root[data-theme="dark"] #ge0935ab .bx{fill:#242422;stroke:#383835}:root[data-theme="dark"] #ge0935ab .ink{fill:#ffffff}:root[data-theme="dark"] #ge0935ab .ink2{fill:#c3c2b7}:root[data-theme="dark"] #ge0935ab .ax{stroke:#383835}:root[data-theme="dark"] #ge0935ab .gt{fill:#383835}#ge0935ab .mut{fill:#898781}#ge0935ab .t{font-size:12px}#ge0935ab .tb{font-size:12.5px;font-weight:600}#ge0935ab .ts{font-size:10px}#ge0935ab .tr{font-size:11.5px;font-weight:600}#ge0935ab .h{font-size:15px;font-weight:600}#ge0935ab .hh{font-size:11px;font-weight:600;letter-spacing:0.06em}</style>
+<rect width="1410" height="872" class="s" rx="6"/>
+<text x="24" y="27" class="h ink">Thermal Probe  ·  rev C</text>
+<text x="24" y="46" class="t ink2">10 blocks · 4 rails · 4 buses</text>
+<text x="24" y="61" class="ts mut">generated from block-diagram.yaml — edit the spec, not this file</text>
+<text x="24" y="84" class="hh mut">POWER TREE</text>
+<rect x="24.0" y="96.0" width="6" height="32" rx="3" fill="#d03b3b"/>
+<text x="38.0" y="108.0" class="tr" fill="#d03b3b">VBUS  5.0 V  ← J1</text>
+<rect x="284" y="98.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="98.0" width="135.0" height="9" rx="4.5" fill="#e08a1e"/>
+<text x="446" y="107.0" class="ts ink2">450 mA max of 500 mA  (90%)  ! tight</text>
+<text x="38.0" y="124.0" class="ts mut">U1 450 mA</text>
+<rect x="24.0" y="142.0" width="6" height="32" rx="3" fill="#e08a1e"/>
+<text x="38.0" y="154.0" class="tr" fill="#e08a1e">VBAT  3.7 V  ← BT1</text>
+<rect x="284" y="144.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="144.0" width="3.0" height="9" rx="4.5" fill="#e08a1e"/>
+<text x="446" y="153.0" class="ts ink2">11 mA max of 1.20 A  (1%)</text>
+<text x="38.0" y="170.0" class="ts mut">U2 0 mA</text>
+<path d="M33.0,156.0 V200.0 H43.0" fill="none" class="ax" stroke-width="1.2" opacity="0.6"/>
+<rect x="46.0" y="188.0" width="6" height="32" rx="3" fill="#0ca30c"/>
+<text x="60.0" y="200.0" class="tr" fill="#0ca30c">V3P3  3.3 V  ← U2</text>
+<rect x="284" y="190.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="190.0" width="7.4" height="9" rx="4.5" fill="#0ca30c"/>
+<text x="446" y="199.0" class="ts ink2">12 mA max of 250 mA  (5%)</text>
+<text x="60.0" y="216.0" class="ts mut">U3 8 mA  U5 4 mA  U4 0 mA  DS1 0 mA</text>
+<path d="M55.0,202.0 V246.0 H65.0" fill="none" class="ax" stroke-width="1.2" opacity="0.6"/>
+<rect x="68.0" y="234.0" width="6" height="32" rx="3" fill="#2a78d6"/>
+<text x="82.0" y="246.0" class="tr" fill="#2a78d6">VREF  2.5 V  ← U4</text>
+<rect x="284" y="236.0" width="150" height="9" rx="4.5" class="gt" opacity="0.5"/>
+<rect x="284" y="236.0" width="3.8" height="9" rx="4.5" fill="#2a78d6"/>
+<text x="446" y="245.0" class="ts ink2">0 mA max of 10 mA  (2%)</text>
+<text x="82.0" y="262.0" class="ts mut">RT1 0 mA</text>
+<text x="24" y="302" class="hh mut">FUNCTIONAL BLOCKS AND DATA BUSES</text>
+<rect x="24.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="336.0" class="tb ink">J1 · USB-C receptacle</text>
+<text x="34.0" y="352.0" class="t ink2">TYPE-C-31-M-12</text>
+<text x="34.0" y="370.0" class="ts mut">CONNECTOR</text>
+<rect x="24.0" y="420.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="440.0" class="tb ink">BT1 · LiPo cell, 900 mAh</text>
+<text x="34.0" y="456.0" class="t ink2">LP503035</text>
+<text x="34.0" y="474.0" class="ts mut">POWER</text>
+<rect x="24.0" y="524.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="544.0" class="tb ink">U1 · Battery charger</text>
+<text x="34.0" y="560.0" class="t ink2">MCP73831T-2ACI/OT</text>
+<text x="34.0" y="578.0" class="ts mut">REGULATOR</text>
+<rect x="167.0" y="568.0" width="33.0" height="15" rx="7.5" fill="#d03b3b"/>
+<text x="183.5" y="579.0" class="ts" fill="#ffffff" text-anchor="middle">VBUS</text>
+<rect x="24.0" y="628.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="34.0" y="648.0" class="tb ink">U2 · 3.3 V LDO</text>
+<text x="34.0" y="664.0" class="t ink2">MCP1700T-3302E/TT</text>
+<text x="34.0" y="682.0" class="ts mut">REGULATOR</text>
+<rect x="167.0" y="672.0" width="33.0" height="15" rx="7.5" fill="#e08a1e"/>
+<text x="183.5" y="683.0" class="ts" fill="#ffffff" text-anchor="middle">VBAT</text>
+<rect x="346.0" y="472.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="356.0" y="492.0" class="tb ink">U3 · MCU</text>
+<text x="356.0" y="508.0" class="t ink2">STM32L071KBU6</text>
+<text x="356.0" y="526.0" class="ts mut">MCU</text>
+<rect x="489.0" y="516.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="505.5" y="527.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="668.0" y="316.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="678.0" y="336.0" class="tb ink">U5 · Log flash, 16 Mbit</text>
+<text x="678.0" y="352.0" class="t ink2">W25Q16JVUXIQ</text>
+<text x="678.0" y="370.0" class="ts mut">MEMORY</text>
+<rect x="811.0" y="360.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="827.5" y="371.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="668.0" y="420.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="678.0" y="440.0" class="tb ink">DS1 · Segment LCD module</text>
+<text x="678.0" y="456.0" class="t ink2">VIM-878-DP-RC-S-LV</text>
+<text x="678.0" y="474.0" class="ts mut">INTERFACE</text>
+<rect x="811.0" y="464.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="827.5" y="475.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<rect x="668.0" y="524.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="678.0" y="544.0" class="tb ink">RT1 · Probe thermistor, NTC 10</text>
+<text x="678.0" y="560.0" class="t ink2">NTCLE100E3103JB0</text>
+<text x="678.0" y="578.0" class="ts mut">SENSOR</text>
+<rect x="811.0" y="568.0" width="33.0" height="15" rx="7.5" fill="#2a78d6"/>
+<text x="827.5" y="579.0" class="ts" fill="#ffffff" text-anchor="middle">VREF</text>
+<rect x="668.0" y="628.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="678.0" y="648.0" class="tb ink">SW1 · Wake button</text>
+<text x="678.0" y="664.0" class="t ink2">TL3305AF160QG</text>
+<text x="678.0" y="682.0" class="ts mut">INTERFACE</text>
+<rect x="990.0" y="472.0" width="186" height="70" rx="5" class="bx" stroke-width="1.2"/>
+<text x="1000.0" y="492.0" class="tb ink">U4 · Voltage reference</text>
+<text x="1000.0" y="508.0" class="t ink2">REF3025AIDBZR</text>
+<text x="1000.0" y="526.0" class="ts mut">ANALOG</text>
+<rect x="1133.0" y="516.0" width="33.0" height="15" rx="7.5" fill="#0ca30c"/>
+<text x="1149.5" y="527.0" class="ts" fill="#ffffff" text-anchor="middle">V3P3</text>
+<path d="M532.0,507.0 H591.0 V559.0 H664.0" fill="none" stroke="#d03b3b" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="532.0" cy="507.0" r="2.6" fill="#d03b3b"/>
+<path d="M-5,-4 L-5,4 L2,0 z" transform="translate(666.0,559.0)" fill="#d03b3b"/>
+<text x="596" y="536" class="ts" fill="#d03b3b" text-anchor="start">ADC1</text>
+<path d="M210.0,351.0 H250.0 V507.0 H342.0" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="210.0" cy="351.0" r="2.6" fill="#64748b"/>
+<path d="M-5,-4 L-5,4 L2,0 z" transform="translate(344.0,507.0)" fill="#64748b"/>
+<text x="255" y="432" class="ts" fill="#64748b" text-anchor="start">SWD1</text>
+<path d="M532.0,524.5 H610.0 V663.0 H664.0" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linejoin="round"/>
+<circle cx="532.0" cy="524.5" r="2.6" fill="#6b7280"/>
+<path d="M-5,-4 L-5,4 L2,0 z" transform="translate(666.0,663.0)" fill="#6b7280"/>
+<text x="615" y="597" class="ts" fill="#6b7280" text-anchor="start">GPIO1</text>
+<line x1="572.0" y1="351.0" x2="572.0" y2="489.5" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round"/>
+<text x="577.0" y="342.0" class="ts" fill="#8b5cf6">SPI1</text>
+<line x1="532.0" y1="489.5" x2="572.0" y2="489.5" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="532.0" cy="489.5" r="2.6" fill="#8b5cf6"/>
+<rect x="568.0" y="485.5" width="8" height="8" rx="1.5" fill="#8b5cf6"/>
+<line x1="668.0" y1="351.0" x2="572.0" y2="351.0" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="668.0" cy="351.0" r="2.6" fill="#8b5cf6"/>
+<circle cx="572.0" cy="351.0" r="3.2" fill="#8b5cf6"/>
+<line x1="668.0" y1="455.0" x2="572.0" y2="455.0" stroke="#8b5cf6" stroke-width="1.6"/>
+<circle cx="668.0" cy="455.0" r="2.6" fill="#8b5cf6"/>
+<circle cx="572.0" cy="455.0" r="3.2" fill="#8b5cf6"/>
+<text x="24" y="724.0" class="tb ink2">DATA BUSES</text>
+<line x1="24" y1="744.0" x2="46" y2="744.0" stroke="#8b5cf6" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="748.0" class="ts ink2">SPI1 · SPI — 8 MHz, two chip selects. Flash and LCD share the bus.</text>
+<line x1="24" y1="766.0" x2="46" y2="766.0" stroke="#d03b3b" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="770.0" class="ts ink2">ADC1 · ANALOG — Ratiometric against VREF, 12-bit, 16x oversampled</text>
+<line x1="24" y1="788.0" x2="46" y2="788.0" stroke="#64748b" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="792.0" class="ts ink2">SWD1 · SWD — Debug on the USB-C sideband pins via a test fixture</text>
+<line x1="24" y1="810.0" x2="46" y2="810.0" stroke="#6b7280" stroke-width="2.4" stroke-linecap="round"/>
+<text x="54" y="814.0" class="ts ink2">GPIO1 · GPIO — Wake interrupt, pulled up internally</text>
+<text x="24" y="856" class="ts mut">■ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
+</svg></span></div></figure></a><a class="lvl-link" href="#p-schematic" data-goto="schematic"><figure class="lvl"><figcaption><b>Circuit</b><span>how it is wired</span></figcaption><div class="lvl-art"><span id="gb66481a" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 381.0 210" preserveAspectRatio="xMidYMid meet">
+<style>#gb66481a .bg{ fill:#faf9f6 }#gb66481a .wire{ stroke:#7a8899; stroke-width:.18; fill:none }#gb66481a .body{ stroke:#9aa7b5; stroke-width:.18; fill:none }#gb66481a .lbl{ fill:#7a8899; font:1.6px sans-serif }#gb66481a .ref{ fill:#556; font:1.6px sans-serif }#gb66481a .cap{ fill:#333; font:2.2px sans-serif }#gb66481a .note{ fill:#444; font:2.4px sans-serif }@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #gb66481a .bg{fill:#14171a}:root:not([data-theme="light"]) #gb66481a .wire{stroke:#4d5b6b}:root:not([data-theme="light"]) #gb66481a .body{stroke:#5c6b7a}:root:not([data-theme="light"]) #gb66481a .lbl,:root:not([data-theme="light"]) #gb66481a .ref{fill:#8494a5}:root:not([data-theme="light"]) #gb66481a .cap,:root:not([data-theme="light"]) #gb66481a .note{fill:#c8d2dc}}:root[data-theme="dark"] #gb66481a .bg{fill:#14171a}:root[data-theme="dark"] #gb66481a .wire{stroke:#4d5b6b}:root[data-theme="dark"] #gb66481a .body{stroke:#5c6b7a}:root[data-theme="dark"] #gb66481a .lbl,:root[data-theme="dark"] #gb66481a .ref{fill:#8494a5}:root[data-theme="dark"] #gb66481a .cap,:root[data-theme="dark"] #gb66481a .note{fill:#c8d2dc}</style>
+<rect class="bg" x="0" y="0" width="381.0" height="210"/>
+<rect x="0" y="0" width="297" height="210" fill="none" stroke="#c7c2b6" stroke-width=".3"/>
+<line class="wire" x1="87.63" y1="43.18" x2="87.63" y2="46.99"/>
+<line class="wire" x1="97.79" y1="129.54" x2="102.87" y2="129.54"/>
+<line class="wire" x1="102.87" y1="106.68" x2="57.15" y2="106.68"/>
+<line class="wire" x1="250.19" y1="156.21" x2="243.84" y2="156.21"/>
+<line class="wire" x1="105.41" y1="168.91" x2="101.60" y2="168.91"/>
+<line class="wire" x1="57.15" y1="106.68" x2="57.15" y2="93.98"/>
+<line class="wire" x1="250.19" y1="143.51" x2="243.84" y2="143.51"/>
+<line class="wire" x1="38.10" y1="168.91" x2="34.29" y2="168.91"/>
+<line class="wire" x1="234.95" y1="137.16" x2="223.52" y2="137.16"/>
+<line class="wire" x1="166.37" y1="66.04" x2="166.37" y2="67.31"/>
+<line class="wire" x1="133.35" y1="80.01" x2="137.16" y2="80.01"/>
+<line class="wire" x1="260.35" y1="137.16" x2="260.35" y2="143.51"/>
+<line class="wire" x1="208.28" y1="154.94" x2="203.20" y2="154.94"/>
+<line class="wire" x1="138.43" y1="35.56" x2="142.24" y2="35.56"/>
+<line class="wire" x1="255.27" y1="137.16" x2="260.35" y2="137.16"/>
+<line class="wire" x1="260.35" y1="156.21" x2="260.35" y2="157.48"/>
+<line class="wire" x1="200.66" y1="73.66" x2="200.66" y2="67.31"/>
+<line class="wire" x1="92.71" y1="129.54" x2="97.79" y2="129.54"/>
+<line class="wire" x1="200.66" y1="67.31" x2="198.12" y2="67.31"/>
+<line class="wire" x1="130.81" y1="43.18" x2="123.19" y2="43.18"/>
+<line class="wire" x1="97.79" y1="68.58" x2="97.79" y2="69.85"/>
+<line class="wire" x1="86.36" y1="168.91" x2="86.36" y2="167.64"/>
+<line class="wire" x1="35.56" y1="173.99" x2="40.64" y2="173.99"/>
+<line class="wire" x1="274.32" y1="137.16" x2="274.32" y2="138.43"/>
+<line class="wire" x1="179.07" y1="46.99" x2="179.07" y2="40.64"/>
+<line class="wire" x1="232.41" y1="152.40" x2="233.68" y2="152.40"/>
+<line class="wire" x1="271.78" y1="137.16" x2="274.32" y2="137.16"/>
+<line class="wire" x1="189.23" y1="154.94" x2="193.04" y2="154.94"/>
+<line class="wire" x1="198.12" y1="73.66" x2="200.66" y2="73.66"/>
+<line class="wire" x1="43.18" y1="93.98" x2="57.15" y2="93.98"/>
+<line class="wire" x1="138.43" y1="35.56" x2="138.43" y2="38.10"/>
+<line class="wire" x1="144.78" y1="19.05" x2="154.94" y2="19.05"/>
+<line class="wire" x1="57.15" y1="91.44" x2="43.18" y2="91.44"/>
+<line class="wire" x1="233.68" y1="152.40" x2="234.95" y2="152.40"/>
+<line class="wire" x1="81.28" y1="80.01" x2="85.09" y2="80.01"/>
+<line class="wire" x1="138.43" y1="38.10" x2="148.59" y2="38.10"/>
+<line class="wire" x1="148.59" y1="73.66" x2="177.80" y2="73.66"/>
+<line class="wire" x1="35.56" y1="175.26" x2="35.56" y2="173.99"/>
+<line class="wire" x1="137.16" y1="80.01" x2="152.40" y2="80.01"/>
+<line class="wire" x1="81.28" y1="168.91" x2="86.36" y2="168.91"/>
+<line class="wire" x1="238.76" y1="149.86" x2="238.76" y2="143.51"/>
+<line class="wire" x1="118.11" y1="80.01" x2="125.73" y2="80.01"/>
+<line class="wire" x1="204.47" y1="81.28" x2="210.82" y2="81.28"/>
+<line class="wire" x1="49.53" y1="171.45" x2="49.53" y2="168.91"/>
+<line class="wire" x1="210.82" y1="81.28" x2="210.82" y2="78.74"/>
+<line class="wire" x1="53.34" y1="129.54" x2="81.28" y2="129.54"/>
+<line class="wire" x1="78.74" y1="168.91" x2="81.28" y2="168.91"/>
+<line class="wire" x1="190.50" y1="40.64" x2="209.55" y2="40.64"/>
+<line class="wire" x1="154.94" y1="29.21" x2="154.94" y2="31.75"/>
+<line class="wire" x1="148.59" y1="38.10" x2="148.59" y2="73.66"/>
+<line class="wire" x1="210.82" y1="81.28" x2="219.71" y2="81.28"/>
+<line class="wire" x1="87.63" y1="54.61" x2="87.63" y2="55.88"/>
+<line class="wire" x1="187.96" y1="67.31" x2="190.50" y2="67.31"/>
+<line class="wire" x1="240.03" y1="149.86" x2="238.76" y2="149.86"/>
+<line class="wire" x1="194.31" y1="83.82" x2="194.31" y2="81.28"/>
+<line class="wire" x1="189.23" y1="156.21" x2="189.23" y2="154.94"/>
+<line class="wire" x1="115.57" y1="43.18" x2="107.95" y2="43.18"/>
+<line class="wire" x1="238.76" y1="128.27" x2="238.76" y2="130.81"/>
+<line class="wire" x1="34.29" y1="173.99" x2="35.56" y2="173.99"/>
+<line class="wire" x1="228.60" y1="160.02" x2="233.68" y2="160.02"/>
+<line class="wire" x1="71.12" y1="43.18" x2="74.93" y2="43.18"/>
+<line class="wire" x1="260.35" y1="137.16" x2="264.16" y2="137.16"/>
+<line class="wire" x1="203.20" y1="160.02" x2="220.98" y2="160.02"/>
+<line class="wire" x1="166.37" y1="30.48" x2="166.37" y2="27.94"/>
+<line class="wire" x1="86.36" y1="168.91" x2="93.98" y2="168.91"/>
+<line class="wire" x1="219.71" y1="81.28" x2="233.68" y2="81.28"/>
+<line class="wire" x1="97.79" y1="77.47" x2="97.79" y2="80.01"/>
+<line class="wire" x1="57.15" y1="43.18" x2="71.12" y2="43.18"/>
+<line class="wire" x1="260.35" y1="156.21" x2="257.81" y2="156.21"/>
+<line class="wire" x1="233.68" y1="160.02" x2="233.68" y2="152.40"/>
+<line class="wire" x1="62.23" y1="96.52" x2="62.23" y2="80.01"/>
+<line class="wire" x1="53.34" y1="88.90" x2="43.18" y2="88.90"/>
+<line class="wire" x1="62.23" y1="96.52" x2="43.18" y2="96.52"/>
+<line class="wire" x1="210.82" y1="88.90" x2="233.68" y2="88.90"/>
+<line class="wire" x1="154.94" y1="31.75" x2="154.94" y2="35.56"/>
+<line class="wire" x1="149.86" y1="35.56" x2="154.94" y2="35.56"/>
+<line class="wire" x1="87.63" y1="33.02" x2="87.63" y2="31.75"/>
+<line class="wire" x1="137.16" y1="106.68" x2="137.16" y2="80.01"/>
+<line class="wire" x1="218.44" y1="152.40" x2="218.44" y2="154.94"/>
+<line class="wire" x1="144.78" y1="19.05" x2="144.78" y2="21.59"/>
+<line class="wire" x1="57.15" y1="43.18" x2="57.15" y2="91.44"/>
+<line class="wire" x1="200.66" y1="73.66" x2="203.20" y2="73.66"/>
+<line class="wire" x1="144.78" y1="31.75" x2="154.94" y2="31.75"/>
+<line class="wire" x1="45.72" y1="168.91" x2="49.53" y2="168.91"/>
+<line class="wire" x1="219.71" y1="81.28" x2="219.71" y2="80.01"/>
+<line class="wire" x1="223.52" y1="137.16" x2="223.52" y2="130.81"/>
+<line class="wire" x1="81.28" y1="129.54" x2="85.09" y2="129.54"/>
+<line class="wire" x1="148.59" y1="129.54" x2="133.35" y2="129.54"/>
+<line class="wire" x1="97.79" y1="80.01" x2="97.79" y2="83.82"/>
+<line class="wire" x1="97.79" y1="80.01" x2="102.87" y2="80.01"/>
+<line class="wire" x1="154.94" y1="17.78" x2="154.94" y2="19.05"/>
+<line class="wire" x1="166.37" y1="40.64" x2="179.07" y2="40.64"/>
+<line class="wire" x1="203.20" y1="154.94" x2="203.20" y2="160.02"/>
+<line class="wire" x1="87.63" y1="43.18" x2="92.71" y2="43.18"/>
+<line class="wire" x1="260.35" y1="143.51" x2="257.81" y2="143.51"/>
+<line class="wire" x1="194.31" y1="81.28" x2="196.85" y2="81.28"/>
+<line class="wire" x1="166.37" y1="40.64" x2="166.37" y2="44.45"/>
+<line class="wire" x1="179.07" y1="40.64" x2="182.88" y2="40.64"/>
+<line class="wire" x1="105.41" y1="171.45" x2="105.41" y2="168.91"/>
+<line class="wire" x1="81.28" y1="133.35" x2="81.28" y2="129.54"/>
+<line class="wire" x1="260.35" y1="135.89" x2="260.35" y2="137.16"/>
+<line class="wire" x1="53.34" y1="129.54" x2="53.34" y2="88.90"/>
+<line class="wire" x1="81.28" y1="83.82" x2="81.28" y2="80.01"/>
+<line class="wire" x1="154.94" y1="35.56" x2="158.75" y2="35.56"/>
+<line class="wire" x1="62.23" y1="80.01" x2="81.28" y2="80.01"/>
+<line class="wire" x1="87.63" y1="40.64" x2="87.63" y2="43.18"/>
+<line class="wire" x1="190.50" y1="73.66" x2="185.42" y2="73.66"/>
+<line class="wire" x1="81.28" y1="168.91" x2="81.28" y2="171.45"/>
+<line class="wire" x1="224.79" y1="152.40" x2="218.44" y2="152.40"/>
+<line class="wire" x1="255.27" y1="135.89" x2="255.27" y2="137.16"/>
+<line class="wire" x1="97.79" y1="142.24" x2="97.79" y2="140.97"/>
+<line class="wire" x1="233.68" y1="97.79" x2="209.55" y2="97.79"/>
+<line class="wire" x1="144.78" y1="29.21" x2="144.78" y2="31.75"/>
+<line class="wire" x1="118.11" y1="106.68" x2="137.16" y2="106.68"/>
+<line class="wire" x1="92.71" y1="80.01" x2="97.79" y2="80.01"/>
+<line class="wire" x1="82.55" y1="43.18" x2="87.63" y2="43.18"/>
+<line class="wire" x1="218.44" y1="154.94" x2="215.90" y2="154.94"/>
+<line class="wire" x1="166.37" y1="52.07" x2="166.37" y2="55.88"/>
+<line class="wire" x1="40.64" y1="173.99" x2="40.64" y2="175.26"/>
+<line class="wire" x1="125.73" y1="129.54" x2="118.11" y2="129.54"/>
+<line class="wire" x1="97.79" y1="119.38" x2="97.79" y2="118.11"/>
+<line class="wire" x1="97.79" y1="129.54" x2="97.79" y2="133.35"/>
+<line class="wire" x1="97.79" y1="127.00" x2="97.79" y2="129.54"/>
+<line class="wire" x1="196.85" y1="119.38" x2="196.85" y2="118.11"/>
+<line class="wire" x1="233.68" y1="105.41" x2="209.55" y2="105.41"/>
+<line class="wire" x1="242.57" y1="137.16" x2="255.27" y2="137.16"/>
+<line class="wire" x1="154.94" y1="19.05" x2="154.94" y2="21.59"/>
+<line class="wire" x1="223.52" y1="130.81" x2="222.25" y2="130.81"/>
+<line class="wire" x1="49.53" y1="168.91" x2="58.42" y2="168.91"/>
+<line class="wire" x1="71.12" y1="46.99" x2="71.12" y2="43.18"/>
+<line class="wire" x1="238.76" y1="143.51" x2="222.25" y2="143.51"/>
+<rect class="body" x="27.94" y="78.99" width="7.62" height="24.89" rx=".5"/>
+<text class="ref" x="31.75" y="90.84">J1</text>
+<rect class="body" x="96.52" y="39.37" width="7.62" height="7.62" rx=".5"/>
+<text class="ref" x="100.33" y="42.58">U2</text>
+<rect class="body" x="76.20" y="42.16" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="78.74" y="42.58">R1</text>
+<rect class="body" x="70.10" y="48.26" width="2.03" height="5.08" rx=".5"/>
+<text class="ref" x="71.12" y="50.20">R2</text>
+<rect class="body" x="86.36" y="34.92" width="2.54" height="3.18" rx=".5"/>
+<text class="ref" x="87.63" y="36.23">D2</text>
+<rect class="body" x="86.36" y="48.89" width="2.54" height="3.18" rx=".5"/>
+<text class="ref" x="87.63" y="50.20">D3</text>
+<rect class="body" x="101.60" y="48.26" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="86.36" y="55.88" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="87.12" y="29.97" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="106.68" y="76.20" width="7.62" height="7.62" rx=".5"/>
+<text class="ref" x="110.49" y="79.41">U2</text>
+<rect class="body" x="86.36" y="78.99" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="88.90" y="79.41">R3</text>
+<rect class="body" x="80.26" y="85.09" width="2.03" height="5.08" rx=".5"/>
+<text class="ref" x="81.28" y="87.03">R4</text>
+<rect class="body" x="96.52" y="71.75" width="2.54" height="3.17" rx=".5"/>
+<text class="ref" x="97.79" y="73.06">D4</text>
+<rect class="body" x="96.52" y="85.72" width="2.54" height="3.17" rx=".5"/>
+<text class="ref" x="97.79" y="87.03">D5</text>
+<rect class="body" x="111.76" y="85.09" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="96.52" y="91.44" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="97.28" y="66.80" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="106.68" y="125.73" width="7.62" height="7.62" rx=".5"/>
+<text class="ref" x="110.49" y="128.94">U2</text>
+<rect class="body" x="86.36" y="128.52" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="88.90" y="128.94">R5</text>
+<rect class="body" x="80.26" y="134.62" width="2.03" height="5.08" rx=".5"/>
+<text class="ref" x="81.28" y="136.56">R6</text>
+<rect class="body" x="96.52" y="121.28" width="2.54" height="3.17" rx=".5"/>
+<text class="ref" x="97.79" y="122.59">D6</text>
+<rect class="body" x="96.52" y="135.25" width="2.54" height="3.18" rx=".5"/>
+<text class="ref" x="97.79" y="136.56">D7</text>
+<rect class="body" x="111.76" y="134.62" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="96.52" y="142.24" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="97.28" y="116.33" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="106.68" y="102.87" width="7.62" height="7.62" rx=".5"/>
+<text class="ref" x="110.49" y="106.08">U2</text>
+<rect class="body" x="106.68" y="111.76" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="127.00" y="78.99" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="129.54" y="79.41">R12</text>
+<rect class="body" x="127.00" y="128.52" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="129.54" y="128.94">R13</text>
+<rect class="body" x="116.84" y="42.16" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="119.38" y="42.58">R8</text>
+<rect class="body" x="80.01" y="91.44" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="80.01" y="140.97" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="69.85" y="54.61" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="43.18" y="100.33" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="134.34" y="40.36" width="5.64" height="5.64" rx=".5"/>
+<text class="ref" x="135.89" y="42.58">Q1</text>
+<rect class="body" x="137.16" y="48.26" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="143.51" y="34.54" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="146.05" y="34.96">R11</text>
+<rect class="body" x="153.92" y="22.86" width="2.03" height="5.08" rx=".5"/>
+<text class="ref" x="154.94" y="24.80">R7</text>
+<rect class="body" x="162.28" y="32.74" width="5.64" height="5.64" rx=".5"/>
+<text class="ref" x="163.83" y="34.96">Q2</text>
+<rect class="body" x="154.43" y="15.24" width="1.02" height="2.54" rx=".5"/>
+<rect class="body" x="165.86" y="25.40" width="1.02" height="2.54" rx=".5"/>
+<rect class="body" x="165.35" y="45.72" width="2.03" height="5.08" rx=".5"/>
+<text class="ref" x="166.37" y="47.66">R9</text>
+<rect class="body" x="165.10" y="59.69" width="3.30" height="4.45" rx=".5"/>
+<text class="ref" x="166.37" y="60.36">D8</text>
+<rect class="body" x="22.86" y="167.64" width="5.08" height="7.62" rx=".5"/>
+<text class="ref" x="25.40" y="170.85">P1</text>
+<rect class="body" x="40.64" y="167.64" width="2.54" height="2.54" rx=".5"/>
+<text class="ref" x="41.91" y="168.31">D1</text>
+<rect class="body" x="34.29" y="175.26" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="47.24" y="172.47" width="4.57" height="3.81" rx=".5"/>
+<text class="ref" x="49.53" y="174.66">C2</text>
+<rect class="body" x="48.26" y="179.07" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="67.31" y="176.53" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="78.99" y="172.47" width="4.57" height="3.81" rx=".5"/>
+<text class="ref" x="81.28" y="174.66">C1</text>
+<rect class="body" x="80.01" y="179.07" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="95.25" y="167.89" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="97.79" y="168.31">R14</text>
+<rect class="body" x="104.14" y="175.26" width="3.30" height="4.45" rx=".5"/>
+<text class="ref" x="105.41" y="175.93">D9</text>
+<rect class="body" x="104.14" y="181.61" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="85.85" y="165.86" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="178.05" y="48.26" width="2.03" height="5.08" rx=".5"/>
+<text class="ref" x="179.07" y="50.20">R17</text>
+<rect class="body" x="177.80" y="54.61" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="226.16" y="129.54" width="10.03" height="1.25" rx=".5"/>
+<text class="ref" x="231.14" y="130.21">L1</text>
+<rect class="body" x="196.34" y="116.33" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="187.96" y="156.21" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="259.84" y="133.35" width="1.02" height="2.54" rx=".5"/>
+<rect class="body" x="265.18" y="134.87" width="3.81" height="4.57" rx=".5"/>
+<text class="ref" x="267.97" y="136.56">C3</text>
+<rect class="body" x="273.05" y="138.43" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="238.25" y="126.49" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="253.37" y="132.08" width="3.81" height="3.81" rx=".5"/>
+<rect class="body" x="227.84" y="150.37" width="1.52" height="4.06" rx=".5"/>
+<text class="ref" x="228.60" y="151.80">C5</text>
+<rect class="body" x="234.95" y="151.13" width="1.27" height="2.54" rx=".5"/>
+<rect class="body" x="251.46" y="155.19" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="254.00" y="155.61">R15</text>
+<rect class="body" x="251.46" y="142.49" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="254.00" y="142.91">R16</text>
+<rect class="body" x="259.08" y="157.48" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="179.07" y="127.00" width="35.56" height="20.32" rx=".5"/>
+<text class="ref" x="196.85" y="136.56">U4</text>
+<rect class="body" x="224.03" y="157.99" width="1.52" height="4.06" rx=".5"/>
+<text class="ref" x="224.79" y="159.42">C4</text>
+<rect class="body" x="209.55" y="153.92" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="212.09" y="154.34">R10</text>
+<rect class="body" x="237.49" y="135.89" width="3.18" height="2.54" rx=".5"/>
+<text class="ref" x="238.76" y="136.56">D10</text>
+<rect class="body" x="38.73" y="175.26" width="3.81" height="3.81" rx=".5"/>
+<rect class="body" x="165.10" y="67.31" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="184.15" y="39.62" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="186.69" y="40.04">R18</text>
+<rect class="body" x="242.06" y="146.05" width="3.05" height="7.62" rx=".5"/>
+<text class="ref" x="243.84" y="149.26">RV1</text>
+<rect class="body" x="187.45" y="65.53" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="206.73" y="70.84" width="5.64" height="5.64" rx=".5"/>
+<text class="ref" x="208.28" y="73.06">Q3</text>
+<rect class="body" x="191.77" y="72.64" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="194.31" y="73.06">R19</text>
+<rect class="body" x="191.77" y="66.29" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="194.31" y="66.71">R20</text>
+<rect class="body" x="198.12" y="80.26" width="5.08" height="2.03" rx=".5"/>
+<text class="ref" x="200.66" y="80.68">R21</text>
+<rect class="body" x="193.04" y="87.63" width="3.30" height="4.44" rx=".5"/>
+<text class="ref" x="194.31" y="88.30">D12</text>
+<rect class="body" x="193.04" y="93.98" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="210.31" y="66.80" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="179.71" y="72.39" width="3.18" height="2.54" rx=".5"/>
+<text class="ref" x="181.61" y="73.06">D11</text>
+<rect class="body" x="218.82" y="68.96" width="3.40" height="6.86" rx=".5"/>
+<text class="ref" x="219.71" y="71.79">JP1</text>
+<rect class="body" x="219.20" y="62.99" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="142.75" y="24.64" width="4.06" height="1.52" rx=".5"/>
+<text class="ref" x="144.78" y="24.80">C9</text>
+<rect class="body" x="161.77" y="171.93" width="1.57" height="1.57" rx=".5"/>
+<text class="ref" x="162.56" y="172.12">P101</text>
+<rect class="body" x="161.77" y="175.74" width="1.57" height="1.57" rx=".5"/>
+<text class="ref" x="162.56" y="175.93">P102</text>
+<rect class="body" x="161.77" y="179.55" width="1.57" height="1.57" rx=".5"/>
+<text class="ref" x="162.56" y="179.74">P103</text>
+<rect class="body" x="161.77" y="183.36" width="1.57" height="1.57" rx=".5"/>
+<text class="ref" x="162.56" y="183.55">P104</text>
+<rect class="body" x="161.77" y="187.17" width="1.57" height="1.57" rx=".5"/>
+<text class="ref" x="162.56" y="187.36">P105</text>
+<rect class="body" x="161.77" y="190.98" width="1.57" height="1.57" rx=".5"/>
+<text class="ref" x="162.56" y="191.17">P106</text>
+<rect class="body" x="107.95" y="85.09" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="110.49" y="111.76" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="107.95" y="134.62" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="108.71" y="122.68" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="111.25" y="99.82" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="108.71" y="73.15" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="97.79" y="48.26" width="2.54" height="1.27" rx=".5"/>
+<rect class="body" x="98.55" y="36.32" width="1.02" height="1.78" rx=".5"/>
+<rect class="body" x="63.50" y="166.37" width="10.16" height="7.62" rx=".5"/>
+<text class="ref" x="68.58" y="169.58">U3</text>
+<text class="lbl" x="139.70" y="79.51">DATA-RB7</text>
+<text class="lbl" x="134.62" y="129.04">CLOCK-RB6</text>
+<text class="lbl" x="68.58" y="106.18">PC-DATA-IN</text>
+<text class="lbl" x="213.36" y="104.91">CLOCK-RB6</text>
+<text class="lbl" x="63.50" y="79.51">PC-DATA-OUT</text>
+<text class="lbl" x="196.85" y="40.14">VPP/MCLR</text>
+<text class="lbl" x="58.42" y="42.68">VPP_ON</text>
+<text class="lbl" x="59.69" y="129.04">PC-CLOCK-OUT</text>
+<text class="lbl" x="213.36" y="88.40">VPP/MCLR</text>
+<text class="lbl" x="212.09" y="97.29">DATA-RB7</text>
+<rect class="body" x="233.68" y="78.74" width="39.37" height="30.48"/>
+<text class="ref" x="234.68" y="82.74">pic_sockets</text>
+<circle cx="43.18" cy="101.60" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="43.18" y="102.40" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">1</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="234.95" cy="152.40" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="234.95" y="153.20" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">2</text><title>WARN: GND is drawn sideways — power symbols read vertically</title>
+<circle cx="82.55" cy="43.18" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="82.55" y="43.98" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">3</text><title>WARN: unnamed net carries 4 pins (D2, D3, R1, U2) — name it after what it carries, not after where it happens to start</title>
+<circle cx="92.71" cy="80.01" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="92.71" y="80.81" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">4</text><title>WARN: unnamed net carries 4 pins (D4, D5, R3, U2) — name it after what it carries, not after where it happens to start</title>
+<circle cx="92.71" cy="129.54" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="92.71" y="130.34" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">5</text><title>WARN: unnamed net carries 4 pins (D6, D7, R5, U2) — name it after what it carries, not after where it happens to start</title>
+<circle cx="144.78" cy="29.21" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="144.78" y="30.01" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">6</text><title>WARN: unnamed net carries 4 pins (C9, Q2, R11, R7) — name it after what it carries, not after where it happens to start</title>
+<circle cx="166.37" cy="40.64" r="2.4" fill="none" stroke="#e08a1e" stroke-width=".5"/><text x="166.37" y="41.44" text-anchor="middle" fill="#e08a1e" font="2.2px sans-serif" style="font:2.2px sans-serif">7</text><title>WARN: unnamed net carries 4 pins (Q2, R17, R18, R9) — name it after what it carries, not after where it happens to start</title>
+<text class="note" x="300.0" y="6.0">pic_programmer — 7 finding(s)</text>
+<text x="300.0" y="9.2" fill="#e08a1e" style="font:1.9px sans-serif">! 1. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="11.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="17.2" fill="#e08a1e" style="font:1.9px sans-serif">! 2. GND is drawn sideways — power symbols</text>
+<text x="300.0" y="19.6" fill="#e08a1e" style="font:1.9px sans-serif">read vertically</text>
+<text x="300.0" y="25.2" fill="#e08a1e" style="font:1.9px sans-serif">! 3. unnamed net carries 4 pins (D2, D3, R1,</text>
+<text x="300.0" y="27.6" fill="#e08a1e" style="font:1.9px sans-serif">U2) — name it after what it carries, not after</text>
+<text x="300.0" y="30.0" fill="#e08a1e" style="font:1.9px sans-serif">where it happens to start</text>
+<text x="300.0" y="35.6" fill="#e08a1e" style="font:1.9px sans-serif">! 4. unnamed net carries 4 pins (D4, D5, R3,</text>
+<text x="300.0" y="38.0" fill="#e08a1e" style="font:1.9px sans-serif">U2) — name it after what it carries, not after</text>
+<text x="300.0" y="40.4" fill="#e08a1e" style="font:1.9px sans-serif">where it happens to start</text>
+<text x="300.0" y="46.0" fill="#e08a1e" style="font:1.9px sans-serif">! 5. unnamed net carries 4 pins (D6, D7, R5,</text>
+<text x="300.0" y="48.4" fill="#e08a1e" style="font:1.9px sans-serif">U2) — name it after what it carries, not after</text>
+<text x="300.0" y="50.8" fill="#e08a1e" style="font:1.9px sans-serif">where it happens to start</text>
+<text x="300.0" y="56.4" fill="#e08a1e" style="font:1.9px sans-serif">! 6. unnamed net carries 4 pins (C9, Q2, R11,</text>
+<text x="300.0" y="58.8" fill="#e08a1e" style="font:1.9px sans-serif">R7) — name it after what it carries, not after</text>
+<text x="300.0" y="61.2" fill="#e08a1e" style="font:1.9px sans-serif">where it happens to start</text>
+<text x="300.0" y="66.8" fill="#e08a1e" style="font:1.9px sans-serif">! 7. unnamed net carries 4 pins (Q2, R17, R18,</text>
+<text x="300.0" y="69.2" fill="#e08a1e" style="font:1.9px sans-serif">R9) — name it after what it carries, not after</text>
+<text x="300.0" y="71.6" fill="#e08a1e" style="font:1.9px sans-serif">where it happens to start</text>
+</svg></span></div></figure></a><figure class="lvl"><figcaption><b>Board</b><span>where it goes</span></figcaption><div class="lvl-art"><span id="g57481cb" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-5.00 -5.00 50.00 65.16" preserveAspectRatio="xMidYMid meet">
+<style>#g57481cb .bg{fill:#faf9f6}#g57481cb .edge{stroke:#5b6470;stroke-width:.25;fill:none}#g57481cb .fpF{fill:#8fb4d9;fill-opacity:.30;stroke:#4b7fae;stroke-width:.08}#g57481cb .fpB{fill:#d9a88f;fill-opacity:.30;stroke:#ae7f4b;stroke-width:.08}#g57481cb .ref{fill:#3c4650;font:1.3px sans-serif}#g57481cb .note{fill:#3c4650;font:2.0px sans-serif}#g57481cb .tiny{fill:#5b6470;font:1.4px sans-serif}#g57481cb .leg{font:1.5px sans-serif}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #g57481cb .bg{fill:#14171a}:root:not([data-theme="light"]) #g57481cb .edge{stroke:#7e8a99}:root:not([data-theme="light"]) #g57481cb .ref,:root:not([data-theme="light"]) #g57481cb .note{fill:#c8d2dc}:root:not([data-theme="light"]) #g57481cb .tiny{fill:#93a1b0}}:root[data-theme="dark"] #g57481cb .bg{fill:#14171a}:root[data-theme="dark"] #g57481cb .edge{stroke:#7e8a99}:root[data-theme="dark"] #g57481cb .ref,:root[data-theme="dark"] #g57481cb .note{fill:#c8d2dc}:root[data-theme="dark"] #g57481cb .tiny{fill:#93a1b0}</style>
+<rect class="bg" x="-5.00" y="-5.00" width="50.00" height="65.16"/>
+<rect class="edge" x="0.00" y="0.00" width="40.00" height="26.00"/>
+<polygon class="fpF" points="29.09,20.54 30.91,20.54 30.91,21.46 29.09,21.46"/>
+<rect class="fpF" x="29.24" y="20.69" width="0.56" height="0.62"/>
+<rect class="fpF" x="30.20" y="20.69" width="0.56" height="0.62"/>
+<text class="ref" x="30.00" y="20.60" text-anchor="middle">C2</text>
+<polygon class="fpF" points="11.09,10.14 12.91,10.14 12.91,11.06 11.09,11.06"/>
+<rect class="fpF" x="11.24" y="10.29" width="0.56" height="0.62"/>
+<rect class="fpF" x="12.20" y="10.29" width="0.56" height="0.62"/>
+<text class="ref" x="12.00" y="10.20" text-anchor="middle">C1</text>
+<polygon class="fpF" points="8.85,11.25 15.15,11.25 15.15,14.75 8.85,14.75"/>
+<rect class="fpF" x="9.10" y="11.83" width="1.57" height="0.40"/>
+<rect class="fpF" x="9.10" y="12.48" width="1.57" height="0.40"/>
+<rect class="fpF" x="9.10" y="13.12" width="1.57" height="0.40"/>
+<rect class="fpF" x="9.10" y="13.78" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="13.78" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="13.12" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="12.48" width="1.57" height="0.40"/>
+<rect class="fpF" x="13.33" y="11.83" width="1.57" height="0.40"/>
+<rect class="fpF" x="11.20" y="12.10" width="0.50" height="0.50"/>
+<rect class="fpF" x="11.20" y="13.40" width="0.50" height="0.50"/>
+<rect class="fpF" x="11.25" y="12.10" width="1.50" height="1.80"/>
+<rect class="fpF" x="11.20" y="12.10" width="1.60" height="1.80"/>
+<rect class="fpF" x="12.30" y="12.10" width="0.50" height="0.50"/>
+<rect class="fpF" x="12.30" y="13.40" width="0.50" height="0.50"/>
+<text class="ref" x="12.00" y="12.60" text-anchor="middle">U1</text>
+<polygon class="fpF" points="1.55,20.15 8.45,20.15 8.45,28.75 1.55,28.75"/>
+<rect class="fpF" x="3.40" y="21.12" width="1.20" height="1.75"/>
+<rect class="fpF" x="5.40" y="21.12" width="1.20" height="1.75"/>
+<text class="ref" x="4.00" y="21.60" text-anchor="middle">J1</text>
+<polygon class="fpB" points="12.91,11.89 11.09,11.89 11.09,12.81 12.91,12.81"/>
+<rect class="fpB" x="12.20" y="12.04" width="0.56" height="0.62"/>
+<rect class="fpB" x="11.24" y="12.04" width="0.56" height="0.62"/>
+<text class="ref" x="12.00" y="11.95" text-anchor="middle">C3 (B)</text>
+<polygon class="fpB" points="23.30,5.30 30.70,5.30 30.70,10.70 23.30,10.70"/>
+<rect class="fpB" x="28.50" y="5.79" width="1.95" height="0.60"/>
+<rect class="fpB" x="28.50" y="7.06" width="1.95" height="0.60"/>
+<rect class="fpB" x="28.50" y="8.33" width="1.95" height="0.60"/>
+<rect class="fpB" x="28.50" y="9.60" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="9.61" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="8.33" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="7.07" width="1.95" height="0.60"/>
+<rect class="fpB" x="23.55" y="5.80" width="1.95" height="0.60"/>
+<text class="ref" x="27.00" y="7.60" text-anchor="middle">U2 (B)</text>
+<line x1="30.00" y1="21.00" x2="27.00" y2="8.00" stroke="#c23b22" stroke-width=".4" stroke-linecap="round"><title>C2 -&gt; U2.8 loop is 26.9 mm (15.7 mm to the power pad + 11.1 mm of ground return) against a 5.0 mm budget</title></line>
+<text class="tiny" x="29.70" y="14.50" fill="#c23b22">26.9 mm</text>
+<circle cx="11.45" cy="12.35" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="11.45" y="12.85" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">1</text><title>ERROR: U1 has a via array under its exposed pad (GND) landing on C3 pad 2 (SW_NODE) on the other side — a short, and it reaches fabrication</title>
+<circle cx="12.55" cy="12.35" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="12.55" y="12.85" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">2</text><title>ERROR: U1 has a via array under its exposed pad (GND) landing on C3 pad 1 (SENSE) on the other side — a short, and it reaches fabrication</title>
+<circle cx="14.11" cy="13.97" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="14.11" y="14.47" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">3</text><title>ERROR: Power class asks for 1.20 mm track on VDD, and U1 pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
+<circle cx="9.89" cy="12.68" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="9.89" y="13.18" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">4</text><title>ERROR: Power class asks for 1.20 mm track on GND, and U1 pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
+<circle cx="12.00" cy="13.00" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="12.00" y="13.50" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">5</text><title>ERROR: Power class clearance 0.30 mm on GND is wider than U1's own pad gap (0.250 mm between pads 2 and 3) — the part is unreachable</title>
+<line x1="12.00" y1="13.00" x2="13.81" y2="11.48" stroke="#e08a1e" stroke-width="0.12" stroke-opacity=".6"/>
+<circle cx="13.81" cy="11.48" r="1.36" fill="#e08a1e" fill-opacity=".14" stroke="#e08a1e" stroke-width="0.27"/><text x="13.81" y="11.98" text-anchor="middle" fill="#e08a1e" style="font:1.45px sans-serif">6</text><title>WARN: U1 is 0.50 mm high on silk against a 0.80 mm minimum — the assembler cannot read it</title>
+<line x1="-5.00" y1="31.00" x2="45.00" y2="31.00" stroke="#c7c2b6" stroke-width=".15"/>
+<text x="-4.00" y="32.47" fill="#3c4650" style="font:bold 1.05px sans-serif">lint-fixture.kicad_pcb — 5 error(s), 7 warning(s)</text>
+<text x="-4.00" y="33.79" fill="#5b6470" style="font:0.74px sans-serif">coloured lines are decoupling loops, longest darkest</text>
+<text x="-4.00" y="35.49" fill="#d03b3b" style="font:0.77px sans-serif">1. U1 has a via array under its exposed pad (GND)</text>
+<text x="-4.00" y="36.69" fill="#d03b3b" style="font:0.77px sans-serif">landing on C3 pad 2 (SW_NODE) on the other side — a</text>
+<text x="-4.00" y="37.89" fill="#d03b3b" style="font:0.77px sans-serif">short, and it reaches fabrication</text>
+<text x="-4.00" y="39.51" fill="#d03b3b" style="font:0.77px sans-serif">2. U1 has a via array under its exposed pad (GND)</text>
+<text x="-4.00" y="40.71" fill="#d03b3b" style="font:0.77px sans-serif">landing on C3 pad 1 (SENSE) on the other side — a</text>
+<text x="-4.00" y="41.91" fill="#d03b3b" style="font:0.77px sans-serif">short, and it reaches fabrication</text>
+<text x="-4.00" y="43.53" fill="#d03b3b" style="font:0.77px sans-serif">3. Power class asks for 1.20 mm track on VDD, and U1</text>
+<text x="-4.00" y="44.73" fill="#d03b3b" style="font:0.77px sans-serif">pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
+<text x="-4.00" y="45.93" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
+<text x="-4.00" y="47.55" fill="#d03b3b" style="font:0.77px sans-serif">4. Power class asks for 1.20 mm track on GND, and U1</text>
+<text x="-4.00" y="48.76" fill="#d03b3b" style="font:0.77px sans-serif">pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
+<text x="-4.00" y="49.96" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
+<text x="-4.00" y="51.58" fill="#d03b3b" style="font:0.77px sans-serif">5. Power class clearance 0.30 mm on GND is wider than</text>
+<text x="-4.00" y="52.78" fill="#d03b3b" style="font:0.77px sans-serif">U1's own pad gap (0.250 mm between pads 2 and 3) — the</text>
+<text x="-4.00" y="53.98" fill="#d03b3b" style="font:0.77px sans-serif">part is unreachable</text>
+<text x="-4.00" y="55.60" fill="#e08a1e" style="font:0.77px sans-serif">6. U1 is 0.50 mm high on silk against a 0.80 mm</text>
+<text x="-4.00" y="56.80" fill="#e08a1e" style="font:0.77px sans-serif">minimum — the assembler cannot read it</text>
+<text x="21.00" y="35.49" fill="#888" style="font:0.77px sans-serif">7. no part number on the silkscreen — a bare board</text>
+<text x="21.00" y="36.69" fill="#888" style="font:0.77px sans-serif">with nothing printed on it cannot be told from the</text>
+<text x="21.00" y="37.89" fill="#888" style="font:0.77px sans-serif">previous spin</text>
+<text x="21.00" y="39.51" fill="#888" style="font:0.77px sans-serif">8. no revision on the silkscreen. Put the rev where a</text>
+<text x="21.00" y="40.71" fill="#888" style="font:0.77px sans-serif">person holding the board can read it, not only in the</text>
+<text x="21.00" y="41.91" fill="#888" style="font:0.77px sans-serif">title block</text>
+<text x="21.00" y="43.53" fill="#888" style="font:0.77px sans-serif">9. no serial-number field. A blank box or an 'S/N'</text>
+<text x="21.00" y="44.73" fill="#888" style="font:0.77px sans-serif">legend gives assembly somewhere to put a unique ID and</text>
+<text x="21.00" y="45.93" fill="#888" style="font:0.77px sans-serif">traceability a hook</text>
+<text x="21.00" y="47.55" fill="#888" style="font:0.77px sans-serif">10. no date-code or lot field. Worth one silk legend</text>
+<text x="21.00" y="48.76" fill="#888" style="font:0.77px sans-serif">when a batch may ever need recalling</text>
+<text x="21.00" y="50.38" fill="#888" style="font:0.77px sans-serif">11. 0 global fiducial(s); assembly needs 3. Two fix</text>
+<text x="21.00" y="51.58" fill="#888" style="font:0.77px sans-serif">position and rotation, the third resolves scale and</text>
+<text x="21.00" y="52.78" fill="#888" style="font:0.77px sans-serif">mirror</text>
+</svg></span></div></figure><a class="lvl-link" href="#p-cad" data-goto="cad"><figure class="lvl"><figcaption><b>Object</b><span>what it becomes</span></figcaption><div class="lvl-art"><img src="data:image/png;base64,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" alt="Object"></div></figure></a></div></section>
 <div class="tabs" role="tablist">
 <button class="tab" role="tab" id="t-review" aria-controls="p-review" aria-selected="false" data-tab="review"><span class="dot b-stop"></span>Review<span class="badge">3</span></button>
 <button class="tab" role="tab" id="t-vision" aria-controls="p-vision" aria-selected="true" data-tab="vision"><span class="dot b-ok"></span>Vision</button>
@@ -328,7 +900,7 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <h3 class="sec">History</h3>
 <ol class="timeline">
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Two concepts that differ in a nameable way: a one-handed wand
 with the probe on a lead, and a bench instrument that lives on a shelf. Both
 envelopes are measured off real geometry.</p>
@@ -336,12 +908,12 @@ envelopes are measured off real geometry.</p>
 <ul class="asks"><li>Which concept, and what made you pick it?</li><li>Is 164 mm too long to hold comfortably in a glove?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-vision" data-goto="vision">Vision</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">The wand. A freezer walk is one-handed and you are already carrying
 a clipboard — the bench version solves a problem we do not have.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Eleven chunks, nine sessions on the critical path. Layout is
 blocked on the enclosure envelope, which is the dependency I am least sure
 about.</p>
@@ -349,12 +921,12 @@ about.</p>
 <ul class="asks"><li>Is this all the work?</li><li>Is the order right — do you know a lead time we do not?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-plan" data-goto="plan">Plan</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Add the drop test earlier if the enclosure is printed rather than
 moulded. Otherwise the order is right.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Fifteen requirements. SYS-001 moved from 12 h to 7 d after the
 logging interval was settled at one minute, which is the number worth arguing
 about.</p>
@@ -362,11 +934,11 @@ about.</p>
 <ul class="asks"><li>Is 7 days the right target, or is 5 with a smaller cell better?</li><li>Is anything here that nobody asked for?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-requirements" data-goto="requirements">Requirements</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">7 days. A week means Friday-to-Friday and nobody has to think.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-architecture" data-goto="architecture">Architecture</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-architecture" data-goto="architecture">Architecture</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Four rails. VBUS is the tight one at 90% of the USB-C default
 500 mA while charging, which is fine because it is a charge-only rail — but it
 is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
@@ -374,7 +946,7 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <ul class="asks"><li>Is a rail or a part missing?</li><li>SPI1 shares flash and LCD on one bus — acceptable, or separate them?</li><li>Is charging at 450 mA off a 500 mA port too close?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Envelope frozen from the agreed wand concept. The board outline is
 published as an interface at 33.4 x 96 mm and the electrical side is now working
 to it, so moving it is expensive from here.</p>
@@ -382,12 +954,12 @@ to it, so moving it is expensive from here.</p>
 <ul class="asks"><li>Board-to-lid clearance is 8.4 mm. Enough for the display and its zebra strip?</li><li>Split line at 40% depth puts the seam on the grip. Acceptable?</li></ul>
 </div></li>
 <li class="ev"><span class="dot b-ok"></span>
-<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-cad" data-goto="cad">CAD</a> <span class="t-ok">approved</span> <span class="mutx">by harrison</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Yes to both. Move the seam to 45% if the tooling allows it, but do not
 hold the schematic for it.</p>
 </div></li>
 <li class="ev"><span class="dot b-wait"></span>
-<div><div class="evhead"><a href="#p-standby" data-goto="standby">Standby current</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>963b3bc</code></div>
+<div><div class="evhead"><a href="#p-standby" data-goto="standby">Standby current</a> <span class="t-wait">sent for review</span> <span class="mutx">2026-09-20</span> <code>9f31024</code></div>
 <p class="evnote">Duty-cycling the reference gets the +40 C corner to 6.4 uA. #5
 was lower and #3 was faster to wake; I took #3.</p>
 <p class="evfiles">added: <code>docs/design/standby-corners.svg</code><code>docs/design/standby-evolution.svg</code></p>
@@ -574,7 +1146,7 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-09-20</
 <text x="377.4" y="622" class="ts mut">outlined bars = critical path</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>Dependency chart — one column per session, scheduled by longest path. Outlined bars are the critical path.
-<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/plan.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fboard-docs%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/plan.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
 </figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>Chunk</th><th>State</th>
@@ -730,8 +1302,8 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-09-20</
 <h3 class="sec">The editable originals</h3>
 <p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/plan.drawio" target="_blank" rel="noopener">Plan chart (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/plan.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — move a bar to re-plan</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/plan.yaml" target="_blank" rel="noopener">Plan source ↗</a><div class="paths"><code>plan.yaml</code></div></td><td class="state t-ok">Ready</td><td>What both charts are generated from</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/plan.drawio" target="_blank" rel="noopener">Plan chart (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fboard-docs%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/plan.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — move a bar to re-plan</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/plan.yaml" target="_blank" rel="noopener">Plan source ↗</a><div class="paths"><code>plan.yaml</code></div></td><td class="state t-ok">Ready</td><td>What both charts are generated from</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>R1 is done but review &#x27;requirements&#x27; was approved, then docs/design/requirements-map.svg changed</li>
@@ -938,7 +1510,7 @@ about.</p>
 <text x="494.4" y="980" class="ts ink2">red border = a gap the gate is failing on</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>Requirement tree — an arrow points from a requirement to the one that refines it. Red borders are gaps the gate is failing on.
-<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fboard-docs%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
 </figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>UID</th><th>State</th>
@@ -995,7 +1567,7 @@ about.</p>
 <h3 class="sec">The editable originals</h3>
 <p class="tally">1 of 1 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Requirements map (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/design/requirements-map.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Requirements map (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fboard-docs%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/design/requirements-map.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>VIS-002 (Readable and operable wearing freezer gloves) is a level-0 requirement with no decomposition</li>
@@ -1177,7 +1749,7 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <text x="24" y="856" class="ts mut">■ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>Power tree with a budget gauge per rail, then the functional blocks and the buses between them.
-<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fboard-docs%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
 </figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>Rail</th><th>State</th>
@@ -1252,8 +1824,8 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <h3 class="sec">The editable originals</h3>
 <p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.drawio" target="_blank" rel="noopener">Block diagram (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>hw/block-diagram.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — drag the file onto the canvas</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">Block diagram source ↗</a><div class="paths"><code>hw/block-diagram.yaml</code></div></td><td class="state t-ok">Ready</td><td>The spec both files are generated from</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.drawio" target="_blank" rel="noopener">Block diagram (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fboard-docs%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>hw/block-diagram.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — drag the file onto the canvas</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/block-diagram.yaml" target="_blank" rel="noopener">Block diagram source ↗</a><div class="paths"><code>hw/block-diagram.yaml</code></div></td><td class="state t-ok">Ready</td><td>The spec both files are generated from</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>BT1: nothing powers it</li>
@@ -1441,11 +2013,11 @@ hold the schematic for it.<span class="who">harrison · 2026-09-20</span></block
 <h3 class="sec">Documents a run needs</h3>
 <p class="tally">5 of 5 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure.step" target="_blank" rel="noopener">STEP (AP242) ↗</a><div class="paths"><code>docs/design/cad/enclosure.step</code></div></td><td class="state t-ok">Ready</td><td>Assembly tree, part names, colours, and a MATE_* datum at every joint</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure.stl" target="_blank" rel="noopener">STL ↗</a><div class="paths"><code>docs/design/cad/enclosure.stl</code></div></td><td class="state t-ok">Ready</td><td>Renders in GitHub&#x27;s own 3D viewer — a review mesh, not a manufacturing one</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure-joints.json" target="_blank" rel="noopener">The joints ↗</a><div class="paths"><code>docs/design/cad/enclosure-joints.json</code></div></td><td class="state t-ok">Ready</td><td>Type, parts, position, orientation and limits — what STEP cannot carry</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure-freecad.py" target="_blank" rel="noopener">FreeCAD macro ↗</a><div class="paths"><code>docs/design/cad/enclosure-freecad.py</code></div></td><td class="state t-ok">Ready</td><td>Rebuilds the assembly in FreeCAD 1.0 with real, draggable joints</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/cad/enclosure.py" target="_blank" rel="noopener">The model (source) ↗</a><div class="paths"><code>cad/enclosure.py</code></div></td><td class="state t-ok">Ready</td><td>The only place the constraints survive a changed dimension</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/cad/enclosure.step" target="_blank" rel="noopener">STEP (AP242) ↗</a><div class="paths"><code>docs/design/cad/enclosure.step</code></div></td><td class="state t-ok">Ready</td><td>Assembly tree, part names, colours, and a MATE_* datum at every joint</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/cad/enclosure.stl" target="_blank" rel="noopener">STL ↗</a><div class="paths"><code>docs/design/cad/enclosure.stl</code></div></td><td class="state t-ok">Ready</td><td>Renders in GitHub&#x27;s own 3D viewer — a review mesh, not a manufacturing one</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/cad/enclosure-joints.json" target="_blank" rel="noopener">The joints ↗</a><div class="paths"><code>docs/design/cad/enclosure-joints.json</code></div></td><td class="state t-ok">Ready</td><td>Type, parts, position, orientation and limits — what STEP cannot carry</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/cad/enclosure-freecad.py" target="_blank" rel="noopener">FreeCAD macro ↗</a><div class="paths"><code>docs/design/cad/enclosure-freecad.py</code></div></td><td class="state t-ok">Ready</td><td>Rebuilds the assembly in FreeCAD 1.0 with real, draggable joints</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/cad/enclosure.py" target="_blank" rel="noopener">The model (source) ↗</a><div class="paths"><code>cad/enclosure.py</code></div></td><td class="state t-ok">Ready</td><td>The only place the constraints survive a changed dimension</td></tr>
 </tbody></table></div>
 </section>
 <section class="panel" role="tabpanel" id="p-schematic" aria-labelledby="t-schematic" hidden>
@@ -1461,7 +2033,7 @@ hold the schematic for it.<span class="who">harrison · 2026-09-20</span></block
   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
   version="1.1"
   viewBox="0.0000 0.0000 297.0022 210.0072" preserveAspectRatio="xMidYMid meet">
-<title>SVG Image created as pic_programmer-pic_sockets.svg date 2026-09-20T19:54:29 </title>
+<title>SVG Image created as pic_programmer-pic_sockets.svg date 2026-09-20T20:21:06 </title>
   <desc>Image generated by Eeschema-SVG </desc>
 <g style="fill:#000000; fill-opacity:1.0000;stroke:#000000; stroke-opacity:1.0000;
 stroke-linecap:round; stroke-linejoin:round;"
@@ -56883,10 +57455,18 @@ L109.3410 59.7152
 <figcaption>What sch-lint found, drawn on the sheet rather than listed beside it. 340 elements against the 60,538 KiCad&#x27;s own plot of this sheet costs — which is why this one inlines and that one cannot. Scroll to zoom.
 </figcaption></figure>
 <figure>
-<div class="sheet mat" style="max-width:223px"><div class="zbar"><button type="button" data-z="out" aria-label="zoom out">−</button><button type="button" data-z="in" aria-label="zoom in">+</button><button type="button" data-z="fit" aria-label="reset">fit</button></div><div class="zoom"><div class="zin"><span id="g57481cb" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-5.00 -5.00 50.00 54.30" preserveAspectRatio="xMidYMid meet">
+<div class="sheet mat" style="max-width:223px"><div class="zbar"><button type="button" data-z="out" aria-label="zoom out">−</button><button type="button" data-z="in" aria-label="zoom in">+</button><button type="button" data-z="fit" aria-label="reset">fit</button></div><div class="zoom"><div class="zin"><span id="g57481cb" class="svgwrap"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-5.00 -5.00 50.00 65.16" preserveAspectRatio="xMidYMid meet">
 <style>#g57481cb .bg{fill:#faf9f6}#g57481cb .edge{stroke:#5b6470;stroke-width:.25;fill:none}#g57481cb .fpF{fill:#8fb4d9;fill-opacity:.30;stroke:#4b7fae;stroke-width:.08}#g57481cb .fpB{fill:#d9a88f;fill-opacity:.30;stroke:#ae7f4b;stroke-width:.08}#g57481cb .ref{fill:#3c4650;font:1.3px sans-serif}#g57481cb .note{fill:#3c4650;font:2.0px sans-serif}#g57481cb .tiny{fill:#5b6470;font:1.4px sans-serif}#g57481cb .leg{font:1.5px sans-serif}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #g57481cb .bg{fill:#14171a}:root:not([data-theme="light"]) #g57481cb .edge{stroke:#7e8a99}:root:not([data-theme="light"]) #g57481cb .ref,:root:not([data-theme="light"]) #g57481cb .note{fill:#c8d2dc}:root:not([data-theme="light"]) #g57481cb .tiny{fill:#93a1b0}}:root[data-theme="dark"] #g57481cb .bg{fill:#14171a}:root[data-theme="dark"] #g57481cb .edge{stroke:#7e8a99}:root[data-theme="dark"] #g57481cb .ref,:root[data-theme="dark"] #g57481cb .note{fill:#c8d2dc}:root[data-theme="dark"] #g57481cb .tiny{fill:#93a1b0}</style>
-<rect class="bg" x="-5.00" y="-5.00" width="50.00" height="54.30"/>
+<rect class="bg" x="-5.00" y="-5.00" width="50.00" height="65.16"/>
 <rect class="edge" x="0.00" y="0.00" width="40.00" height="26.00"/>
+<polygon class="fpF" points="29.09,20.54 30.91,20.54 30.91,21.46 29.09,21.46"/>
+<rect class="fpF" x="29.24" y="20.69" width="0.56" height="0.62"/>
+<rect class="fpF" x="30.20" y="20.69" width="0.56" height="0.62"/>
+<text class="ref" x="30.00" y="20.60" text-anchor="middle">C2</text>
+<polygon class="fpF" points="11.09,10.14 12.91,10.14 12.91,11.06 11.09,11.06"/>
+<rect class="fpF" x="11.24" y="10.29" width="0.56" height="0.62"/>
+<rect class="fpF" x="12.20" y="10.29" width="0.56" height="0.62"/>
+<text class="ref" x="12.00" y="10.20" text-anchor="middle">C1</text>
 <polygon class="fpF" points="8.85,11.25 15.15,11.25 15.15,14.75 8.85,14.75"/>
 <rect class="fpF" x="9.10" y="11.83" width="1.57" height="0.40"/>
 <rect class="fpF" x="9.10" y="12.48" width="1.57" height="0.40"/>
@@ -56903,14 +57483,6 @@ L109.3410 59.7152
 <rect class="fpF" x="12.30" y="12.10" width="0.50" height="0.50"/>
 <rect class="fpF" x="12.30" y="13.40" width="0.50" height="0.50"/>
 <text class="ref" x="12.00" y="12.60" text-anchor="middle">U1</text>
-<polygon class="fpF" points="29.09,20.54 30.91,20.54 30.91,21.46 29.09,21.46"/>
-<rect class="fpF" x="29.24" y="20.69" width="0.56" height="0.62"/>
-<rect class="fpF" x="30.20" y="20.69" width="0.56" height="0.62"/>
-<text class="ref" x="30.00" y="20.60" text-anchor="middle">C2</text>
-<polygon class="fpF" points="11.09,10.14 12.91,10.14 12.91,11.06 11.09,11.06"/>
-<rect class="fpF" x="11.24" y="10.29" width="0.56" height="0.62"/>
-<rect class="fpF" x="12.20" y="10.29" width="0.56" height="0.62"/>
-<text class="ref" x="12.00" y="10.20" text-anchor="middle">C1</text>
 <polygon class="fpF" points="1.55,20.15 8.45,20.15 8.45,28.75 1.55,28.75"/>
 <rect class="fpF" x="3.40" y="21.12" width="1.20" height="1.75"/>
 <rect class="fpF" x="5.40" y="21.12" width="1.20" height="1.75"/>
@@ -56933,13 +57505,13 @@ L109.3410 59.7152
 <text class="tiny" x="29.70" y="14.50" fill="#c23b22">26.9 mm</text>
 <circle cx="11.45" cy="12.35" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="11.45" y="12.85" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">1</text><title>ERROR: U1 has a via array under its exposed pad (GND) landing on C3 pad 2 (SW_NODE) on the other side — a short, and it reaches fabrication</title>
 <circle cx="12.55" cy="12.35" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="12.55" y="12.85" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">2</text><title>ERROR: U1 has a via array under its exposed pad (GND) landing on C3 pad 1 (SENSE) on the other side — a short, and it reaches fabrication</title>
-<circle cx="9.89" cy="12.68" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="9.89" y="13.18" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">3</text><title>ERROR: Power class asks for 1.20 mm track on GND, and U1 pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
-<circle cx="14.11" cy="13.97" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="14.11" y="14.47" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">4</text><title>ERROR: Power class asks for 1.20 mm track on VDD, and U1 pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
+<circle cx="14.11" cy="13.97" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="14.11" y="14.47" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">3</text><title>ERROR: Power class asks for 1.20 mm track on VDD, and U1 pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
+<circle cx="9.89" cy="12.68" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="9.89" y="13.18" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">4</text><title>ERROR: Power class asks for 1.20 mm track on GND, and U1 pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then widen and re-run DRC.</title>
 <circle cx="12.00" cy="13.00" r="1.36" fill="#d03b3b" fill-opacity=".14" stroke="#d03b3b" stroke-width="0.27"/><text x="12.00" y="13.50" text-anchor="middle" fill="#d03b3b" style="font:1.45px sans-serif">5</text><title>ERROR: Power class clearance 0.30 mm on GND is wider than U1's own pad gap (0.250 mm between pads 2 and 3) — the part is unreachable</title>
 <line x1="12.00" y1="13.00" x2="13.81" y2="11.48" stroke="#e08a1e" stroke-width="0.12" stroke-opacity=".6"/>
 <circle cx="13.81" cy="11.48" r="1.36" fill="#e08a1e" fill-opacity=".14" stroke="#e08a1e" stroke-width="0.27"/><text x="13.81" y="11.98" text-anchor="middle" fill="#e08a1e" style="font:1.45px sans-serif">6</text><title>WARN: U1 is 0.50 mm high on silk against a 0.80 mm minimum — the assembler cannot read it</title>
 <line x1="-5.00" y1="31.00" x2="45.00" y2="31.00" stroke="#c7c2b6" stroke-width=".15"/>
-<text x="-4.00" y="32.47" fill="#3c4650" style="font:bold 1.05px sans-serif">lint-fixture.kicad_pcb — 5 error(s), 2 warning(s)</text>
+<text x="-4.00" y="32.47" fill="#3c4650" style="font:bold 1.05px sans-serif">lint-fixture.kicad_pcb — 5 error(s), 7 warning(s)</text>
 <text x="-4.00" y="33.79" fill="#5b6470" style="font:0.74px sans-serif">coloured lines are decoupling loops, longest darkest</text>
 <text x="-4.00" y="35.49" fill="#d03b3b" style="font:0.77px sans-serif">1. U1 has a via array under its exposed pad (GND)</text>
 <text x="-4.00" y="36.69" fill="#d03b3b" style="font:0.77px sans-serif">landing on C3 pad 2 (SW_NODE) on the other side — a</text>
@@ -56947,22 +57519,36 @@ L109.3410 59.7152
 <text x="-4.00" y="39.51" fill="#d03b3b" style="font:0.77px sans-serif">2. U1 has a via array under its exposed pad (GND)</text>
 <text x="-4.00" y="40.71" fill="#d03b3b" style="font:0.77px sans-serif">landing on C3 pad 1 (SENSE) on the other side — a</text>
 <text x="-4.00" y="41.91" fill="#d03b3b" style="font:0.77px sans-serif">short, and it reaches fabrication</text>
-<text x="-4.00" y="43.53" fill="#d03b3b" style="font:0.77px sans-serif">3. Power class asks for 1.20 mm track on GND, and U1</text>
-<text x="-4.00" y="44.73" fill="#d03b3b" style="font:0.77px sans-serif">pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
+<text x="-4.00" y="43.53" fill="#d03b3b" style="font:0.77px sans-serif">3. Power class asks for 1.20 mm track on VDD, and U1</text>
+<text x="-4.00" y="44.73" fill="#d03b3b" style="font:0.77px sans-serif">pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
 <text x="-4.00" y="45.93" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
-<text x="21.00" y="35.49" fill="#d03b3b" style="font:0.77px sans-serif">4. Power class asks for 1.20 mm track on VDD, and U1</text>
-<text x="21.00" y="36.69" fill="#d03b3b" style="font:0.77px sans-serif">pad 5 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
-<text x="21.00" y="37.89" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
-<text x="21.00" y="39.51" fill="#d03b3b" style="font:0.77px sans-serif">5. Power class clearance 0.30 mm on GND is wider than</text>
-<text x="21.00" y="40.71" fill="#d03b3b" style="font:0.77px sans-serif">U1's own pad gap (0.250 mm between pads 2 and 3) — the</text>
-<text x="21.00" y="41.91" fill="#d03b3b" style="font:0.77px sans-serif">part is unreachable</text>
-<text x="21.00" y="43.53" fill="#e08a1e" style="font:0.77px sans-serif">6. U1 is 0.50 mm high on silk against a 0.80 mm</text>
-<text x="21.00" y="44.73" fill="#e08a1e" style="font:0.77px sans-serif">minimum — the assembler cannot read it</text>
+<text x="-4.00" y="47.55" fill="#d03b3b" style="font:0.77px sans-serif">4. Power class asks for 1.20 mm track on GND, and U1</text>
+<text x="-4.00" y="48.76" fill="#d03b3b" style="font:0.77px sans-serif">pad 2 is 0.40 mm wide — 3.0x. Route at pad width, then</text>
+<text x="-4.00" y="49.96" fill="#d03b3b" style="font:0.77px sans-serif">widen and re-run DRC.</text>
+<text x="-4.00" y="51.58" fill="#d03b3b" style="font:0.77px sans-serif">5. Power class clearance 0.30 mm on GND is wider than</text>
+<text x="-4.00" y="52.78" fill="#d03b3b" style="font:0.77px sans-serif">U1's own pad gap (0.250 mm between pads 2 and 3) — the</text>
+<text x="-4.00" y="53.98" fill="#d03b3b" style="font:0.77px sans-serif">part is unreachable</text>
+<text x="-4.00" y="55.60" fill="#e08a1e" style="font:0.77px sans-serif">6. U1 is 0.50 mm high on silk against a 0.80 mm</text>
+<text x="-4.00" y="56.80" fill="#e08a1e" style="font:0.77px sans-serif">minimum — the assembler cannot read it</text>
+<text x="21.00" y="35.49" fill="#888" style="font:0.77px sans-serif">7. no part number on the silkscreen — a bare board</text>
+<text x="21.00" y="36.69" fill="#888" style="font:0.77px sans-serif">with nothing printed on it cannot be told from the</text>
+<text x="21.00" y="37.89" fill="#888" style="font:0.77px sans-serif">previous spin</text>
+<text x="21.00" y="39.51" fill="#888" style="font:0.77px sans-serif">8. no revision on the silkscreen. Put the rev where a</text>
+<text x="21.00" y="40.71" fill="#888" style="font:0.77px sans-serif">person holding the board can read it, not only in the</text>
+<text x="21.00" y="41.91" fill="#888" style="font:0.77px sans-serif">title block</text>
+<text x="21.00" y="43.53" fill="#888" style="font:0.77px sans-serif">9. no serial-number field. A blank box or an 'S/N'</text>
+<text x="21.00" y="44.73" fill="#888" style="font:0.77px sans-serif">legend gives assembly somewhere to put a unique ID and</text>
+<text x="21.00" y="45.93" fill="#888" style="font:0.77px sans-serif">traceability a hook</text>
+<text x="21.00" y="47.55" fill="#888" style="font:0.77px sans-serif">10. no date-code or lot field. Worth one silk legend</text>
+<text x="21.00" y="48.76" fill="#888" style="font:0.77px sans-serif">when a batch may ever need recalling</text>
+<text x="21.00" y="50.38" fill="#888" style="font:0.77px sans-serif">11. 0 global fiducial(s); assembly needs 3. Two fix</text>
+<text x="21.00" y="51.58" fill="#888" style="font:0.77px sans-serif">position and rotation, the third resolves scale and</text>
+<text x="21.00" y="52.78" fill="#888" style="font:0.77px sans-serif">mirror</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>pcb-lint on the board fixture. Numbered findings, and every decoupling loop drawn with its length in millimetres — the via array under U1 is landing on a back-side capacitor&#x27;s pads on another net.
 </figcaption></figure>
 <figure>
-<div class="notes"><h3>Not shown here</h3><ul><li>sheet-1-main.svg is 2958 kB, past the 1500 kB limit for one figure. It still renders on GitHub, so it is linked rather than shown. Plot fewer sheets, or a simplified one, for the review — and export a PDF alongside them for the record. <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Open on GitHub ↗</a></li></ul></div>
+<div class="notes"><h3>Not shown here</h3><ul><li>sheet-1-main.svg is 2958 kB, past the 1500 kB limit for one figure. It still renders on GitHub, so it is linked rather than shown. Plot fewer sheets, or a simplified one, for the review — and export a PDF alongside them for the record. <a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Open on GitHub ↗</a></li></ul></div>
 <figcaption>The main sheet of the same export, and the reason SVG has a budget: 3.0 MB and 61,681 elements, because KiCad&#x27;s plotter writes one path per line segment — every stroke of every character included. Sheets that heavy are linked rather than inlined.
 </figcaption></figure>
 <div class="prose"><h3>Status</h3>
@@ -56985,9 +57571,9 @@ L109.3410 59.7152
 <h3 class="sec">Documents a run needs</h3>
 <p class="tally">3 of 3 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/lint/1-pic-programmer.lint.svg" target="_blank" rel="noopener">sch-lint findings, sheet 1 ↗</a><div class="paths"><code>docs/design/lint/1-pic-programmer.lint.svg</code></div></td><td class="state t-ok">Ready</td><td>Every finding circled on the sheet it is about</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/kicad-demo/pic_programmer.kicad_sch" target="_blank" rel="noopener">KiCad schematic (source) ↗</a><div class="paths"><code>hw/kicad-demo/pic_programmer.kicad_sch</code></div></td><td class="state t-ok">Ready</td><td>Opens in KiCad — the editable original</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Sheet 1, main ↗</a><div class="paths"><code>docs/design/schematic/sheet-1-main.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub at full size</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/lint/1-pic-programmer.lint.svg" target="_blank" rel="noopener">sch-lint findings, sheet 1 ↗</a><div class="paths"><code>docs/design/lint/1-pic-programmer.lint.svg</code></div></td><td class="state t-ok">Ready</td><td>Every finding circled on the sheet it is about</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/hw/kicad-demo/pic_programmer.kicad_sch" target="_blank" rel="noopener">KiCad schematic (source) ↗</a><div class="paths"><code>hw/kicad-demo/pic_programmer.kicad_sch</code></div></td><td class="state t-ok">Ready</td><td>Opens in KiCad — the editable original</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Sheet 1, main ↗</a><div class="paths"><code>docs/design/schematic/sheet-1-main.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub at full size</td></tr>
 </tbody></table></div>
 </section>
 <section class="panel" role="tabpanel" id="p-simulation" aria-labelledby="t-simulation" hidden>
@@ -57424,7 +58010,7 @@ L109.3410 59.7152
 <td class="t-stop">Mixed — 3 lines estimated</td>
 </tr>
 </tbody></table></div>
-<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/bom-summary.csv" target="_blank" rel="noopener"><code>docs/design/bom-summary.csv</code> ↗</a></p>
+<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/bom-summary.csv" target="_blank" rel="noopener"><code>docs/design/bom-summary.csv</code> ↗</a></p>
 <h3 class="sec">Quotes received</h3>
 <p class="tnote">Sort by lead time before sorting by price. A quote with no date is a quote, not a price.</p>
 <div class="notes"><h3>2 price(s) are not quoted</h3><ul><li>Rows marked in red carry an estimate, not a checked price. Treat the roll-up as indicative until they are quoted — a BOM cost built on guesses is the number that gets committed to.</li></ul></div>
@@ -57551,25 +58137,25 @@ L109.3410 59.7152
 <td class="t-stop">Estimated at 400 from the last project</td>
 </tr>
 </tbody></table></div>
-<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/quotes.csv" target="_blank" rel="noopener"><code>docs/design/mfg/quotes.csv</code> ↗</a></p>
+<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/mfg/quotes.csv" target="_blank" rel="noopener"><code>docs/design/mfg/quotes.csv</code> ↗</a></p>
 <h3 class="sec">Release checklist</h3>
 <p class="lead">Everything a fab, an assembler and a purchaser need in order to quote and build. This is a completeness check, not a reading list — the documents themselves are one click away, and the rows still to produce are the answer to &quot;can we release?&quot;.</p>
 <p class="tally">7 of 12 present · <span class="t-stop">5 still to produce</span></p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
 <tr class="grp"><td colspan="3">Fabrication</td></tr>
 <tr><td>Gerbers and drill files<div class="paths"><code>docs/design/pcb-fab.zip</code></div></td><td class="state t-stop">Not produced</td><td>RS-274X plus the drill schedule. Not generated until layout is frozen</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/fab-drawing.svg" target="_blank" rel="noopener">Fabrication drawing ↗</a><div class="paths"><code>docs/design/mfg/fab-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Outline, hole schedule and tolerances. Travels with the gerbers</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/stackup.svg" target="_blank" rel="noopener">Stackup drawing ↗</a><div class="paths"><code>docs/design/stackup.svg</code></div></td><td class="state t-ok">Ready</td><td>What the fab quotes against</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/fab-notes.md" target="_blank" rel="noopener">Fabrication notes ↗</a><div class="paths"><code>docs/design/mfg/fab-notes.md</code></div></td><td class="state t-ok">Ready</td><td>Material, finish, class, panelisation — the written half of the spec</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/mfg/fab-drawing.svg" target="_blank" rel="noopener">Fabrication drawing ↗</a><div class="paths"><code>docs/design/mfg/fab-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Outline, hole schedule and tolerances. Travels with the gerbers</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/stackup.svg" target="_blank" rel="noopener">Stackup drawing ↗</a><div class="paths"><code>docs/design/stackup.svg</code></div></td><td class="state t-ok">Ready</td><td>What the fab quotes against</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/mfg/fab-notes.md" target="_blank" rel="noopener">Fabrication notes ↗</a><div class="paths"><code>docs/design/mfg/fab-notes.md</code></div></td><td class="state t-ok">Ready</td><td>Material, finish, class, panelisation — the written half of the spec</td></tr>
 <tr><td>Layer plots<div class="paths"><code>docs/design/pcb-layers.pdf</code></div></td><td class="state t-stop">Not produced</td><td>Incoming inspection and any fab query</td></tr>
 <tr class="grp"><td colspan="3">Assembly</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/assembly-drawing.svg" target="_blank" rel="noopener">Assembly drawing ↗</a><div class="paths"><code>docs/design/mfg/assembly-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Placement, orientation and polarity for the assembler</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/mfg/assembly-drawing.svg" target="_blank" rel="noopener">Assembly drawing ↗</a><div class="paths"><code>docs/design/mfg/assembly-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Placement, orientation and polarity for the assembler</td></tr>
 <tr><td>Pick and place<div class="paths"><code>docs/design/pcb-pos.csv</code></div></td><td class="state t-stop">Not produced</td><td>Centroid file. Needs the layout</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/bom-summary.csv" target="_blank" rel="noopener">BOM ↗</a><div class="paths"><code>docs/design/bom-summary.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing and the assembly house</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/assembly-process.md" target="_blank" rel="noopener">Assembly and test process ↗</a><div class="paths"><code>docs/design/mfg/assembly-process.md</code></div></td><td class="state t-ok">Ready</td><td>The traveller — paste, placement, reflow, then the test sequence</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/bom-summary.csv" target="_blank" rel="noopener">BOM ↗</a><div class="paths"><code>docs/design/bom-summary.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing and the assembly house</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/mfg/assembly-process.md" target="_blank" rel="noopener">Assembly and test process ↗</a><div class="paths"><code>docs/design/mfg/assembly-process.md</code></div></td><td class="state t-ok">Ready</td><td>The traveller — paste, placement, reflow, then the test sequence</td></tr>
 <tr><td>Test fixture definition<div class="paths"><code>docs/design/mfg/test-fixture.md</code></div></td><td class="state t-stop">Not produced</td><td>Bed of nails for the first four test steps. Needs the layout</td></tr>
 <tr class="grp"><td colspan="3">Commercial</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/quotes.csv" target="_blank" rel="noopener">Quotes ↗</a><div class="paths"><code>docs/design/mfg/quotes.csv</code></div></td><td class="state t-ok">Ready</td><td>Supplier, quantity, tooling, lead time and the date each was given</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/mfg/quotes.csv" target="_blank" rel="noopener">Quotes ↗</a><div class="paths"><code>docs/design/mfg/quotes.csv</code></div></td><td class="state t-ok">Ready</td><td>Supplier, quantity, tooling, lead time and the date each was given</td></tr>
 <tr><td>Supplier decision<div class="paths"><code>docs/design/mfg/supplier-decision.md</code></div></td><td class="state t-stop">Not produced</td><td>Which quote was taken and why. Not made yet</td></tr>
 </tbody></table></div>
 </section>
@@ -57694,11 +58280,11 @@ was lower and #3 was faster to wake; I took #3.</p>
 <p class="lead">The agreed artefacts are above. These are the sources behind them — reading, not agreeing.</p>
 <p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/iterations/standby.json" target="_blank" rel="noopener">Standby ↗</a><div class="paths"><code>docs/design/iterations/standby.json</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/standby-results.md" target="_blank" rel="noopener">Standby results ↗</a><div class="paths"><code>docs/design/standby-results.md</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/iterations/standby.json" target="_blank" rel="noopener">Standby ↗</a><div class="paths"><code>docs/design/iterations/standby.json</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/board-docs/docs/design/standby-results.md" target="_blank" rel="noopener">Standby results ↗</a><div class="paths"><code>docs/design/standby-results.md</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
 </tbody></table></div>
 </section>
-<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>7da342d</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
+<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>9f31024</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
 </div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];

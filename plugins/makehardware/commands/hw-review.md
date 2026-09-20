@@ -1,5 +1,8 @@
 ---
 description: Put the current stage in front of the human for review - build the artefacts they can see on GitHub, ask them directly with a link, and record the sign-off
+# commits, pushes and puts a request in front of a human,
+# so it runs when a person asks for it and never on the model's own initiative.
+disable-model-invocation: true
 ---
 
 Run a human review for `$ARGUMENTS` (a milestone id — `vision`, `plan`,

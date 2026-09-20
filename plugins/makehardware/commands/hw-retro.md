@@ -1,5 +1,8 @@
 ---
 description: Write a project retrospective that proposes specific edits to the MakeHardware toolbox
+# writes a retrospective and files feedback against the toolbox,
+# so it runs when a person asks for it and never on the model's own initiative.
+disable-model-invocation: true
 ---
 
 Produce a retrospective for this project, following the `hw-retro` skill.

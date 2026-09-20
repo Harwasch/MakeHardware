@@ -1,5 +1,8 @@
 ---
 description: Scaffold a new hardware project repository with the MakeHardware workflow structure
+# scaffolds a repository, writes files and makes the first commit,
+# so it runs when a person asks for it and never on the model's own initiative.
+disable-model-invocation: true
 ---
 
 Set up the current repository for the MakeHardware workflow.

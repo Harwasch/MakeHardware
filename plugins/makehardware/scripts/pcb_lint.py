@@ -16,6 +16,13 @@ the reasoning is worth reading once and the check is worth running every time.
     PCB-COURTYARD  overlapping courtyards, by real polygon area          (§5)
     PCB-REFPLANE   a signal layer with no reference plane next to it
 
+  The board documentation gate — can anyone build, stuff, test and trace it:
+
+    PCB-IDENT      part number, revision, serial and date fields on silk
+    PCB-FIDUCIAL   three global fiducials, not in a line, both sides if needed
+    PCB-TESTPOINT  every rail worth probing reachable with a probe
+    PCB-PIN1       a silkscreen polarity mark on every part that needs one
+
 **Net classes are not in the `.kicad_pcb`.** They live in the sibling
 `.kicad_pro` under `net_settings.classes`, with assignment through
 `netclass_patterns`. A board linter that looks for them in the board file finds
@@ -56,7 +63,8 @@ CAP_RE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([pnumµ]?)\s*F?\s*$", re.I)
 MULT = {"p": 1e-12, "n": 1e-9, "u": 1e-6, "µ": 1e-6, "m": 1e-3, "": 1.0}
 
 CODES = ["PCB-THERMVIA", "PCB-TRACKW", "PCB-CLEAR", "PCB-KEEPOUT", "PCB-DECAP",
-         "PCB-SILK", "PCB-REFTEXT", "PCB-COURTYARD", "PCB-REFPLANE"]
+         "PCB-SILK", "PCB-REFTEXT", "PCB-COURTYARD", "PCB-REFPLANE",
+         "PCB-IDENT", "PCB-FIDUCIAL", "PCB-TESTPOINT", "PCB-PIN1"]
 
 
 def finding(code, severity, what, where=None, refs=None, **extra) -> dict:
@@ -868,6 +876,236 @@ def check_courtyard(b: Board, cfg) -> list[dict]:
     return out
 
 
+# ---------------------------------------------------------------------------
+# The board documentation gate
+#
+# The nine checks above ask whether the board works. These four ask whether
+# anybody can build, stuff, test and trace it — the half a contract
+# manufacturer and a bring-up engineer see first, and the half that is
+# invisible until the boards arrive and nobody can tell rev B from rev C.
+#
+# Everything here is computed off the board. None of it is a reminder.
+# ---------------------------------------------------------------------------
+SILK = ("F.SilkS", "B.SilkS")
+
+# Families where getting the part round the wrong way destroys it or the
+# board. Matched on lib_id, which is what a footprint actually carries.
+POLARISED = ("SOIC", "SOP", "QFN", "QFP", "DFN", "BGA", "SOT", "TO-",
+             "TO_", "D_", "LED", "CP_", "Diode", "Crystal", "Conn_",
+             "PinHeader", "USB", "MicroSD", "Battery")
+FIDUCIAL_HINTS = ("fiducial",)
+TESTPOINT_HINTS = ("testpoint", "test_point")
+MOUNT_HINTS = ("mountinghole", "mounting_hole")
+
+
+def _lib_family(fp) -> str:
+    return f'{fp.get("lib_id", "")} {fp.get("ref", "")}'.lower()
+
+
+def _is(fp, hints) -> bool:
+    fam = _lib_family(fp)
+    return any(h in fam for h in hints)
+
+
+def _silk_texts(b: Board) -> list[str]:
+    """Every string the fab will actually screen onto the board.
+
+    Board-level `gr_text` plus footprint `fp_text` that is neither the
+    reference nor the value — a designator is not documentation.
+    """
+    out = []
+    for t in sx.find_all(b.doc, "gr_text"):
+        layer = str(sx.attr(t, "layer", 1, ""))
+        if layer in SILK and len(t) > 1 and isinstance(t[1], str):
+            out.append(t[1])
+    for fp in b.footprints:
+        for t in sx.find_all(fp["node"], "fp_text"):
+            kind = str(t[1]) if len(t) > 1 else ""
+            layer = str(sx.attr(t, "layer", 1, ""))
+            if kind == "user" and layer in SILK and len(t) > 2:
+                out.append(str(t[2]))
+    return out
+
+
+_REV_RX = re.compile(r"\b(rev|revision)\b[ .:]*([A-Za-z0-9._-]+)|"
+                     r"\bv\d+(\.\d+)*\b", re.I)
+_SERIAL_RX = re.compile(r"\b(s/?n|serial)\b", re.I)
+_DATE_RX = re.compile(r"\b(date|yyww|ww/?yy|lot)\b", re.I)
+
+
+def check_ident(b: Board, cfg) -> list[dict]:
+    """The board must say what it is, in silkscreen, without a document.
+
+    A bare board with no part number and no revision is indistinguishable from
+    the last spin the moment it leaves its bag, and every later question —
+    which rev is this fault on, which build shipped — becomes guesswork. The
+    fab will not add it, and it costs nothing at design time.
+    """
+    texts = _silk_texts(b)
+    blob = " | ".join(texts)
+    out = []
+    # A part number: any silk string that is not purely a designator or a
+    # value, and carries at least one digit and one letter.
+    pn = [t for t in texts
+          if re.search(r"[A-Za-z]", t) and re.search(r"\d", t)
+          and not re.fullmatch(r"[A-Z]{1,3}\d{1,4}", t.strip())]
+    if not pn:
+        out.append(finding(
+            "PCB-IDENT", "error",
+            "no part number on the silkscreen — a bare board with nothing "
+            "printed on it cannot be told from the previous spin",
+            ))
+    if not _REV_RX.search(blob):
+        out.append(finding(
+            "PCB-IDENT", "error",
+            "no revision on the silkscreen. Put the rev where a person "
+            "holding the board can read it, not only in the title block",
+            ))
+    if not _SERIAL_RX.search(blob):
+        out.append(finding(
+            "PCB-IDENT", "warn",
+            "no serial-number field. A blank box or an 'S/N' legend gives "
+            "assembly somewhere to put a unique ID and traceability a hook",
+            ))
+    if not _DATE_RX.search(blob):
+        out.append(finding(
+            "PCB-IDENT", "info",
+            "no date-code or lot field. Worth one silk legend when a batch "
+            "may ever need recalling",
+            ))
+    return out
+
+
+def check_fiducial(b: Board, cfg) -> list[dict]:
+    """Pick-and-place needs three global fiducials, and not in a line.
+
+    Two fiducials fix translation and rotation; the third resolves scale and
+    mirror, and three on one line resolve nothing. A board that goes to
+    assembly without them is placed off the board outline instead, which is
+    cut to a looser tolerance than the copper.
+    """
+    fids = [f for f in b.footprints if _is(f, FIDUCIAL_HINTS)]
+    out = []
+    smd_back = [f for f in b.footprints
+                if f.get("back") and any(not p["through"] for p in f["pads"])]
+    if len(fids) < 3:
+        out.append(finding(
+            "PCB-FIDUCIAL", "error",
+            f"{len(fids)} global fiducial(s); assembly needs 3. Two fix "
+            f"position and rotation, the third resolves scale and mirror",
+            refs=[f["ref"] for f in fids]))
+        return out
+    # Collinear? Twice the triangle area over the longest side is the height
+    # of the thinnest one; under a millimetre is a line as far as a placer's
+    # optics are concerned.
+    best = 0.0
+    for i in range(len(fids)):
+        for j in range(i + 1, len(fids)):
+            for k in range(j + 1, len(fids)):
+                a, c, d = fids[i], fids[j], fids[k]
+                area2 = abs((c["x"] - a["x"]) * (d["y"] - a["y"])
+                            - (d["x"] - a["x"]) * (c["y"] - a["y"]))
+                longest = max(
+                    math.dist((a["x"], a["y"]), (c["x"], c["y"])),
+                    math.dist((a["x"], a["y"]), (d["x"], d["y"])),
+                    math.dist((c["x"], c["y"]), (d["x"], d["y"]))) or 1.0
+                best = max(best, area2 / longest)
+    if best < 1.0:
+        out.append(finding(
+            "PCB-FIDUCIAL", "error",
+            f"the fiducials are effectively collinear ({best:.2f} mm off a "
+            f"straight line) — three in a row fix no more than two do",
+            refs=[f["ref"] for f in fids]))
+    if smd_back and not any(f.get("back") for f in fids):
+        out.append(finding(
+            "PCB-FIDUCIAL", "warn",
+            f"{len(smd_back)} SMD part(s) on the back and no fiducial on that "
+            f"side — the second side is placed blind",
+            refs=[f["ref"] for f in smd_back[:6]]))
+    return out
+
+
+# What "a net worth probing" means, when nothing declares it. Power and the
+# signals a board is brought up on.
+PROBE_RX = re.compile(
+    r"^(gnd|agnd|dgnd|pgnd|earth)$|^\+?\d+v\d*$|^v(cc|dd|ss|bat|bus|in|out|ref)"
+    r"|^(3v3|5v|1v8|1v2|12v)$|reset|nrst|boot|swdio|swclk|tck|tms", re.I)
+
+
+def check_testpoint(b: Board, cfg) -> list[dict]:
+    """Every rail you will measure needs somewhere to put a probe.
+
+    Bring-up happens with one hand on a scope and one on a multimeter. A rail
+    whose only copper is under a QFN gets probed by soldering a wire to a via,
+    which is how a first article gets destroyed on the bench.
+    """
+    tps = {p["net"] for f in b.footprints if _is(f, TESTPOINT_HINTS)
+           for p in f["pads"] if p["net"]}
+    # A through-hole pad is a probe point whether or not anyone called it one.
+    for f in b.footprints:
+        for p in f["pads"]:
+            if p["through"] and p["net"]:
+                tps.add(p["net"])
+    nets = {p["net"] for f in b.footprints for p in f["pads"] if p["net"]}
+    want = sorted(n for n in nets if PROBE_RX.search(n.split("/")[-1]))
+    missing = [n for n in want if n not in tps]
+    if not missing:
+        return []
+    return [finding(
+        "PCB-TESTPOINT", "warn",
+        f"{len(missing)} net(s) worth probing have no test point and no "
+        f"through-hole pad: {', '.join(missing[:6])}"
+        + (f" and {len(missing) - 6} more" if len(missing) > 6 else ""),
+        refs=missing[:8])]
+
+
+def check_pin1(b: Board, cfg) -> list[dict]:
+    """A polarised part needs a mark on silk saying which way round it goes.
+
+    Not in the footprint's copper, where the part covers it, and not only in
+    the assembly drawing, which the operator correcting a reel at 2am does not
+    have. This checks for any silkscreen geometry near pin 1 — a proxy for a
+    real marker, and a proxy that is right far more often than it is wrong.
+    """
+    out = []
+    for f in b.footprints:
+        fam = f.get("lib_id", "")
+        if not any(h.lower() in fam.lower() for h in POLARISED):
+            continue
+        if _is(f, FIDUCIAL_HINTS + TESTPOINT_HINTS + MOUNT_HINTS):
+            continue
+        p1 = next((p for p in f["pads"] if p["number"] in ("1", "A1", "A", "+")),
+                  None)
+        if p1 is None:
+            continue
+        near = False
+        for g in ("fp_line", "fp_poly", "fp_circle", "fp_arc", "fp_rect"):
+            for node in sx.find_all(f["node"], g):
+                if str(sx.attr(node, "layer", 1, "")) not in SILK:
+                    continue
+                for tag in ("start", "center", "end", "mid"):
+                    pt = sx.find(node, tag)
+                    if not pt or len(pt) < 3:
+                        continue
+                    wx, wy = rot(float(pt[1]), float(pt[2]), f["rot"])
+                    if math.dist((f["x"] + wx, f["y"] + wy),
+                                 (p1["x"], p1["y"])) <= max(p1["w"], p1["h"]) + 2.0:
+                        near = True
+                        break
+                if near:
+                    break
+            if near:
+                break
+        if not near:
+            out.append(finding(
+                "PCB-PIN1", "warn",
+                f'{f["ref"] or f["lib_id"]} is polarised and carries no '
+                f'silkscreen mark within 2 mm of pin 1',
+                where=(p1["x"], p1["y"]), refs=[f["ref"]],
+                layer=f["layer"]))
+    return out
+
+
 def check_refplane(b: Board, cfg) -> list[dict]:
     """A signal layer with no reference plane next to it.
 
@@ -1168,6 +1406,9 @@ def main() -> int:
         ("PCB-DECAP", check_decap), ("PCB-SILK", check_silk),
         ("PCB-REFTEXT", check_reftext), ("PCB-COURTYARD", check_courtyard),
         ("PCB-REFPLANE", check_refplane),
+        # the board documentation gate
+        ("PCB-IDENT", check_ident), ("PCB-FIDUCIAL", check_fiducial),
+        ("PCB-TESTPOINT", check_testpoint), ("PCB-PIN1", check_pin1),
     ]
     findings = []
     for code, fn in checks:

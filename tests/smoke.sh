@@ -365,6 +365,84 @@ assert t.count('<') < 220, 'chart is too heavy for the review page'" \
     || fail "hw-chart budget output is wrong"
 
 echo
+echo "== the board documentation gate =="
+
+# These four ask whether anybody can build, stuff, test and trace the board.
+# Both directions are checked: a gate that fires on everything teaches an
+# agent to ignore it, which is worse than not having one.
+cat > "${WORK}/good.kicad_pcb" <<'GOOD'
+(kicad_pcb (version 20241229) (generator "test")
+  (layers (0 "F.Cu" signal) (31 "B.Cu" signal) (37 "F.SilkS" user))
+  (gr_text "TP-MAIN-001  REV B" (at 20 4) (layer "F.SilkS")
+    (effects (font (size 1 1) (thickness 0.15))))
+  (gr_text "S/N ____________" (at 20 8) (layer "F.SilkS")
+    (effects (font (size 1 1) (thickness 0.15))))
+  (gr_text "LOT / DATE ______" (at 20 12) (layer "F.SilkS")
+    (effects (font (size 1 1) (thickness 0.15))))
+  (footprint "Fiducial:Fiducial_1mm" (layer "F.Cu") (at 5 5)
+    (property "Reference" "FID1" (at 0 0) (layer "F.SilkS")))
+  (footprint "Fiducial:Fiducial_1mm" (layer "F.Cu") (at 55 5)
+    (property "Reference" "FID2" (at 0 0) (layer "F.SilkS")))
+  (footprint "Fiducial:Fiducial_1mm" (layer "F.Cu") (at 30 40)
+    (property "Reference" "FID3" (at 0 0) (layer "F.SilkS")))
+  (footprint "TestPoint:TestPoint_Pad_D1.5mm" (layer "F.Cu") (at 12 30)
+    (property "Reference" "TP1" (at 0 0) (layer "F.SilkS"))
+    (pad "1" smd circle (at 0 0) (size 1.5 1.5) (layers "F.Cu") (net 1 "+3V3")))
+  (footprint "TestPoint:TestPoint_Pad_D1.5mm" (layer "F.Cu") (at 16 30)
+    (property "Reference" "TP2" (at 0 0) (layer "F.SilkS"))
+    (pad "1" smd circle (at 0 0) (size 1.5 1.5) (layers "F.Cu") (net 2 "GND")))
+  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 30 20)
+    (property "Reference" "U1" (at 0 -4) (layer "F.SilkS"))
+    (fp_line (start -2.6 -2.2) (end -2.6 -1.4) (layer "F.SilkS") (width 0.15))
+    (fp_circle (center -2.4 -1.9) (end -2.2 -1.9) (layer "F.SilkS") (width 0.15))
+    (pad "1" smd rect (at -2.475 -1.905) (size 1.5 0.6) (layers "F.Cu") (net 1 "+3V3"))
+    (pad "8" smd rect (at 2.475 -1.905) (size 1.5 0.6) (layers "F.Cu") (net 2 "GND"))))
+GOOD
+DOCS=PCB-IDENT,PCB-FIDUCIAL,PCB-TESTPOINT,PCB-PIN1
+check "${PY}" "${S}/pcb_lint.py" "${WORK}/good.kicad_pcb" --only "${DOCS}" --gate \
+    && pass "a board with PN, rev, serial, fiducials, test points and a pin-1 mark is quiet" \
+    || fail "the documentation gate fires on a compliant board"
+
+# The same board with its silkscreen legends removed must fail, and name why.
+# Built as its own file rather than filtered out of the good one: a gr_text
+# spans several lines, so dropping the first leaves a dangling (effects ...)
+# and the parser rejects the file before any rule runs — which would have had
+# the test passing for the wrong reason.
+"${PY}" - "${WORK}/good.kicad_pcb" "${WORK}/nosilk.kicad_pcb" <<'STRIP'
+import re, sys
+src = open(sys.argv[1]).read()
+out = re.sub(r"\n  \(gr_text.*?\n    \(effects[^\n]*\)\)", "", src, flags=re.S)
+assert "gr_text" not in out, "the silk legends did not come out"
+open(sys.argv[2], "w").write(out)
+STRIP
+says "no part number" "${PY}" "${S}/pcb_lint.py" "${WORK}/nosilk.kicad_pcb" --only PCB-IDENT \
+    && pass "a board with nothing printed on it is caught" \
+    || fail "PCB-IDENT missed a board with no silkscreen identity"
+
+# Three fiducials in a straight line fix no more than two do.
+"${PY}" -c "
+src = open('${WORK}/good.kicad_pcb').read()
+open('${WORK}/collinear.kicad_pcb','w').write(src.replace('(at 30 40)', '(at 30 5)'))"
+says "collinear" "${PY}" "${S}/pcb_lint.py" "${WORK}/collinear.kicad_pcb" --only PCB-FIDUCIAL \
+    && pass "…and three fiducials in a line, which resolve no scale or mirror" \
+    || fail "PCB-FIDUCIAL accepted three collinear fiducials"
+
+# Same board, silk marker beside pin 1 removed. Both graphics are single
+# lines, so a literal strip is safe here.
+"${PY}" - "${WORK}/good.kicad_pcb" "${WORK}/nopin1.kicad_pcb" <<'NOPIN'
+import sys
+src = open(sys.argv[1]).read()
+for g in ('    (fp_line (start -2.6 -2.2) (end -2.6 -1.4) (layer "F.SilkS") (width 0.15))\n',
+          '    (fp_circle (center -2.4 -1.9) (end -2.2 -1.9) (layer "F.SilkS") (width 0.15))\n'):
+    assert g in src, g
+    src = src.replace(g, "")
+open(sys.argv[2], "w").write(src)
+NOPIN
+says "pin 1" "${PY}" "${S}/pcb_lint.py" "${WORK}/nopin1.kicad_pcb" --only PCB-PIN1 \
+    && pass "…and a polarised part with no polarity mark on silk" \
+    || fail "PCB-PIN1 missed an unmarked polarised part"
+
+echo
 echo "== the KiCad channel =="
 
 # Konnect went in 0.7.0 and ki-stack in 0.8.0. The regression these guard against is a
