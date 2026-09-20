@@ -995,7 +995,14 @@ def chart_evolution(data, title, subtitle) -> str:
     best = None
     accepted = next((r for r in its if r["accepted"]), None)
     if have:
-        best = (max if direction == "max" else min)(have, key=lambda rv: rv[1])
+        # "Best" means best among the passes that respected their limits. The
+        # verdict already encodes that — `hw-iterate run` downgrades a pass
+        # that hit its target by breaching a --track limit — so a loop whose
+        # lowest number came at a cost it was told not to pay does not get to
+        # advertise that number as its best.
+        clean = [(r, v) for r, v in have if r["verdict"] == "pass"]
+        pool = clean or have
+        best = (max if direction == "max" else min)(pool, key=lambda rv: rv[1])
     chosen = None
     if accepted is not None:
         chosen = (accepted, _evo_num(accepted["metrics"].get(okey)))

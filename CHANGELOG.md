@@ -7,6 +7,83 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.11.0
+
+The design loop was a diary. It is now a loop.
+
+### Fixed
+
+* **Every number on an evolution chart was typed in by the agent.**
+  `hw-iterate record` took metrics on the command line, so each figure had
+  been read off a simulator's output and retyped — a transcription, unchecked,
+  of a number nobody could re-derive. `--evidence` named the file it came from
+  and nothing ever opened that file. The chart looked like evidence and was
+  testimony.
+
+  That broke this repository's second founding rule, in its newest subsystem:
+  *"Generated, not hand-written. Every number on a review page is read from
+  the file that owns it. If you find yourself typing a figure into markdown
+  that a tool could compute, that number is already wrong — it just does not
+  know it yet."*
+
+* **A pass that met its target by breaching a `--track` limit recorded as a
+  clean `pass`.** `--track` exists precisely because an objective alone is a
+  licence to wreck everything else to satisfy it, so the one trade the loop is
+  open to catch was the one it recorded as a success. A derived verdict now
+  downgrades it to `partial` and names the breached limit on the console.
+  Found by rebuilding the worked example and reading the chart, not by reading
+  the code.
+
+* **"Best" meant best on the objective, breaches included.** It now means best
+  among the passes that respected their limits, falling back to the overall
+  best when none did. The verdict already carries the breach, so the chart and
+  the ledger apply the same rule.
+
+### Added
+
+* **`hw-iterate run`** — executes the verifier, keeps its output as the
+  evidence file, reads each number out with a named extractor, and records the
+  pass. One call where there were four, and no figure passes through anyone's
+  hands. The verdict is derived from the objective against its target and the
+  tracked limits; `--verdict` overrides it for the case where the number is not
+  the whole story.
+
+* **`hw-extract`** — the extractors, usable on their own to get a spec right
+  before wiring it into a loop:
+
+  | | reads |
+  |---|---|
+  | `meas:NAME` | an ngspice `.meas` or `print` line — measured against ngspice 42, both forms |
+  | `line:PREFIX` | the number after a literal prefix, e.g. Elmer's `ElectroMagnetic Field Energy:` |
+  | `json:a.b.0.c` | a dotted path — build123d `measure()`, `req-trace --json` |
+  | `csv:COL[:how]` | a column reduced by `last`/`first`/`max`/`min`/`mean`/`absmax` |
+  | `re:PATTERN` | first capture group, for anything else |
+
+  Every extractor fails loudly when its metric is absent. A loop that silently
+  records nothing for a missing measurement is worse than one that stops,
+  because the chart still draws and the gap does not show. `run` refuses to
+  record a pass whose objective could not be read, rather than recording a
+  hole.
+
+* **`hw-iterate verify`** — re-derives every recorded number from the file it
+  was read out of, and `status --gate` now fails on a figure that no longer
+  reproduces. A deck edited after the run, an extractor that changed meaning, a
+  number someone typed: all of it surfaces here instead of on a review page.
+  Passes recorded by `record` carry no extractor and are reported as
+  unverifiable rather than as wrong — `record` remains right for a bench
+  reading or a scope photograph.
+
+### Changed
+
+* **The worked example's standby loop is now driven by `run`.** Its five
+  passes come from a stand-in model that emits ngspice's own `.meas` format —
+  the same convention `build-fixture.py` already uses for the vision renders —
+  so `run` and `verify` take exactly the path they take against a real
+  simulator. The run logs are committed, which is what lets `verify` pass on a
+  fresh clone. Two of the five passes now read `partial`: they hit the current
+  target by breaking the wake-up budget, which is the trade the whole chart
+  exists to show.
+
 ## 0.10.0
 
 `hw-repair` could repair two of the seven things `setup.sh` installs, and

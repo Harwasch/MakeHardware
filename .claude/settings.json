@@ -28,6 +28,7 @@
       "Bash(imagegen:*)",
       "Bash(cad-export:*)",
       "Bash(hw-chart:*)",
+      "Bash(hw-extract:*)",
       "Bash(hw-feedback:*)",
       "Bash(hw-iterate:*)",
       "Bash(pcb-lint:*)",

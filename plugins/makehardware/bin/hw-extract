@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# MakeHardware wrapper — pull named numbers out of a tool's output.
+exec "${HARDWARE_PYTHON:-/opt/hw-py/bin/python}" \
+  "$(dirname "$(dirname "$(readlink -f "$0")")")/scripts/extract.py" "$@"
