@@ -1108,6 +1108,7 @@ CSS = """
   --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
   --rule:#c3c2b7; --rule-soft:#e4e2dc;
   --ok:#0ca30c; --wait:#2a78d6; --stop:#d03b3b; --idle:#898781;
+  --warn:#b8720e;
   --accent:#0f9b8e;
   --sans:'IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --cond:'IBM Plex Sans Condensed',var(--sans);
@@ -1119,6 +1120,7 @@ CSS = """
     --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
     --rule:#383835; --rule-soft:#2c2c2a;
     --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+    --warn:#e3a33c;
   }
 }
 :root[data-theme="dark"]{
@@ -1126,6 +1128,7 @@ CSS = """
   --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
   --rule:#383835; --rule-soft:#2c2c2a;
   --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+  --warn:#e3a33c;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
@@ -1135,6 +1138,53 @@ a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
   padding:0.1em 0.35em;border-radius:3px}
+
+/* ---- the parameter board: what the page opens on ----
+   A dashboard is scanned, not read, so state is carried in form as well as in
+   number: a severity stripe down the left edge, a word, and a signed margin.
+   Colour alone would not survive a mono print or a colour-blind reader, which
+   is the rule charts.py already draws by. */
+.board{margin:22px 0 0;border:1px solid var(--rule);background:var(--panel)}
+.board-head{padding:14px 20px 12px;border-bottom:1px solid var(--rule)}
+.board-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-0.01em}
+.board-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.params{display:grid}
+.param{display:grid;gap:0 14px;align-items:center;padding:11px 20px 11px 17px;
+  border-bottom:1px solid var(--rule-soft);border-left:3px solid transparent;
+  grid-template-columns:minmax(150px,1.5fr) 96px minmax(80px,1fr) 92px 84px 110px minmax(110px,1fr)}
+.param:last-child{border-bottom:0}
+.param.t-ok{border-left-color:var(--ok)}
+.param.t-warn{border-left-color:var(--warn)}
+.param.t-stop{border-left-color:var(--stop)}
+.param.t-idle{border-left-color:var(--rule)}
+.p-name{font-weight:600;font-size:14px;min-width:0}
+.p-note{display:block;font-weight:400;color:var(--muted);font-size:12px;
+  margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-val{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;
+  text-align:right}
+.p-bar{position:relative;height:7px;background:var(--sunk);border-radius:1px}
+.p-bar i{display:block;height:100%;background:var(--ok);border-radius:1px}
+.p-bar b{position:absolute;top:-2px;bottom:-2px;right:0;width:3px;background:var(--stop)}
+.t-warn .p-bar i{background:var(--warn)}
+.t-stop .p-bar i{background:var(--stop)}
+.t-idle .p-bar i{background:var(--muted)}
+.p-lim,.p-src{color:var(--muted);font-size:12px;font-family:var(--mono);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-margin{font-family:var(--mono);font-size:13.5px;text-align:right;
+  font-variant-numeric:tabular-nums}
+.p-state{display:block;font-family:var(--sans);font-size:11px;
+  letter-spacing:0.04em;text-transform:uppercase;color:var(--muted)}
+.t-ok .p-margin{color:var(--ok)} .t-warn .p-margin{color:var(--warn)}
+.t-stop .p-margin{color:var(--stop);font-weight:600}
+.t-stop .p-state{color:var(--stop)}
+.p-trail{color:var(--ink-2);display:flex;justify-content:flex-end}
+.spark{display:block;overflow:visible}
+@media (max-width:880px){
+  .param{grid-template-columns:1fr auto;gap:2px 10px;padding:12px 16px 12px 13px}
+  .p-bar,.p-lim,.p-trail,.p-src{display:none}
+  .p-val{text-align:left}
+  .p-margin{text-align:right}
+}
 
 /* ---- title block: the drawing-sheet header ---- */
 .block{border:1px solid var(--rule);background:var(--panel);margin:20px 0 0;
@@ -1327,7 +1377,266 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 """
 
 
-def render_page(project: dict, phases: list[Phase]) -> str:
+# ---------------------------------------------------------------------------
+# The parameter board
+#
+# What a review page should open with, and did not.
+#
+# The old page led with Stage 1 — a vision comparison signed off weeks ago —
+# and scattered every number that actually says how the design is doing across
+# ten tabs. A reviewer could not answer "is this working?" without clicking
+# through all of them and holding the answers in their head.
+#
+# So the page now opens on the question. One row per key performance
+# parameter: where it sits, what it is allowed to be, how much room is left,
+# and — where a design loop produced it — how it got there. Nothing here is
+# typed: the loop ledgers carry objective, target, unit and trajectory, and
+# the block diagram carries every rail's draw against its budget.
+# ---------------------------------------------------------------------------
+class Param:
+    __slots__ = ("name", "value", "limit", "unit", "direction", "state",
+                 "margin_pct", "trail", "source", "source_url", "note")
+
+    def __init__(self, **kw):
+        for k in self.__slots__:
+            setattr(self, k, kw.get(k))
+
+
+_SI = ((1e9, "G"), (1e6, "M"), (1e3, "k"), (1.0, ""), (1e-3, "m"),
+       (1e-6, "u"), (1e-9, "n"), (1e-12, "p"))
+
+
+def _scale(v) -> tuple[float, str]:
+    """The SI step a number should be read in. 0.01238 -> (1e-3, "m")."""
+    a = abs(v or 0)
+    if a == 0:
+        return 1.0, ""
+    for step, pre in _SI:
+        if a >= step:
+            return step, pre
+    return 1e-12, "p"
+
+
+def _fig(v, unit: str = "", scale=None) -> str:
+    """A number a person reads. `0.01238, "A"` -> "12.4 mA".
+
+    `scale` pins the SI step so a value and the limit it is measured against
+    are shown in the same one: "250 uA against max 10 mA" is a comparison the
+    reader can make at a glance, and "250 uA against max 0.01 A" is arithmetic
+    they have to do first.
+
+    charts.py owns the same idea for SVG; this is its HTML twin rather than an
+    import, because the review page must render with nothing but the standard
+    library — the constraint the lint tools are built to.
+    """
+    if v is None:
+        return "—"
+    step, pre = scale if scale else _scale(v)
+    x = v / step
+    txt = f"{x:.4g}" if abs(x) < 1000 else f"{x:.0f}"
+    tail = f"{pre}{unit}"
+    return f"{txt} {tail}" if tail else txt
+
+
+_UNIT_TOKENS = {"ua", "ma", "a", "ms", "us", "s", "hz", "khz", "mhz", "db",
+                "deg", "degc", "c", "v", "mv", "w", "mw", "g", "mm", "pct", "j"}
+
+
+def _label(metric: str) -> str:
+    """`i_standby_ua` -> "I standby";  `wake_ms` -> "Wake".
+
+    A reviewer should not have to read variable names. The trailing unit token
+    goes because the unit is already in the column beside it.
+    """
+    parts = [p for p in re.split(r"[_\s]+", str(metric)) if p]
+    while len(parts) > 1 and parts[-1].lower() in _UNIT_TOKENS:
+        parts.pop()
+    out = " ".join(parts)
+    return (out[:1].upper() + out[1:]) if out else str(metric)
+
+
+def _judge(value, limit, direction):
+    """(state, margin %) for a value against a limit it must stay one side of.
+
+    `direction` is the direction that is GOOD: "max" means higher is better
+    and the limit is a floor, "min" means the limit is a ceiling. Margin is
+    signed room, as a percentage of the limit, so a rail at 90% of budget and
+    a margin 10% short of a phase target read on the same scale.
+    """
+    if value is None or limit in (None, 0):
+        return "none", None
+    room = (value - limit) if direction == "max" else (limit - value)
+    pct = room / abs(limit) * 100.0
+    if pct < 0:
+        return "stop", pct
+    return ("warn" if pct < 15 else "ok"), pct
+
+
+def _loop_params(root: str) -> list[Param]:
+    """Every design loop's objective and the limits it was told not to cost."""
+    out = []
+    d = os.path.join(root, "docs/design/iterations")
+    if not os.path.isdir(d):
+        return out
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(d, fn)) as fh:
+                led = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        its = led.get("iterations") or []
+        if not its:
+            continue
+        # The accepted pass is the design; the last pass is only where the
+        # search stopped. Reporting the latter as the design's figure is how a
+        # rejected experiment ends up on a review page as a result.
+        acc = next((r for r in its if r.get("accepted")), its[-1])
+        obj = led.get("objective") or {}
+        okey = obj.get("metric")
+        if okey:
+            trail = [r.get("metrics", {}).get(okey) for r in its]
+            st, pct = _judge(acc.get("metrics", {}).get(okey),
+                             obj.get("target"), (obj.get("direction") or "max"))
+            out.append(Param(
+                name=okey, value=acc.get("metrics", {}).get(okey),
+                limit=obj.get("target"), unit=obj.get("unit") or "",
+                direction=obj.get("direction") or "max", state=st,
+                margin_pct=pct,
+                trail=[v for v in trail if isinstance(v, (int, float))],
+                source=f'{led.get("loop", fn[:-5])} loop, #{acc.get("iteration")}',
+                source_url=blob_url(f"docs/design/iterations/{fn}"),
+                note=led.get("goal") or ""))
+        for t in led.get("track") or []:
+            key = t.get("metric")
+            if not key or t.get("limit") is None:
+                continue
+            trail = [r.get("metrics", {}).get(key) for r in its]
+            st, pct = _judge(acc.get("metrics", {}).get(key), t.get("limit"),
+                             (t.get("direction") or "max"))
+            out.append(Param(
+                name=key, value=acc.get("metrics", {}).get(key),
+                limit=t.get("limit"), unit=t.get("unit") or "",
+                direction=t.get("direction") or "max", state=st,
+                margin_pct=pct,
+                trail=[v for v in trail if isinstance(v, (int, float))],
+                source=f'{led.get("loop", fn[:-5])} loop, #{acc.get("iteration")}',
+                source_url=blob_url(f"docs/design/iterations/{fn}"),
+                note=""))
+    return out
+
+
+def _rail_params(root: str) -> list[Param]:
+    """Every rail's worst-case draw against what its source can supply.
+
+    Through `block_diagram.budget()` rather than off the YAML, because a rail
+    carries the draw of every rail derived from it, referred through the
+    voltage ratio. Re-deriving that here would be a second implementation of
+    the one calculation on this page most likely to be wrong, and the two
+    would disagree the first time either changed.
+    """
+    spec_path = os.path.join(root, "hw/block-diagram.yaml")
+    if not os.path.exists(spec_path):
+        return []
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import block_diagram
+        rails = block_diagram.budget(read_yaml(spec_path) or {})
+    except Exception:
+        return []
+    out = []
+    for r in rails:
+        limit, draw = r.get("limit"), r.get("max")
+        if limit is None or draw is None:
+            continue
+        st, pct = _judge(draw, limit, "min")
+        src = r.get("source")
+        out.append(Param(
+            name=f'{r["id"]} rail', value=draw, limit=limit, unit="A",
+            direction="min", state=st, margin_pct=pct, trail=[],
+            source="power budget",
+            note=f'worst case at {r.get("voltage", 0):g} V'
+                 + (f', from {src}' if src else ""),
+            source_url=blob_url("hw/block-diagram.yaml")))
+    return out
+
+
+def parameters(root: str, cfg: dict) -> list[Param]:
+    """Worst first. A board sorted by name buries the row that needs reading."""
+    params = _loop_params(root) + _rail_params(root)
+    rank = {"stop": 0, "warn": 1, "ok": 2, "none": 3}
+    params.sort(key=lambda p: (rank.get(p.state, 3),
+                               p.margin_pct if p.margin_pct is not None else 1e9))
+    return params
+
+
+def _spark(trail: list, state: str, w: int = 104, h: int = 26) -> str:
+    """How the parameter got where it is. Endpoint emphasised, per dataviz."""
+    pts = [v for v in trail if isinstance(v, (int, float))]
+    if len(pts) < 2:
+        return ""
+    lo, hi = min(pts), max(pts)
+    span = (hi - lo) or abs(hi) or 1.0
+    def X(i): return 1 + i / (len(pts) - 1) * (w - 2)
+    def Y(v): return h - 4 - (v - lo) / span * (h - 8)
+    line = " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(pts))
+    return (f'<svg class="spark" viewBox="0 0 {w} {h}" width="{w}" height="{h}" '
+            f'aria-hidden="true">'
+            f'<polyline points="{line}" fill="none" stroke="currentColor" '
+            f'stroke-width="1.4" stroke-linejoin="round" opacity=".55"/>'
+            f'<circle cx="{X(len(pts)-1):.1f}" cy="{Y(pts[-1]):.1f}" r="2.6" '
+            f'fill="currentColor"/></svg>')
+
+
+PARAM_STATE = {"ok": ("ok", "clear"), "warn": ("warn", "tight"),
+               "stop": ("stop", "over"), "none": ("idle", "—")}
+
+
+def render_parameters(params: list[Param]) -> str:
+    if not params:
+        return ""
+    o = ['<section class="board" aria-label="Key performance parameters">',
+         '<div class="board-head"><h2>Where the design stands</h2>'
+         '<p>Every number read from the file that owns it. Worst first.</p></div>',
+         '<div class="params">']
+    for p in params:
+        tone, word = PARAM_STATE.get(p.state, PARAM_STATE["none"])
+        # The limit sets the scale: it is the stable half of the pair, so the
+        # column does not change units as the design improves.
+        sc = _scale(p.limit if p.limit is not None else p.value)
+        val = _fig(p.value, p.unit, sc)
+        lim = _fig(p.limit, p.unit, sc) if p.limit is not None else ""
+        # The bar reads as "how much of what you are allowed", which is the
+        # same grammar hw-chart budget uses, so the page stays one system.
+        frac = 0.0
+        if p.value is not None and p.limit:
+            frac = (p.limit / p.value) if p.direction == "max" else (p.value / p.limit)
+            frac = max(0.0, min(frac, 1.6))
+        o.append(
+            f'<div class="param t-{tone}">'
+            f'<div class="p-name">{esc(_label(p.name))}'
+            + (f'<span class="p-note">{esc(p.note[:64])}</span>' if p.note else "")
+            + '</div>'
+            f'<div class="p-val">{esc(val)}</div>'
+            f'<div class="p-bar"><i style="width:{min(frac,1.0)*100:.0f}%"></i>'
+            f'{"<b></b>" if frac > 1.0 else ""}</div>'
+            f'<div class="p-lim">{esc(("min " if p.direction == "max" else "max ") + lim) if lim else ""}</div>'
+            f'<div class="p-margin">'
+            + (f'{p.margin_pct:+.0f}%' if p.margin_pct is not None else "—")
+            + f'<span class="p-state">{esc(word)}</span></div>'
+            f'<div class="p-trail">{_spark(p.trail, p.state)}</div>'
+            f'<div class="p-src">'
+            + (f'<a href="{esc(p.source_url)}" target="_blank" rel="noopener">'
+               f'{esc(p.source)} ↗</a>' if p.source_url
+               else esc(p.source or ""))
+            + '</div></div>')
+    o.append("</div></section>")
+    return "\n".join(o)
+
+
+def render_page(project: dict, phases: list[Phase],
+                params: list | None = None) -> str:
     o: list[str] = []
     a = o.append
     a(f"<title>{esc(project['title'])} Review</title>")
@@ -1378,6 +1687,11 @@ def render_page(project: dict, phases: list[Phase]) -> str:
         a("<p>Nothing is waiting on you. Every phase below is signed off and "
           "still matches what you saw.</p>")
     a("</div>")
+
+    # The board sits above the tabs deliberately: it is the only thing on the
+    # page that answers "how is it doing" without a click, and a reviewer who
+    # reads nothing else should still leave with that.
+    a(render_parameters(params or []))
 
     # ---- tabs ------------------------------------------------------------
     a('<div class="tabs" role="tablist">')
@@ -2154,12 +2468,23 @@ def main() -> int:
 
     out = args.out if os.path.isabs(args.out) else os.path.join(root, args.out)
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    params = parameters(root, cfg)
     with open(out, "w") as fh:
-        fh.write(render_page(project, phases))
+        fh.write(render_page(project, phases, params))
 
     size = os.path.getsize(out)
     print(f"wrote {os.path.relpath(out, cwd)}  ({size // 1024} kB, "
           f"{len(phases)} phase(s))")
+    if params:
+        bad = [p for p in params if p.state == "stop"]
+        tight = [p for p in params if p.state == "warn"]
+        print(f"  parameters      {len(params)} on the board"
+              + (f", {len(bad)} over limit: "
+                 f'{", ".join(p.name for p in bad[:4])}' if bad else "")
+              + (f", {len(tight)} tight" if tight else ""))
+    else:
+        print("  parameters      none — no design loop and no rail budget to "
+              "read. The page opens on the stages instead.")
     for p in phases:
         label, _ = STATE_LABEL.get(p.state, STATE_LABEL["none"])
         note = ""
