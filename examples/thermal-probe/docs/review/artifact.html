@@ -8,6 +8,7 @@
   --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
   --rule:#c3c2b7; --rule-soft:#e4e2dc;
   --ok:#0ca30c; --wait:#2a78d6; --stop:#d03b3b; --idle:#898781;
+  --warn:#b8720e;
   --accent:#0f9b8e;
   --sans:'IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --cond:'IBM Plex Sans Condensed',var(--sans);
@@ -19,6 +20,7 @@
     --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
     --rule:#383835; --rule-soft:#2c2c2a;
     --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+    --warn:#e3a33c;
   }
 }
 :root[data-theme="dark"]{
@@ -26,6 +28,7 @@
   --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
   --rule:#383835; --rule-soft:#2c2c2a;
   --ok:#2fbb2f; --wait:#4d93e8; --stop:#e05555; --accent:#25b3a5;
+  --warn:#e3a33c;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
@@ -35,6 +38,53 @@ a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 code{font-family:var(--mono);font-size:0.88em;background:var(--sunk);
   padding:0.1em 0.35em;border-radius:3px}
+
+/* ---- the parameter board: what the page opens on ----
+   A dashboard is scanned, not read, so state is carried in form as well as in
+   number: a severity stripe down the left edge, a word, and a signed margin.
+   Colour alone would not survive a mono print or a colour-blind reader, which
+   is the rule charts.py already draws by. */
+.board{margin:22px 0 0;border:1px solid var(--rule);background:var(--panel)}
+.board-head{padding:14px 20px 12px;border-bottom:1px solid var(--rule)}
+.board-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-0.01em}
+.board-head p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.params{display:grid}
+.param{display:grid;gap:0 14px;align-items:center;padding:11px 20px 11px 17px;
+  border-bottom:1px solid var(--rule-soft);border-left:3px solid transparent;
+  grid-template-columns:minmax(150px,1.5fr) 96px minmax(80px,1fr) 92px 84px 110px minmax(110px,1fr)}
+.param:last-child{border-bottom:0}
+.param.t-ok{border-left-color:var(--ok)}
+.param.t-warn{border-left-color:var(--warn)}
+.param.t-stop{border-left-color:var(--stop)}
+.param.t-idle{border-left-color:var(--rule)}
+.p-name{font-weight:600;font-size:14px;min-width:0}
+.p-note{display:block;font-weight:400;color:var(--muted);font-size:12px;
+  margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-val{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;
+  text-align:right}
+.p-bar{position:relative;height:7px;background:var(--sunk);border-radius:1px}
+.p-bar i{display:block;height:100%;background:var(--ok);border-radius:1px}
+.p-bar b{position:absolute;top:-2px;bottom:-2px;right:0;width:3px;background:var(--stop)}
+.t-warn .p-bar i{background:var(--warn)}
+.t-stop .p-bar i{background:var(--stop)}
+.t-idle .p-bar i{background:var(--muted)}
+.p-lim,.p-src{color:var(--muted);font-size:12px;font-family:var(--mono);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-margin{font-family:var(--mono);font-size:13.5px;text-align:right;
+  font-variant-numeric:tabular-nums}
+.p-state{display:block;font-family:var(--sans);font-size:11px;
+  letter-spacing:0.04em;text-transform:uppercase;color:var(--muted)}
+.t-ok .p-margin{color:var(--ok)} .t-warn .p-margin{color:var(--warn)}
+.t-stop .p-margin{color:var(--stop);font-weight:600}
+.t-stop .p-state{color:var(--stop)}
+.p-trail{color:var(--ink-2);display:flex;justify-content:flex-end}
+.spark{display:block;overflow:visible}
+@media (max-width:880px){
+  .param{grid-template-columns:1fr auto;gap:2px 10px;padding:12px 16px 12px 13px}
+  .p-bar,.p-lim,.p-trail,.p-src{display:none}
+  .p-val{text-align:left}
+  .p-margin{text-align:right}
+}
 
 /* ---- title block: the drawing-sheet header ---- */
 .block{border:1px solid var(--rule);background:var(--panel);margin:20px 0 0;
@@ -233,8 +283,8 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <h1>Thermal Probe</h1>
 <p>A handheld logger for walk-in freezers. A week on one charge, readable through a glove.</p>
 </div><div class='fields'>
-<div class="field"><span class="k">Revision</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/commit/963b3bc" target="_blank" rel="noopener">963b3bc ↗</a></span></div>
-<div class="field"><span class="k">Branch</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/tree/claude/closed-loop-extract" target="_blank" rel="noopener">claude/closed-loop-extract ↗</a></span></div>
+<div class="field"><span class="k">Revision</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/commit/7da342d" target="_blank" rel="noopener">7da342d ↗</a></span></div>
+<div class="field"><span class="k">Branch</span><span class="v"><a href="https://github.com/Harwasch/MakeHardware/tree/claude/parameter-board" target="_blank" rel="noopener">claude/parameter-board ↗</a></span></div>
 <div class="field"><span class="k">Generated</span><span class="v">2026-09-20</span></div>
 <div class="field"><span class="k">Phases</span><span class="v">10</span></div>
 <div class="field"><span class="k">Awaiting you</span><span class="v"><a href="#p-review" data-goto="review">3 →</a></span></div>
@@ -242,6 +292,16 @@ footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);
 <div class="strip"><span class="k">Outstanding</span>
 <p><strong>Requirements, Architecture, Standby current</strong> — needs another look. <a href="#p-review" data-goto="review">See what is being asked →</a></p>
 </div>
+<section class="board" aria-label="Key performance parameters">
+<div class="board-head"><h2>Where the design stands</h2><p>Every number read from the file that owns it. Worst first.</p></div>
+<div class="params">
+<div class="param t-warn"><div class="p-name">VBUS rail<span class="p-note">worst case at 5 V, from J1</span></div><div class="p-val">450 mA</div><div class="p-bar"><i style="width:90%"></i></div><div class="p-lim">max 500 mA</div><div class="p-margin">+10%<span class="p-state">tight</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">Wake</div><div class="p-val">4.2 ms</div><div class="p-bar"><i style="width:42%"></i></div><div class="p-lim">max 10 ms</div><div class="p-margin">+58%<span class="p-state">clear</span></div><div class="p-trail"><svg class="spark" viewBox="0 0 104 26" width="104" height="26" aria-hidden="true"><polyline points="1.0,22.0 26.5,4.0 52.0,20.4 77.5,4.4 103.0,20.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><circle cx="103.0" cy="20.4" r="2.6" fill="currentColor"/></svg></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/iterations/standby.json" target="_blank" rel="noopener">standby loop, #3 ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">I standby<span class="p-note">worst in-spec standby corner under 25 uA, without making wake-up</span></div><div class="p-val">8.884 uA</div><div class="p-bar"><i style="width:36%"></i></div><div class="p-lim">max 25 uA</div><div class="p-margin">+64%<span class="p-state">clear</span></div><div class="p-trail"><svg class="spark" viewBox="0 0 104 26" width="104" height="26" aria-hidden="true"><polyline points="1.0,4.0 26.5,22.0 52.0,20.7 77.5,21.3 103.0,21.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/><circle cx="103.0" cy="21.4" r="2.6" fill="currentColor"/></svg></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/iterations/standby.json" target="_blank" rel="noopener">standby loop, #3 ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">V3P3 rail<span class="p-note">worst case at 3.3 V, from U2</span></div><div class="p-val">12.38 mA</div><div class="p-bar"><i style="width:5%"></i></div><div class="p-lim">max 250 mA</div><div class="p-margin">+95%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">VREF rail<span class="p-note">worst case at 2.5 V, from U4</span></div><div class="p-val">0.25 mA</div><div class="p-bar"><i style="width:2%"></i></div><div class="p-lim">max 10 mA</div><div class="p-margin">+98%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+<div class="param t-ok"><div class="p-name">VBAT rail<span class="p-note">worst case at 3.7 V, from BT1</span></div><div class="p-val">0.01105 A</div><div class="p-bar"><i style="width:1%"></i></div><div class="p-lim">max 1.2 A</div><div class="p-margin">+99%<span class="p-state">clear</span></div><div class="p-trail"></div><div class="p-src"><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">power budget ↗</a></div></div>
+</div></section>
 <div class="tabs" role="tablist">
 <button class="tab" role="tab" id="t-review" aria-controls="p-review" aria-selected="false" data-tab="review"><span class="dot b-stop"></span>Review<span class="badge">3</span></button>
 <button class="tab" role="tab" id="t-vision" aria-controls="p-vision" aria-selected="true" data-tab="vision"><span class="dot b-ok"></span>Vision</button>
@@ -514,7 +574,7 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-09-20</
 <text x="377.4" y="622" class="ts mut">outlined bars = critical path</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>Dependency chart — one column per session, scheduled by longest path. Outlined bars are the critical path.
-<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fclosed-loop-extract%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/plan.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/plan.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
 </figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>Chunk</th><th>State</th>
@@ -670,8 +730,8 @@ moulded. Otherwise the order is right.<span class="who">harrison · 2026-09-20</
 <h3 class="sec">The editable originals</h3>
 <p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/plan.drawio" target="_blank" rel="noopener">Plan chart (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fclosed-loop-extract%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/plan.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — move a bar to re-plan</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/plan.yaml" target="_blank" rel="noopener">Plan source ↗</a><div class="paths"><code>plan.yaml</code></div></td><td class="state t-ok">Ready</td><td>What both charts are generated from</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/plan.drawio" target="_blank" rel="noopener">Plan chart (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fplan.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/plan.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — move a bar to re-plan</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/plan.yaml" target="_blank" rel="noopener">Plan source ↗</a><div class="paths"><code>plan.yaml</code></div></td><td class="state t-ok">Ready</td><td>What both charts are generated from</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>R1 is done but review &#x27;requirements&#x27; was approved, then docs/design/requirements-map.svg changed</li>
@@ -878,7 +938,7 @@ about.</p>
 <text x="494.4" y="980" class="ts ink2">red border = a gap the gate is failing on</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>Requirement tree — an arrow points from a requirement to the one that refines it. Red borders are gaps the gate is failing on.
-<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fclosed-loop-extract%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
 </figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>UID</th><th>State</th>
@@ -935,7 +995,7 @@ about.</p>
 <h3 class="sec">The editable originals</h3>
 <p class="tally">1 of 1 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Requirements map (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fclosed-loop-extract%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/design/requirements-map.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/requirements-map.drawio" target="_blank" rel="noopener">Requirements map (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fdocs%2Fdesign%2Frequirements-map.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>docs/design/requirements-map.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>VIS-002 (Readable and operable wearing freezer gloves) is a level-0 requirement with no decomposition</li>
@@ -1117,7 +1177,7 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <text x="24" y="856" class="ts mut">■ bus controller · ● bus member · pill on a block = the rail it runs from · every colour is also labelled</text>
 </svg></span></div></div><span class="zhint">scroll to zoom, drag to pan, double-click to reset</span></div>
 <figcaption>Power tree with a budget gauge per rail, then the functional blocks and the buses between them.
-<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fclosed-loop-extract%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/hw/block-diagram.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
+<span class="acts"><a href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">Open in draw.io ↗</a> · <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.drawio" target="_blank" rel="noopener">Get the .drawio ↗</a></span>
 </figcaption></figure>
 <div class="scroll"><table><thead><tr>
 <th>Rail</th><th>State</th>
@@ -1192,8 +1252,8 @@ is the number to check. Standby on V3P3 comes to 12 uA of the 40 uA budget.</p>
 <h3 class="sec">The editable originals</h3>
 <p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/hw/block-diagram.drawio" target="_blank" rel="noopener">Block diagram (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fclosed-loop-extract%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>hw/block-diagram.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — drag the file onto the canvas</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/hw/block-diagram.yaml" target="_blank" rel="noopener">Block diagram source ↗</a><div class="paths"><code>hw/block-diagram.yaml</code></div></td><td class="state t-ok">Ready</td><td>The spec both files are generated from</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.drawio" target="_blank" rel="noopener">Block diagram (draw.io) ↗</a> <a class="alt" href="https://app.diagrams.net/?url=https%3A%2F%2Fraw.githubusercontent.com%2FHarwasch%2FMakeHardware%2Fclaude%2Fparameter-board%2Fhw%2Fblock-diagram.drawio" target="_blank" rel="noopener">open in draw.io ↗</a><div class="paths"><code>hw/block-diagram.drawio</code></div></td><td class="state t-ok">Ready</td><td>Opens in draw.io or diagrams.net — drag the file onto the canvas</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/block-diagram.yaml" target="_blank" rel="noopener">Block diagram source ↗</a><div class="paths"><code>hw/block-diagram.yaml</code></div></td><td class="state t-ok">Ready</td><td>The spec both files are generated from</td></tr>
 </tbody></table></div>
 <div class="notes calm"><h3>Worth a human's eye</h3><ul>
 <li>BT1: nothing powers it</li>
@@ -1381,11 +1441,11 @@ hold the schematic for it.<span class="who">harrison · 2026-09-20</span></block
 <h3 class="sec">Documents a run needs</h3>
 <p class="tally">5 of 5 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/cad/enclosure.step" target="_blank" rel="noopener">STEP (AP242) ↗</a><div class="paths"><code>docs/design/cad/enclosure.step</code></div></td><td class="state t-ok">Ready</td><td>Assembly tree, part names, colours, and a MATE_* datum at every joint</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/cad/enclosure.stl" target="_blank" rel="noopener">STL ↗</a><div class="paths"><code>docs/design/cad/enclosure.stl</code></div></td><td class="state t-ok">Ready</td><td>Renders in GitHub&#x27;s own 3D viewer — a review mesh, not a manufacturing one</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/cad/enclosure-joints.json" target="_blank" rel="noopener">The joints ↗</a><div class="paths"><code>docs/design/cad/enclosure-joints.json</code></div></td><td class="state t-ok">Ready</td><td>Type, parts, position, orientation and limits — what STEP cannot carry</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/cad/enclosure-freecad.py" target="_blank" rel="noopener">FreeCAD macro ↗</a><div class="paths"><code>docs/design/cad/enclosure-freecad.py</code></div></td><td class="state t-ok">Ready</td><td>Rebuilds the assembly in FreeCAD 1.0 with real, draggable joints</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/cad/enclosure.py" target="_blank" rel="noopener">The model (source) ↗</a><div class="paths"><code>cad/enclosure.py</code></div></td><td class="state t-ok">Ready</td><td>The only place the constraints survive a changed dimension</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure.step" target="_blank" rel="noopener">STEP (AP242) ↗</a><div class="paths"><code>docs/design/cad/enclosure.step</code></div></td><td class="state t-ok">Ready</td><td>Assembly tree, part names, colours, and a MATE_* datum at every joint</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure.stl" target="_blank" rel="noopener">STL ↗</a><div class="paths"><code>docs/design/cad/enclosure.stl</code></div></td><td class="state t-ok">Ready</td><td>Renders in GitHub&#x27;s own 3D viewer — a review mesh, not a manufacturing one</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure-joints.json" target="_blank" rel="noopener">The joints ↗</a><div class="paths"><code>docs/design/cad/enclosure-joints.json</code></div></td><td class="state t-ok">Ready</td><td>Type, parts, position, orientation and limits — what STEP cannot carry</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/cad/enclosure-freecad.py" target="_blank" rel="noopener">FreeCAD macro ↗</a><div class="paths"><code>docs/design/cad/enclosure-freecad.py</code></div></td><td class="state t-ok">Ready</td><td>Rebuilds the assembly in FreeCAD 1.0 with real, draggable joints</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/cad/enclosure.py" target="_blank" rel="noopener">The model (source) ↗</a><div class="paths"><code>cad/enclosure.py</code></div></td><td class="state t-ok">Ready</td><td>The only place the constraints survive a changed dimension</td></tr>
 </tbody></table></div>
 </section>
 <section class="panel" role="tabpanel" id="p-schematic" aria-labelledby="t-schematic" hidden>
@@ -56902,7 +56962,7 @@ L109.3410 59.7152
 <figcaption>pcb-lint on the board fixture. Numbered findings, and every decoupling loop drawn with its length in millimetres — the via array under U1 is landing on a back-side capacitor&#x27;s pads on another net.
 </figcaption></figure>
 <figure>
-<div class="notes"><h3>Not shown here</h3><ul><li>sheet-1-main.svg is 2958 kB, past the 1500 kB limit for one figure. It still renders on GitHub, so it is linked rather than shown. Plot fewer sheets, or a simplified one, for the review — and export a PDF alongside them for the record. <a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Open on GitHub ↗</a></li></ul></div>
+<div class="notes"><h3>Not shown here</h3><ul><li>sheet-1-main.svg is 2958 kB, past the 1500 kB limit for one figure. It still renders on GitHub, so it is linked rather than shown. Plot fewer sheets, or a simplified one, for the review — and export a PDF alongside them for the record. <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Open on GitHub ↗</a></li></ul></div>
 <figcaption>The main sheet of the same export, and the reason SVG has a budget: 3.0 MB and 61,681 elements, because KiCad&#x27;s plotter writes one path per line segment — every stroke of every character included. Sheets that heavy are linked rather than inlined.
 </figcaption></figure>
 <div class="prose"><h3>Status</h3>
@@ -56925,9 +56985,9 @@ L109.3410 59.7152
 <h3 class="sec">Documents a run needs</h3>
 <p class="tally">3 of 3 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/lint/1-pic-programmer.lint.svg" target="_blank" rel="noopener">sch-lint findings, sheet 1 ↗</a><div class="paths"><code>docs/design/lint/1-pic-programmer.lint.svg</code></div></td><td class="state t-ok">Ready</td><td>Every finding circled on the sheet it is about</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/hw/kicad-demo/pic_programmer.kicad_sch" target="_blank" rel="noopener">KiCad schematic (source) ↗</a><div class="paths"><code>hw/kicad-demo/pic_programmer.kicad_sch</code></div></td><td class="state t-ok">Ready</td><td>Opens in KiCad — the editable original</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Sheet 1, main ↗</a><div class="paths"><code>docs/design/schematic/sheet-1-main.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub at full size</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/lint/1-pic-programmer.lint.svg" target="_blank" rel="noopener">sch-lint findings, sheet 1 ↗</a><div class="paths"><code>docs/design/lint/1-pic-programmer.lint.svg</code></div></td><td class="state t-ok">Ready</td><td>Every finding circled on the sheet it is about</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/hw/kicad-demo/pic_programmer.kicad_sch" target="_blank" rel="noopener">KiCad schematic (source) ↗</a><div class="paths"><code>hw/kicad-demo/pic_programmer.kicad_sch</code></div></td><td class="state t-ok">Ready</td><td>Opens in KiCad — the editable original</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/schematic/sheet-1-main.svg" target="_blank" rel="noopener">Sheet 1, main ↗</a><div class="paths"><code>docs/design/schematic/sheet-1-main.svg</code></div></td><td class="state t-ok">Ready</td><td>Renders on GitHub at full size</td></tr>
 </tbody></table></div>
 </section>
 <section class="panel" role="tabpanel" id="p-simulation" aria-labelledby="t-simulation" hidden>
@@ -57364,7 +57424,7 @@ L109.3410 59.7152
 <td class="t-stop">Mixed — 3 lines estimated</td>
 </tr>
 </tbody></table></div>
-<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/bom-summary.csv" target="_blank" rel="noopener"><code>docs/design/bom-summary.csv</code> ↗</a></p>
+<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/bom-summary.csv" target="_blank" rel="noopener"><code>docs/design/bom-summary.csv</code> ↗</a></p>
 <h3 class="sec">Quotes received</h3>
 <p class="tnote">Sort by lead time before sorting by price. A quote with no date is a quote, not a price.</p>
 <div class="notes"><h3>2 price(s) are not quoted</h3><ul><li>Rows marked in red carry an estimate, not a checked price. Treat the roll-up as indicative until they are quoted — a BOM cost built on guesses is the number that gets committed to.</li></ul></div>
@@ -57491,25 +57551,25 @@ L109.3410 59.7152
 <td class="t-stop">Estimated at 400 from the last project</td>
 </tr>
 </tbody></table></div>
-<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/mfg/quotes.csv" target="_blank" rel="noopener"><code>docs/design/mfg/quotes.csv</code> ↗</a></p>
+<p class="tnote">Source: <a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/quotes.csv" target="_blank" rel="noopener"><code>docs/design/mfg/quotes.csv</code> ↗</a></p>
 <h3 class="sec">Release checklist</h3>
 <p class="lead">Everything a fab, an assembler and a purchaser need in order to quote and build. This is a completeness check, not a reading list — the documents themselves are one click away, and the rows still to produce are the answer to &quot;can we release?&quot;.</p>
 <p class="tally">7 of 12 present · <span class="t-stop">5 still to produce</span></p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
 <tr class="grp"><td colspan="3">Fabrication</td></tr>
 <tr><td>Gerbers and drill files<div class="paths"><code>docs/design/pcb-fab.zip</code></div></td><td class="state t-stop">Not produced</td><td>RS-274X plus the drill schedule. Not generated until layout is frozen</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/mfg/fab-drawing.svg" target="_blank" rel="noopener">Fabrication drawing ↗</a><div class="paths"><code>docs/design/mfg/fab-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Outline, hole schedule and tolerances. Travels with the gerbers</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/stackup.svg" target="_blank" rel="noopener">Stackup drawing ↗</a><div class="paths"><code>docs/design/stackup.svg</code></div></td><td class="state t-ok">Ready</td><td>What the fab quotes against</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/mfg/fab-notes.md" target="_blank" rel="noopener">Fabrication notes ↗</a><div class="paths"><code>docs/design/mfg/fab-notes.md</code></div></td><td class="state t-ok">Ready</td><td>Material, finish, class, panelisation — the written half of the spec</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/fab-drawing.svg" target="_blank" rel="noopener">Fabrication drawing ↗</a><div class="paths"><code>docs/design/mfg/fab-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Outline, hole schedule and tolerances. Travels with the gerbers</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/stackup.svg" target="_blank" rel="noopener">Stackup drawing ↗</a><div class="paths"><code>docs/design/stackup.svg</code></div></td><td class="state t-ok">Ready</td><td>What the fab quotes against</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/fab-notes.md" target="_blank" rel="noopener">Fabrication notes ↗</a><div class="paths"><code>docs/design/mfg/fab-notes.md</code></div></td><td class="state t-ok">Ready</td><td>Material, finish, class, panelisation — the written half of the spec</td></tr>
 <tr><td>Layer plots<div class="paths"><code>docs/design/pcb-layers.pdf</code></div></td><td class="state t-stop">Not produced</td><td>Incoming inspection and any fab query</td></tr>
 <tr class="grp"><td colspan="3">Assembly</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/mfg/assembly-drawing.svg" target="_blank" rel="noopener">Assembly drawing ↗</a><div class="paths"><code>docs/design/mfg/assembly-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Placement, orientation and polarity for the assembler</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/assembly-drawing.svg" target="_blank" rel="noopener">Assembly drawing ↗</a><div class="paths"><code>docs/design/mfg/assembly-drawing.svg</code></div></td><td class="state t-ok">Ready</td><td>Placement, orientation and polarity for the assembler</td></tr>
 <tr><td>Pick and place<div class="paths"><code>docs/design/pcb-pos.csv</code></div></td><td class="state t-stop">Not produced</td><td>Centroid file. Needs the layout</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/bom-summary.csv" target="_blank" rel="noopener">BOM ↗</a><div class="paths"><code>docs/design/bom-summary.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing and the assembly house</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/mfg/assembly-process.md" target="_blank" rel="noopener">Assembly and test process ↗</a><div class="paths"><code>docs/design/mfg/assembly-process.md</code></div></td><td class="state t-ok">Ready</td><td>The traveller — paste, placement, reflow, then the test sequence</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/bom-summary.csv" target="_blank" rel="noopener">BOM ↗</a><div class="paths"><code>docs/design/bom-summary.csv</code></div></td><td class="state t-ok">Ready</td><td>Purchasing and the assembly house</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/assembly-process.md" target="_blank" rel="noopener">Assembly and test process ↗</a><div class="paths"><code>docs/design/mfg/assembly-process.md</code></div></td><td class="state t-ok">Ready</td><td>The traveller — paste, placement, reflow, then the test sequence</td></tr>
 <tr><td>Test fixture definition<div class="paths"><code>docs/design/mfg/test-fixture.md</code></div></td><td class="state t-stop">Not produced</td><td>Bed of nails for the first four test steps. Needs the layout</td></tr>
 <tr class="grp"><td colspan="3">Commercial</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/mfg/quotes.csv" target="_blank" rel="noopener">Quotes ↗</a><div class="paths"><code>docs/design/mfg/quotes.csv</code></div></td><td class="state t-ok">Ready</td><td>Supplier, quantity, tooling, lead time and the date each was given</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/mfg/quotes.csv" target="_blank" rel="noopener">Quotes ↗</a><div class="paths"><code>docs/design/mfg/quotes.csv</code></div></td><td class="state t-ok">Ready</td><td>Supplier, quantity, tooling, lead time and the date each was given</td></tr>
 <tr><td>Supplier decision<div class="paths"><code>docs/design/mfg/supplier-decision.md</code></div></td><td class="state t-stop">Not produced</td><td>Which quote was taken and why. Not made yet</td></tr>
 </tbody></table></div>
 </section>
@@ -57634,11 +57694,11 @@ was lower and #3 was faster to wake; I took #3.</p>
 <p class="lead">The agreed artefacts are above. These are the sources behind them — reading, not agreeing.</p>
 <p class="tally">2 of 2 present · complete</p>
 <div class="scroll"><table><thead><tr><th>Document</th><th>State</th><th>What it is for</th></tr></thead><tbody>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/iterations/standby.json" target="_blank" rel="noopener">Standby ↗</a><div class="paths"><code>docs/design/iterations/standby.json</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
-<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/closed-loop-extract/docs/design/standby-results.md" target="_blank" rel="noopener">Standby results ↗</a><div class="paths"><code>docs/design/standby-results.md</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/iterations/standby.json" target="_blank" rel="noopener">Standby ↗</a><div class="paths"><code>docs/design/iterations/standby.json</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
+<tr><td><a href="https://github.com/Harwasch/MakeHardware/blob/claude/parameter-board/docs/design/standby-results.md" target="_blank" rel="noopener">Standby results ↗</a><div class="paths"><code>docs/design/standby-results.md</code></div></td><td class="state t-ok">Ready</td><td>plain text on GitHub</td></tr>
 </tbody></table></div>
 </section>
-<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>963b3bc</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
+<footer>Generated by <code>review-artifact</code> from Harwasch/MakeHardware at <code>7da342d</code>. Every figure and number here is read from the file that owns it — nothing on this page is typed by hand. Each phase is pinned to the commit it was reviewed at.</footer>
 </div>
 <script>
 const tabs=[...document.querySelectorAll('.tab')];

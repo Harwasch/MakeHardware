@@ -7,6 +7,57 @@ install treats `claude plugin marketplace update makehardware` as nothing to
 do and keeps running the old code. So every change to `plugins/makehardware/`
 bumps it, and `tests/version-bump.sh` fails the build when it does not.
 
+## 0.12.0
+
+The review page now opens on the question a reviewer actually has.
+
+### Added
+
+* **The parameter board.** The page led with Stage 1 — a vision comparison
+  signed off weeks ago — and scattered every number that says how the design
+  is doing across ten tabs. A reviewer could not answer *"is this working?"*
+  without clicking through all of them and holding the answers in their head.
+
+  It now opens on a board: one row per key performance parameter, worst first.
+  Where it sits, what it is allowed to be, how much room is left as a signed
+  margin, and — where a design loop produced it — a sparkline of how it got
+  there. Nothing on it is typed. The loop ledgers already carry objective,
+  target, unit and trajectory; the block diagram already carries every rail's
+  worst-case draw against what its source can supply.
+
+  The rails come through `block_diagram.budget()` rather than off the YAML,
+  because a rail carries the draw of every rail derived from it *referred
+  through the voltage ratio* — re-deriving that on the page would be a second
+  implementation of the one calculation most likely to be wrong, and the two
+  would disagree the first time either changed.
+
+  The board reports the **accepted** pass, not the last one. The last pass is
+  only where the search stopped, and putting a rejected experiment on a review
+  page as the design's figure is a specific way to mislead.
+
+### Fixed
+
+* **A value and the limit it is measured against picked different SI
+  prefixes.** "250 uA against max 0.01 A" is arithmetic the reader has to do
+  before they can make the comparison the row exists to hand them. The limit
+  now sets the scale for both — it is the stable half of the pair, so the
+  column does not change units as the design improves.
+
+* **`0.01238 A` where an engineer reads `12.4 mA`.** The prefix threshold was
+  tight enough to leave ordinary values unscaled.
+
+* **The "tight" state borrowed `--wait`**, which is this page's blue for
+  *waiting on your answer*. A rail at 90% of budget was rendering as a
+  question for the reviewer rather than a margin to watch. There is a proper
+  `--warn` amber now, defined in all three theme states — light, the
+  `prefers-color-scheme` block, and the explicit `[data-theme="dark"]` stamp.
+  It was missing from the third on the first pass, which is the classic
+  token-defined-in-one-state bug and invisible until someone toggles a theme.
+
+* **Rows were labelled with raw metric keys** — `i_standby_ua`, `wake_ms`. A
+  reviewer should not have to read variable names, so the trailing unit token
+  is dropped (the unit is in the next column) and the rest reads as a label.
+
 ## 0.11.0
 
 The design loop was a diary. It is now a loop.
